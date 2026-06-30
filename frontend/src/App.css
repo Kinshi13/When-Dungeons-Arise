@@ -1336,6 +1336,53 @@
   color: var(--outro);
 }
 
+/* Pop-up do mural de missões — abre ao tocar no quadro na Recepção, fundo desfocado */
+
+.mission-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 5, 16, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 220;
+}
+
+.mission-popup {
+  background: var(--surface);
+  border: var(--pixel-border);
+  border-radius: 10px;
+  box-shadow: 6px 6px 0 var(--border);
+  max-width: 360px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  text-align: center;
+  padding: 0 20px 20px;
+}
+
+.mission-popup-art {
+  width: 100%;
+  max-width: 220px;
+  margin: -10px auto 4px;
+  display: block;
+  image-rendering: pixelated;
+}
+
+.mission-popup h2 {
+  margin-bottom: 12px;
+}
+
+.mission-popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
 .mission-card {
   background: var(--surface);
   border: var(--pixel-border);

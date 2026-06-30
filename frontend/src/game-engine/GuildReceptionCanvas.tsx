@@ -16,11 +16,18 @@ const MAX_HEIGHT = 440;
 interface GuildReceptionCanvasProps {
   hasUrgentMissions: boolean;
   onReceptionistTap: () => void;
+  onEnterMissionBoard: () => void;
 }
 
 // Cena principal da recepção da guilda: fundo + recepcionista + mural de missões + atalhos,
 // tudo num único canvas Phaser responsivo (altura derivada da largura medida do container).
-export default function GuildReceptionCanvas({ hasUrgentMissions, onReceptionistTap }: GuildReceptionCanvasProps) {
+// Tocar no mural abre o pop-up de missões (ver GuildReceptionScreen); os atalhos continuam
+// navegando direto pra rota correspondente.
+export default function GuildReceptionCanvas({
+  hasUrgentMissions,
+  onReceptionistTap,
+  onEnterMissionBoard,
+}: GuildReceptionCanvasProps) {
   const navigate = useNavigate();
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(FALLBACK_WIDTH);
@@ -47,7 +54,7 @@ export default function GuildReceptionCanvas({ hasUrgentMissions, onReceptionist
       hasUrgentMissions,
       onEnterMissionBoard: () => {
         playSfx("coin");
-        navigate("/missoes");
+        onEnterMissionBoard();
       },
       onEnterShortcut: (shortcut: GuildShortcut) => {
         playSfx("coin");
@@ -55,7 +62,7 @@ export default function GuildReceptionCanvas({ hasUrgentMissions, onReceptionist
       },
       onReceptionistTap,
     }),
-    [width, height, hasUrgentMissions, navigate, onReceptionistTap]
+    [width, height, hasUrgentMissions, navigate, onReceptionistTap, onEnterMissionBoard]
   );
 
   return (

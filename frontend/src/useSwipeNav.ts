@@ -1,7 +1,7 @@
 import { useRef, type TouchEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-const TAB_ROUTES = ["/missoes", "/tesouraria", "/", "/sala-do-tempo", "/diario"];
+const TAB_ROUTES = ["/missoes", "/tesouraria", "/", "/biblioteca", "/sala-do-tempo", "/diario"];
 
 const SWIPE_THRESHOLD = 60;
 

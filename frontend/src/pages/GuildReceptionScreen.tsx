@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api, type Reminder } from "../api";
 import { generateMissions } from "../game/missionGenerator";
 import { useGame } from "../game/GameContext";
 import PixelDialogBox from "../components/game/PixelDialogBox";
 import DailyMissionSummary from "../components/game/DailyMissionSummary";
+import MissionBoardPopup from "../components/game/MissionBoardPopup";
 import GuildReceptionCanvas from "../game-engine/GuildReceptionCanvas";
 import { RECEPTIONIST_MESSAGES } from "../game-engine/guildReceptionConfig";
 
@@ -17,8 +19,10 @@ function pickBaseMessageIndex(hasUrgentMissions: boolean, pendingToday: number, 
 }
 
 export default function GuildReceptionScreen() {
+  const navigate = useNavigate();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [tapCount, setTapCount] = useState(0);
+  const [missionPopupOpen, setMissionPopupOpen] = useState(false);
   const { level, coins, streak } = useGame();
 
   useEffect(() => {
@@ -39,6 +43,7 @@ export default function GuildReceptionScreen() {
       <GuildReceptionCanvas
         hasUrgentMissions={hasUrgentMissions}
         onReceptionistTap={() => setTapCount((n) => n + 1)}
+        onEnterMissionBoard={() => setMissionPopupOpen(true)}
       />
 
       <PixelDialogBox speaker="Recepcionista">
@@ -52,6 +57,16 @@ export default function GuildReceptionScreen() {
           ? `Mais ${weekly.length} missão${weekly.length > 1 ? "ões" : ""} chegando esta semana.`
           : "Sem missões previstas para os próximos dias."}
       </p>
+
+      <MissionBoardPopup
+        open={missionPopupOpen}
+        missions={daily}
+        onClose={() => setMissionPopupOpen(false)}
+        onViewAll={() => {
+          setMissionPopupOpen(false);
+          navigate("/missoes");
+        }}
+      />
     </div>
   );
 }

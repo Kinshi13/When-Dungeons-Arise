@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useGame } from "../game/GameContext";
 import { xpProgressInLevel } from "../game/levels";
-import PixelCharacterIdle from "../components/game/PixelCharacterIdle";
 import PixelProgressBar from "../components/game/PixelProgressBar";
 import { ChevronLeftIcon, CoinIcon } from "../icons";
 
@@ -17,10 +16,6 @@ export default function CharacterDetail() {
           <ChevronLeftIcon width={18} height={18} />
         </button>
         <strong className="reader-fullscreen-title">Perfil do Aventureiro</strong>
-      </div>
-
-      <div className="reception-scene" style={{ justifyContent: "center" }}>
-        <PixelCharacterIdle name="Você" size={120} color="var(--accent)" />
       </div>
 
       <section className="settings-section">
