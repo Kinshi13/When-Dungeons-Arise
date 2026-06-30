@@ -151,6 +151,47 @@ sistema de XP) pra ganho incerto.
    continua 100% React normal. Não converter telas de CRUD (Mural de Missões, Tesouraria etc.)
    pra Phaser — não faz sentido pra esse tipo de interface.
 
+9. **Pivô de design (rodada mais recente)**: o usuário não gostou das prévias anteriores e mandou
+   5 imagens de referência (recepcionista, recepção da guilda, bibliotecária, biblioteca, e o
+   quadro de missões) com 4 pedidos concretos, todos implementados:
+   - **Sem personagem do jogador**: `CharacterDetail.tsx` (`/perfil`) não renderiza mais nenhum
+     `PixelCharacterIdle` — só os cards de stats (nível, moedas, sequência, XP). O app é
+     inteiramente por toque, sem avatar do jogador.
+   - **Navegação por swipe ampliada**: `useSwipeNav.ts` — `TAB_ROUTES` ganhou `/biblioteca` entre
+     `/tesouraria` e `/`. Resultado: a partir da Recepção, deslizar pra esquerda abre a Biblioteca,
+     deslizar pra direita abre a Tesouraria (mesma lógica de índice ±1 que já existia pras outras
+     4 salas, sem gesture nova).
+   - **Pop-up do mural com blur**: tocar no mural na Recepção não navega mais direto pra
+     `/missoes` — abre `MissionBoardPopup.tsx` (novo componente, `createPortal` + `framer-motion`,
+     mesmo padrão do `RewardPopup`), com fundo desfocado de verdade (`backdrop-filter: blur(6px)`,
+     primeiro uso desse recurso no app) e animação fade-in + zoom suave (sem o "bounce" de mola do
+     RewardPopup — intencional, é uma janela de consulta rápida, não uma recompensa). O botão "Ver
+     mural completo" dentro do pop-up é que leva pra `/missoes` de fato. Pra viabilizar isso,
+     `GuildReceptionCanvas` ganhou a prop `onEnterMissionBoard` (antes navegava direto, sozinho);
+     quem decide o que acontece é `GuildReceptionScreen` agora.
+   - **Arte real do mural**: `frontend/public/game/ui/mission-board-popup.png` — processada com a
+     mesma técnica de flood-fill a partir das bordas (não era checkerboard falso dessa vez, só um
+     fundo branco/cinza-claro liso, mas o método funciona igual), redimensionada de 1254×1254 pra
+     640×640 e comprimida.
+   - **Imagens de referência NÃO usadas como asset direto**: as 4 imagens da recepcionista+recepção
+     e bibliotecária+biblioteca (`IMG_2959`, `IMG_2960`, e as outras duas) são mockups com
+     personagem+fundo já compostos numa imagem só — não dá pra "encaixar" isso no pipeline atual
+     (fundo e personagem são renderizados separados, character por cima do bg). Foram usadas só
+     como referência de clima/paleta (already-similar: parede roxa, mural dourado, tons de
+     madeira). Se o usuário quiser trocar visualmente de verdade, precisa gerar nos formatos que o
+     código já aceita: spritesheet de personagem (mesma convenção de `receptionist-idle.png`,
+     frames quadrados ou não lado a lado) e imagem de fundo única (mesma convenção de
+     `guild-reception-bg.png`).
+   - **APK beta exportado**: Android SDK (cmdline-tools + platform-tools + `platforms;android-36`
+     + `build-tools;36.0.0`) instalado neste ambiente de nuvem (não fica persistido entre sessões —
+     reinstalar do zero se for buildar de novo: baixar
+     `commandlinetools-linux-11076708_latest.zip` de `dl.google.com/android/repository/`, aceitar
+     licenças com `sdkmanager --licenses`, instalar os 3 pacotes acima, criar
+     `frontend/android/local.properties` com `sdk.dir=<caminho do sdk>`, então
+     `npm run build:android && cd android && ./gradlew assembleDebug`). APK gerado em
+     `frontend/android/app/build/outputs/apk/debug/app-debug.apk` (~11,3 MB) e entregue ao usuário
+     via SendUserFile.
+
 ## Pendências conhecidas (não relacionadas ao Phaser)
 
 - **Spritesheets reais dos personagens**: recepcionista e bibliotecária já têm arte real (ver
