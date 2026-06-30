@@ -26,22 +26,33 @@ continua compilando pelo mesmo pipeline Capacitor pra Android. Reescrever em Kot
 jogaria fora toda a lógica de dados (storage local, leitor de PDF/EPUB, notificações,
 sistema de XP) pra ganho incerto.
 
-## Plano do Phaser (ainda não iniciado)
+## Plano do Phaser
 
-1. **Instalar**: `npm install phaser` dentro de `frontend/`.
-2. **Criar `frontend/src/game-engine/`** com:
-   - `PhaserGameCanvas.tsx` — componente React que monta/desmonta uma instância Phaser num
-     `<div>` ref, faz bridge de eventos entre Phaser e React (ex: callbacks quando o jogador
-     clica num personagem ou completa uma ação no mini-jogo).
-   - `scenes/` — cenas Phaser (ex: `ReceptionScene.ts` pra recepção animada, futuras cenas de
-     exploração/mini-jogos).
-3. **Primeiro uso recomendado**: trocar o `PixelCharacterIdle` (hoje placeholder CSS) da tela
-   `GuildReception.tsx` por uma cena Phaser simples com sprite animado de verdade — escopo
-   pequeno, prova de conceito, não mexe em nenhuma outra tela.
-4. **Depois**: avaliar com o usuário se quer gameplay mais profundo (ex: mini-exploração da
+1. ✅ **Instalado**: `phaser` está em `frontend/package.json` (dependency).
+2. ✅ **Criado `frontend/src/game-engine/`** com:
+   - `PhaserGameCanvas.tsx` — componente React genérico que monta/desmonta uma instância
+     Phaser num `<div>` ref (recebe `sceneClass`, `sceneKey`, `width`, `height`, `data`).
+   - `scenes/ReceptionScene.ts` — cena da recepção: sem `spriteUrl` desenha um placeholder
+     pixelado via `Phaser.Graphics` (mesma silhueta de antes) com tween de idle bob; com
+     `spriteUrl` toca a spritesheet de verdade quando ela existir (frames quadrados de
+     `size`×`size`, igual à convenção que já existia no `PixelCharacterIdle`).
+   - `ReceptionCharacterScene.tsx` — wrapper com a mesma interface de props do antigo
+     `PixelCharacterIdle` (`name`, `spriteUrl`, `frameCount`, `fps`, `size`, `color`), pra
+     ficar fácil de trocar em outras telas quando fizer sentido.
+3. ✅ **Feito**: `GuildReception.tsx` agora usa `ReceptionCharacterScene` no lugar do
+   `PixelCharacterIdle` pra Recepcionista — prova de conceito validada (testado com
+   Playwright headless: canvas monta, zero erros de console, visual idêntico ao placeholder
+   anterior, só que renderizado dentro de um `<canvas>` Phaser de verdade).
+4. **Pendência de build**: o bundle JS principal passou de ~700 kB pra ~2,57 MB por causa do
+   Phaser, o que estourou o limite padrão de precache do `vite-plugin-pwa` (2 MiB). Resolvido
+   subindo `workbox.maximumFileSizeToCacheInBytes` pra 4 MiB em `vite.config.ts`. Se o bundle
+   continuar crescendo, considerar lazy-load (`React.lazy`) do `game-engine` — hoje nenhuma
+   tela do app usa lazy loading, então não foi feito pra manter consistência, mas é a primeira
+   coisa a avaliar se o tempo de carregamento inicial virar problema.
+5. **Próximo**: avaliar com o usuário se quer gameplay mais profundo (ex: mini-exploração da
    guilda, item collection visual, animações de conclusão de missão) — não implementar isso
    sem alinhar escopo primeiro, é fácil estourar o tempo aqui.
-5. **Importante**: Phaser e React não devem competir pelo mesmo DOM. Cada cena Phaser vive
+6. **Importante**: Phaser e React não devem competir pelo mesmo DOM. Cada cena Phaser vive
    isolada num componente próprio; o resto do app (formulários, listas, leitor de PDF/EPUB)
    continua 100% React normal. Não converter telas de CRUD (Mural de Missões, Tesouraria etc.)
    pra Phaser — não faz sentido pra esse tipo de interface.

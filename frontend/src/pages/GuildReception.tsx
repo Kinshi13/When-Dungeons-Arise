@@ -3,7 +3,7 @@ import { api, type Reminder } from "../api";
 import { generateMissions } from "../game/missionGenerator";
 import { useGame } from "../game/GameContext";
 import PixelDialogBox from "../components/game/PixelDialogBox";
-import PixelCharacterIdle from "../components/game/PixelCharacterIdle";
+import ReceptionCharacterScene from "../game-engine/ReceptionCharacterScene";
 import PixelRoomButton from "../components/game/PixelRoomButton";
 import { TabBellIcon, TabCoinsIcon, TabHomeCalendarIcon } from "../icons2";
 import { BookIcon, DiaryIcon, SettingsIcon } from "../icons";
@@ -31,7 +31,7 @@ export default function GuildReception() {
       <h1>Recepção da Guilda</h1>
 
       <div className="reception-scene">
-        <PixelCharacterIdle name="Recepcionista" size={110} color="var(--reuniao)" />
+        <ReceptionCharacterScene name="Recepcionista" size={110} color="#6c5ce7" />
         <PixelDialogBox speaker="Recepcionista">
           {greeting()}{" "}
           {pendingToday > 0

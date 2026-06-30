@@ -1395,6 +1395,15 @@
   margin-bottom: 14px;
 }
 
+.phaser-game-canvas {
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.phaser-game-canvas canvas {
+  image-rendering: pixelated;
+}
+
 .reception-scene .pixel-dialog {
   flex: 1;
   margin-bottom: 0;
