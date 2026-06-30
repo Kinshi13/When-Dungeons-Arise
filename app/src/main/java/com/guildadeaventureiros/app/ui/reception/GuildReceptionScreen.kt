@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -54,16 +55,18 @@ fun GuildReceptionScreen(
             // Texto encaixado dentro do balão de fala já pintado na arte de fundo.
             PainterlyDialogText(
                 text = if (pendingCount > 0) {
-                    "Bem-vindo de volta! $pendingCount missão(ões) esperam por você no mural."
+                    "Bem-vindo! $pendingCount missão(ões) no mural."
                 } else {
-                    "Bem-vindo de volta! O mural está limpo por enquanto."
+                    "Bem-vindo! Mural limpo por enquanto."
                 },
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 11.sp, lineHeight = 13.sp),
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 9.sp, lineHeight = 10.5.sp),
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .offset(x = maxWidth * 0.555f, y = maxHeight * 0.238f)
-                    .size(width = maxWidth * 0.305f, height = maxHeight * 0.062f)
-                    .padding(4.dp),
+                    .offset(x = maxWidth * 0.575f, y = maxHeight * 0.242f)
+                    .size(width = maxWidth * 0.25f, height = maxHeight * 0.05f)
+                    .padding(horizontal = 3.dp),
             )
 
             // Área tocável sobre o quadro de avisos pintado na parede — abre o mural com zoom-in.

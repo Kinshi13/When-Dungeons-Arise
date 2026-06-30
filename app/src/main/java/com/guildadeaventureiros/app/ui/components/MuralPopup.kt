@@ -76,8 +76,8 @@ fun MuralPopup(
                     onClick = onOpenTasks,
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .offset(x = maxWidth * 0.345f, y = maxHeight * 0.40f)
-                        .size(width = maxWidth * 0.30f, height = maxHeight * 0.10f),
+                        .offset(x = maxWidth * 0.41f, y = maxHeight * 0.28f)
+                        .size(width = maxWidth * 0.19f, height = maxHeight * 0.28f),
                 )
 
                 MuralHyperlink(
@@ -85,8 +85,8 @@ fun MuralPopup(
                     onClick = onOpenSettings,
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .offset(x = maxWidth * 0.645f, y = maxHeight * 0.335f)
-                        .size(width = maxWidth * 0.165f, height = maxHeight * 0.10f),
+                        .offset(x = maxWidth * 0.71f, y = maxHeight * 0.28f)
+                        .size(width = maxWidth * 0.17f, height = maxHeight * 0.17f),
                 )
             }
         }
@@ -105,11 +105,13 @@ private fun MuralHyperlink(
     ) {
         Text(
             text = label,
-            color = GuildColors.WoodDark,
+            color = GuildColors.TextOnParchment,
             fontWeight = FontWeight.Bold,
             style = MaterialTheme.typography.labelLarge,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(2.dp),
+            modifier = Modifier
+                .background(GuildColors.Parchment.copy(alpha = 0.85f), RoundedCornerShape(4.dp))
+                .padding(horizontal = 6.dp, vertical = 3.dp),
         )
     }
 }

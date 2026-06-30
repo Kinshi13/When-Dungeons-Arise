@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.guildadeaventureiros.app.ui.theme.GuildColors
 
@@ -39,6 +40,8 @@ fun PainterlyDialogText(
     text: String,
     modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.bodyMedium,
+    maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Clip,
 ) {
     Text(
         text = text,
@@ -46,5 +49,7 @@ fun PainterlyDialogText(
         color = GuildColors.TextOnParchment,
         style = style,
         textAlign = TextAlign.Center,
+        maxLines = maxLines,
+        overflow = overflow,
     )
 }
