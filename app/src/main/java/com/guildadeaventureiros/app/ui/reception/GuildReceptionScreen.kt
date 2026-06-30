@@ -77,7 +77,7 @@ fun GuildReceptionScreen(
 
     SceneBackground(backgroundRes = R.drawable.bg_reception, modifier = modifier.fillMaxSize()) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            // Rosto animado da recepcionista, sobreposto exatamente sobre o busto estático pintado no fundo.
+            // Recepcionista animada — fundo limpo (sem personagem), então o busto inteiro vem do spritesheet.
             Image(
                 painter = painterResource(receptionistIdleFrames[idleFrameIndex]),
                 contentDescription = null,
@@ -91,7 +91,18 @@ fun GuildReceptionScreen(
 
             GameTopBar(profile = profile, modifier = Modifier.align(Alignment.TopCenter))
 
-            // Texto encaixado dentro do balão de fala já pintado na arte de fundo.
+            // Balão de fala — extraído do fundo original e sobreposto, já que o fundo limpo não o contém.
+            Image(
+                painter = painterResource(R.drawable.speech_bubble),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .offset(x = maxWidth * 0.5632f, y = maxHeight * 0.2243f)
+                    .size(width = maxWidth * 0.2976f, height = maxHeight * 0.0987f),
+            )
+
+            // Texto encaixado dentro do balão de fala sobreposto acima.
             PainterlyDialogText(
                 text = if (pendingCount > 0) {
                     "Bem-vindo! $pendingCount missão(ões) no mural."

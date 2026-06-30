@@ -1,6 +1,11 @@
 package com.guildadeaventureiros.app.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -14,18 +19,20 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.guildadeaventureiros.app.R
+import com.guildadeaventureiros.app.ui.theme.GuildColors
 
 /**
  * Popup do mural — abre com zoom-in suave sobre a arte detalhada do quadro de avisos.
@@ -67,8 +74,6 @@ fun MuralPopup(
                 )
 
                 MuralHyperlink(
-                    iconRes = R.drawable.icon_tarefas,
-                    contentDescription = "Tarefas",
                     onClick = onOpenTasks,
                     modifier = Modifier
                         .align(Alignment.TopStart)
@@ -77,8 +82,6 @@ fun MuralPopup(
                 )
 
                 MuralHyperlink(
-                    iconRes = R.drawable.icon_config,
-                    contentDescription = "Configurações",
                     onClick = onOpenSettings,
                     modifier = Modifier
                         .align(Alignment.TopStart)
@@ -90,24 +93,34 @@ fun MuralPopup(
     }
 }
 
+/** Folha do mural tocável — apenas um leve brilho dourado pulsante, sem texto ou imagem. */
 @Composable
 private fun MuralHyperlink(
-    iconRes: Int,
-    contentDescription: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val infiniteTransition = rememberInfiniteTransition(label = "muralGlow")
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.12f,
+        targetValue = 0.32f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1400),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "muralGlowAlpha",
+    )
+
     Box(
-        modifier = modifier.clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Image(
-            painter = painterResource(iconRes),
-            contentDescription = contentDescription,
-            contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .fillMaxWidth(0.78f)
-                .aspectRatio(1f),
-        )
-    }
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(
+                        GuildColors.Gold.copy(alpha = glowAlpha),
+                        GuildColors.Gold.copy(alpha = 0f),
+                    ),
+                ),
+            )
+            .clickable(onClick = onClick),
+    )
 }
