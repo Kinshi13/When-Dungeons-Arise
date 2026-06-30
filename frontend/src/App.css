@@ -1246,39 +1246,13 @@
   }
 }
 
-.room-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  background: var(--surface);
+.guild-map-wrap {
+  margin-top: 16px;
   border: var(--pixel-border);
   border-radius: 8px;
-  padding: 12px 8px;
   box-shadow: var(--pixel-shadow-sm);
-  cursor: pointer;
-  color: var(--text);
-}
-
-.room-button-icon {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--accent);
-}
-
-.room-button-label {
-  font-size: 0.78rem;
-  text-align: center;
-}
-
-.room-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 16px;
+  overflow: hidden;
+  line-height: 0;
 }
 
 .reward-popup {

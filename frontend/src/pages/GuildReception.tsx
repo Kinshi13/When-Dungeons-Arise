@@ -4,9 +4,17 @@ import { generateMissions } from "../game/missionGenerator";
 import { useGame } from "../game/GameContext";
 import PixelDialogBox from "../components/game/PixelDialogBox";
 import ReceptionCharacterScene from "../game-engine/ReceptionCharacterScene";
-import PixelRoomButton from "../components/game/PixelRoomButton";
-import { TabBellIcon, TabCoinsIcon, TabHomeCalendarIcon } from "../icons2";
-import { BookIcon, DiaryIcon, SettingsIcon } from "../icons";
+import GuildMapCanvas from "../game-engine/GuildMapCanvas";
+import type { GuildMapRoom } from "../game-engine/scenes/GuildMapScene";
+
+const GUILD_ROOMS: GuildMapRoom[] = [
+  { id: "missoes", label: "Mural de Missões", to: "/missoes", color: "#2ecc71", x: 0.18, y: 0.28 },
+  { id: "sala-do-tempo", label: "Sala do Tempo", to: "/sala-do-tempo", color: "#6c5ce7", x: 0.5, y: 0.28 },
+  { id: "tesouraria", label: "Tesouraria", to: "/tesouraria", color: "#ffd23f", x: 0.82, y: 0.28 },
+  { id: "diario", label: "Diário", to: "/diario", color: "#4fd6e8", x: 0.18, y: 0.66 },
+  { id: "biblioteca", label: "Biblioteca", to: "/biblioteca", color: "#ff8a5c", x: 0.5, y: 0.66 },
+  { id: "regras", label: "Livro de Regras", to: "/regras", color: "#9a8fc2", x: 0.82, y: 0.66 },
+];
 
 function greeting() {
   const hour = new Date().getHours();
@@ -47,14 +55,7 @@ export default function GuildReception() {
           : "Sem missões previstas para os próximos dias."}
       </p>
 
-      <div className="room-grid">
-        <PixelRoomButton to="/missoes" label="Mural de Missões" icon={<TabBellIcon width={26} height={26} />} />
-        <PixelRoomButton to="/sala-do-tempo" label="Sala do Tempo" icon={<TabHomeCalendarIcon width={26} height={26} />} />
-        <PixelRoomButton to="/tesouraria" label="Tesouraria" icon={<TabCoinsIcon width={26} height={26} />} />
-        <PixelRoomButton to="/diario" label="Diário" icon={<DiaryIcon width={26} height={26} />} />
-        <PixelRoomButton to="/biblioteca" label="Biblioteca" icon={<BookIcon width={26} height={26} />} />
-        <PixelRoomButton to="/regras" label="Livro de Regras" icon={<SettingsIcon width={26} height={26} />} />
-      </div>
+      <GuildMapCanvas rooms={GUILD_ROOMS} />
     </div>
   );
 }

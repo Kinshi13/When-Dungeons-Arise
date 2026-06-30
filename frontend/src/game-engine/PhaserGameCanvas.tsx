@@ -31,13 +31,13 @@ export default function PhaserGameCanvas<TData extends object>({
       parent,
       transparent: true,
       pixelArt: true,
-      scene: sceneClass,
       audio: { noAudio: true },
     });
 
-    game.events.once(Phaser.Core.Events.READY, () => {
-      game.scene.start(sceneKey, data);
-    });
+    // Adiciona a cena com os dados de init já em mãos (autoStart: true), em vez de deixar o
+    // Phaser auto-iniciá-la pela config do Game — isso evitaria uma corrida onde create()
+    // roda antes da gente conseguir passar `data`.
+    game.scene.add(sceneKey, sceneClass, true, data);
 
     return () => {
       game.destroy(true);

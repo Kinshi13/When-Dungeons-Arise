@@ -49,10 +49,36 @@ sistema de XP) pra ganho incerto.
    continuar crescendo, considerar lazy-load (`React.lazy`) do `game-engine` — hoje nenhuma
    tela do app usa lazy loading, então não foi feito pra manter consistência, mas é a primeira
    coisa a avaliar se o tempo de carregamento inicial virar problema.
-5. **Próximo**: avaliar com o usuário se quer gameplay mais profundo (ex: mini-exploração da
-   guilda, item collection visual, animações de conclusão de missão) — não implementar isso
-   sem alinhar escopo primeiro, é fácil estourar o tempo aqui.
-6. **Importante**: Phaser e React não devem competir pelo mesmo DOM. Cada cena Phaser vive
+5. ✅ **Feito — mini-exploração da guilda**: a grade estática de botões (`room-grid` /
+   `PixelRoomButton`, removidos) virou um mapa Phaser navegável:
+   - `scenes/GuildMapScene.ts` — desenha o "chão" da guilda com grid sutil, 6 salas como
+     prédios coloridos (retângulo + label), e o personagem do jogador. Tocar numa sala faz o
+     personagem andar até lá (tween com velocidade fixa, não é teleporte) e só dispara a
+     navegação (`onEnterRoom`) quando ele chega.
+   - `GuildMapCanvas.tsx` — wrapper React que mede a largura do container via
+     `ResizeObserver` (mapa é responsivo, ao contrário do personagem fixo da recepção) e liga
+     `onEnterRoom` a `useNavigate()` + som de moeda, igual o antigo `PixelRoomButton` fazia.
+   - `drawPixelCharacterPlaceholder.ts` — desenho do personagem placeholder extraído da
+     `ReceptionScene` pra ser reaproveitado também no mapa (mesmo personagem em dois lugares).
+   - `GuildReception.tsx` define `GUILD_ROOMS` (id/label/rota/cor/posição 0..1 no mapa) e
+     renderiza `<GuildMapCanvas rooms={GUILD_ROOMS} />` no lugar do grid antigo.
+   - **Bug real encontrado e corrigido durante a implementação**: passar `data` pro Phaser via
+     `scene: SceneClass` na config do `Game` + `game.scene.start(key, data)` depois do evento
+     `READY` cria uma corrida — a cena já roda `create()` uma vez com `data` undefined antes do
+     `start()` explícito rodar, jogando `TypeError` (`Cannot read properties of undefined`) e
+     deixando canvases órfãos no DOM. Corrigido em `PhaserGameCanvas.tsx`: não usar `scene:` na
+     config do `Game`; em vez disso, logo após criar o `Game`, chamar
+     `game.scene.add(sceneKey, sceneClass, true, data)`, que já recebe os dados de init no
+     mesmo passo que inicia a cena (sem corrida). Confirmado com teste Playwright headless
+     (tap numa sala → personagem anda → navega pra rota certa, zero erros de console, 1 único
+     canvas no DOM).
+6. **Próximo**: avaliar com o usuário se quer mais gameplay (item collection visual, animação
+   de conclusão de missão) — não implementar isso sem alinhar escopo primeiro, é fácil
+   estourar o tempo aqui. Também falta decidir se a acessibilidade de navegação por
+   teclado/leitor de tela do mapa (hoje só por toque/clique no canvas) importa pro usuário —
+   não foi implementada nessa rodada porque o app é de uso pessoal, mas vale perguntar antes
+   de assumir que não é necessário.
+7. **Importante**: Phaser e React não devem competir pelo mesmo DOM. Cada cena Phaser vive
    isolada num componente próprio; o resto do app (formulários, listas, leitor de PDF/EPUB)
    continua 100% React normal. Não converter telas de CRUD (Mural de Missões, Tesouraria etc.)
    pra Phaser — não faz sentido pra esse tipo de interface.

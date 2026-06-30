@@ -1,9 +1,9 @@
 import Phaser from "phaser";
+import { drawPixelCharacterPlaceholder } from "../drawPixelCharacterPlaceholder";
 
 export const RECEPTION_SCENE_KEY = "ReceptionScene";
 
 const SPRITE_KEY = "reception-character";
-const BORDER_COLOR = 0x2b2b2b;
 const DEFAULT_COLOR = "#f4c95d";
 
 export interface ReceptionSceneData {
@@ -42,7 +42,7 @@ export default class ReceptionScene extends Phaser.Scene {
 
     const character = spriteUrl
       ? this.createAnimatedSprite(centerX, centerY, frameCount, fps)
-      : this.createPlaceholder(centerX, centerY, size, color);
+      : drawPixelCharacterPlaceholder(this, centerX, centerY, size, color);
 
     this.tweens.add({
       targets: character,
@@ -64,28 +64,5 @@ export default class ReceptionScene extends Phaser.Scene {
     const sprite = this.add.sprite(x, y, SPRITE_KEY);
     sprite.play("idle");
     return sprite;
-  }
-
-  private createPlaceholder(x: number, y: number, size: number, colorHex: string) {
-    const scale = size / 24;
-    const color = Phaser.Display.Color.HexStringToColor(colorHex).color;
-
-    const g = this.add.graphics();
-    g.fillStyle(color, 1);
-    g.fillRect(-4 * scale, -9 * scale, 8 * scale, 7 * scale);
-    g.lineStyle(scale, BORDER_COLOR, 1);
-    g.strokeRect(-4 * scale, -9 * scale, 8 * scale, 7 * scale);
-
-    g.fillRect(-6 * scale, -2 * scale, 12 * scale, 9 * scale);
-    g.strokeRect(-6 * scale, -2 * scale, 12 * scale, 9 * scale);
-
-    g.fillStyle(BORDER_COLOR, 1);
-    g.fillRect(-6 * scale, 7 * scale, 4 * scale, 3 * scale);
-    g.fillRect(2 * scale, 7 * scale, 4 * scale, 3 * scale);
-    g.fillRect(-2 * scale, -6 * scale, 1.5 * scale, 1.5 * scale);
-    g.fillRect(1.5 * scale, -6 * scale, 1.5 * scale, 1.5 * scale);
-
-    const container = this.add.container(x, y, [g]);
-    return container;
   }
 }
