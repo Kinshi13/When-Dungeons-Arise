@@ -1,0 +1,89 @@
+:root {
+  --bg: #0f0a1e;
+  --surface: #1c1430;
+  --surface-raised: #251a3d;
+  --border: #000000;
+  --text: #e7e1f5;
+  --text-h: #ffffff;
+  --text-muted: #9a8fc2;
+
+  --accent: #ffd23f;
+  --accent-ink: #1c1430;
+  --accent-2: #4fd6e8;
+  --reuniao: #6c5ce7;
+  --tarefa: #2ecc71;
+  --outro: #ffd23f;
+  --danger: #ff4d6d;
+  --success: #2ecc71;
+
+  --pixel-border: 3px solid var(--border);
+  --pixel-shadow: 4px 4px 0 var(--border);
+  --pixel-shadow-sm: 2px 2px 0 var(--border);
+
+  --font-display: "Press Start 2P", "VT323", monospace;
+  --font-body: "VT323", "Segoe UI", system-ui, sans-serif;
+
+  font: 20px/1.4 var(--font-body);
+  color-scheme: dark;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background:
+    radial-gradient(circle at 20% 10%, rgba(108, 92, 231, 0.25), transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(79, 214, 232, 0.18), transparent 45%),
+    var(--bg);
+  min-height: 100svh;
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--text-h);
+  margin: 0 0 16px;
+  text-shadow: var(--pixel-shadow-sm);
+}
+
+h1 {
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  line-height: 1.6;
+}
+
+h2 {
+  font-size: 0.75rem;
+  line-height: 1.7;
+  text-transform: uppercase;
+}
+
+p {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+button {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+}
+
+input,
+select {
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+}

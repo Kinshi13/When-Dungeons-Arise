@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+**/dev.db
+**/dev.db-journal
+frontend/android/app/build
+frontend/android/build
+frontend/android/.gradle
+frontend/android/local.properties
+*.apk

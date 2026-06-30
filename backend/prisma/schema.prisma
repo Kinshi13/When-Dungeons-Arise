@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite não suporta enums nativos no Prisma; valores são restritos via zod na camada de API.
+// ReminderType: "REUNIAO" | "TAREFA" | "OUTRO"
+
+model Reminder {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  dateTime    DateTime
+  type        String    @default("OUTRO")
+  plan        Plan?     @relation(fields: [planId], references: [id], onDelete: SetNull)
+  planId      String?
+  planStep    PlanStep?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Plan {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  steps       PlanStep[]
+  reminders   Reminder[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model PlanStep {
+  id         String    @id @default(cuid())
+  plan       Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planId     String
+  title      String
+  done       Boolean   @default(false)
+  dateTime   DateTime?
+  reminder   Reminder? @relation(fields: [reminderId], references: [id], onDelete: SetNull)
+  reminderId String?   @unique
+  order      Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  amount      Float
+  description String?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+// BillType: "CARTAO" | "BOLETO" | "ASSINATURA" | "OUTRO" (restrito via zod)
+model Bill {
+  id        String   @id @default(cuid())
+  title     String
+  amount    Float
+  dueDate   DateTime
+  type      String   @default("OUTRO")
+  priority  Boolean  @default(false)
+  paid      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
