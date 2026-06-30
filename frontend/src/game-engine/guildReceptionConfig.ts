@@ -16,6 +16,19 @@ export const GUILD_SHORTCUTS: GuildShortcut[] = [
   { id: "configuracoes", label: "Ajustes", to: "/regras", color: "#9a8fc2", x: 0.68, y: 0.88 },
 ];
 
+export interface ReceptionistSpriteConfig {
+  /** Caminho do arquivo dentro de frontend/public/, ex.: "/game/characters/receptionist-idle.png" */
+  url: string;
+  /** Lado de cada frame no arquivo original, em pixels (frames quadrados, lado a lado). */
+  frameSize: number;
+  frameCount: number;
+  fps: number;
+}
+
+// Defina aqui quando o spritesheet real da recepcionista existir. Enquanto for `null`, a cena
+// desenha o placeholder pixelado via Phaser.Graphics.
+export const RECEPTIONIST_SPRITE: ReceptionistSpriteConfig | null = null;
+
 export const RECEPTIONIST_MESSAGES = [
   "Bem-vindo de volta, aventureiro.",
   "O mural foi atualizado com novas missões.",

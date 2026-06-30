@@ -1,9 +1,9 @@
 import Phaser from "phaser";
 import { drawGuildBackground } from "../sceneObjects/drawGuildBackground";
-import { createReceptionistIdleCharacter } from "../sceneObjects/createReceptionistIdleCharacter";
+import { createReceptionistIdleCharacter, RECEPTIONIST_SPRITE_KEY } from "../sceneObjects/createReceptionistIdleCharacter";
 import { createMissionBoardHotspot } from "../sceneObjects/createMissionBoardHotspot";
 import { createGuildShortcutButton } from "../sceneObjects/createGuildShortcutButton";
-import type { GuildShortcut } from "../guildReceptionConfig";
+import { RECEPTIONIST_SPRITE, type GuildShortcut } from "../guildReceptionConfig";
 
 export const GUILD_RECEPTION_SCENE_KEY = "GuildReceptionScene";
 
@@ -26,7 +26,7 @@ export interface GuildReceptionSceneData {
 // sido validada no mapa anterior, só que com o mural distinguido visualmente dos atalhos.
 export default class GuildReceptionScene extends Phaser.Scene {
   private sceneData!: GuildReceptionSceneData;
-  private character!: Phaser.GameObjects.Container;
+  private character!: Phaser.GameObjects.Container | Phaser.GameObjects.Sprite;
   private homeX = 0;
   private homeY = 0;
   private idleTween?: Phaser.Tweens.Tween;
@@ -40,6 +40,15 @@ export default class GuildReceptionScene extends Phaser.Scene {
     this.sceneData = data;
   }
 
+  preload() {
+    if (RECEPTIONIST_SPRITE) {
+      this.load.spritesheet(RECEPTIONIST_SPRITE_KEY, RECEPTIONIST_SPRITE.url, {
+        frameWidth: RECEPTIONIST_SPRITE.frameSize,
+        frameHeight: RECEPTIONIST_SPRITE.frameSize,
+      });
+    }
+  }
+
   create() {
     const { width, height, shortcuts, hasUrgentMissions } = this.sceneData;
 
@@ -48,7 +57,7 @@ export default class GuildReceptionScene extends Phaser.Scene {
     this.homeX = width * 0.5;
     this.homeY = height * 0.2;
     const characterSize = height * CHARACTER_SIZE_RATIO;
-    this.character = createReceptionistIdleCharacter(this, this.homeX, this.homeY, characterSize);
+    this.character = createReceptionistIdleCharacter(this, this.homeX, this.homeY, characterSize, RECEPTIONIST_SPRITE);
     this.character.on("pointerup", () => this.onReceptionistTap());
     this.startIdleBob();
 

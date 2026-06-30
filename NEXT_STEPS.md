@@ -78,7 +78,9 @@ sistema de XP) pra ganho incerto.
    - `sceneObjects/drawGuildBackground.ts` — fundo procedural (parede + bandeira da guilda +
      chão em grade), placeholder pro asset `guild_reception_bg`.
    - `sceneObjects/createReceptionistIdleCharacter.ts` — recepcionista com bob de idle +
-     área de toque (alterna a fala).
+     área de toque (alterna a fala). Aceita um `ReceptionistSpriteConfig` opcional: sem ele
+     desenha o placeholder via `Phaser.Graphics`; com ele toca uma `Sprite` animada a partir do
+     spritesheet carregado no `preload()` de `GuildReceptionScene.ts`.
    - `sceneObjects/createMissionBoardHotspot.ts` — mural de missões, visualmente em destaque
      (maior, dourado) com selo vermelho quando há missão vencendo hoje/atrasada.
    - `sceneObjects/createBuildingHotspot.ts` — desenho base de "prédio interativo" reaproveitado
@@ -108,6 +110,18 @@ sistema de XP) pra ganho incerto.
      pra lá. Testado via Playwright headless: 1 canvas no DOM, zero erros de console, toque na
      recepcionista cicla a fala, toque no mural navega pra `/missoes`, toque num atalho
      (Biblioteca) navega pra `/biblioteca`.
+   - **Correção feita numa rodada seguinte**: a consolidação inicial tinha perdido o suporte a
+     spritesheet real da recepcionista (a `ReceptionScene.ts` antiga aceitava `spriteUrl`, mas o
+     `createReceptionistIdleCharacter.ts` novo só desenhava o placeholder, sem nenhum jeito de
+     carregar arte real). Corrigido: `guildReceptionConfig.ts` ganhou
+     `ReceptionistSpriteConfig`/`RECEPTIONIST_SPRITE` (hoje `null`); `GuildReceptionScene.ts`
+     ganhou um `preload()` que carrega o spritesheet via `this.load.spritesheet(...)` quando
+     `RECEPTIONIST_SPRITE` não é `null`; `createReceptionistIdleCharacter.ts` agora recebe esse
+     config como argumento opcional e cria uma `Phaser.GameObjects.Sprite` animada em vez do
+     placeholder. Pra ativar: salvar o arquivo em `frontend/public/game/characters/`, preencher
+     `RECEPTIONIST_SPRITE` com `url`/`frameSize`/`frameCount`/`fps`. Testado via Playwright
+     headless com `RECEPTIONIST_SPRITE` ainda `null` (caminho do placeholder): 1 canvas, zero
+     erros de console.
 7. **Próximo**: avaliar com o usuário se quer mais gameplay (item collection visual, animação
    de conclusão de missão) — não implementar isso sem alinhar escopo primeiro, é fácil
    estourar o tempo aqui. Também falta decidir se a acessibilidade de navegação por
