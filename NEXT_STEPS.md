@@ -72,13 +72,49 @@ sistema de XP) pra ganho incerto.
      mesmo passo que inicia a cena (sem corrida). Confirmado com teste Playwright headless
      (tap numa sala → personagem anda → navega pra rota certa, zero erros de console, 1 único
      canvas no DOM).
-6. **Próximo**: avaliar com o usuário se quer mais gameplay (item collection visual, animação
+6. ✅ **Feito — tela `GuildReceptionScreen` (substituiu a recepção anterior)**: a recepção virou
+   uma única cena Phaser coesa (`game-engine/scenes/GuildReceptionScene.ts`), em vez de dois
+   canvases separados (personagem + mapa). Estrutura modular, espelhando os nomes pedidos:
+   - `sceneObjects/drawGuildBackground.ts` — fundo procedural (parede + bandeira da guilda +
+     chão em grade), placeholder pro asset `guild_reception_bg`.
+   - `sceneObjects/createReceptionistIdleCharacter.ts` — recepcionista com bob de idle +
+     área de toque (alterna a fala).
+   - `sceneObjects/createMissionBoardHotspot.ts` — mural de missões, visualmente em destaque
+     (maior, dourado) com selo vermelho quando há missão vencendo hoje/atrasada.
+   - `sceneObjects/createBuildingHotspot.ts` — desenho base de "prédio interativo" reaproveitado
+     pelo mural e pelos atalhos.
+   - `sceneObjects/createGuildShortcutButton.ts` — atalhos pra Biblioteca, Tesouraria, Sala do
+     Tempo, Diário e Ajustes (rota `/regras`, que já embute o `Settings.tsx`).
+   - `guildReceptionConfig.ts` — configuração dos atalhos (rota/cor/posição), as 5 mensagens
+     fixas da recepcionista e as chaves de preload reservadas pros assets reais
+     (`guild_reception_bg`, `receptionist_idle`, `mission_board`, `shortcut_*`, `xp_icon`,
+     `coin_icon`, `reward_popup`, `dialog_box`) — nenhuma é carregada ainda, tudo é desenhado
+     via `Phaser.Graphics`; basta trocar por `scene.load.image` quando os arquivos existirem.
+   - `GuildReceptionCanvas.tsx` — wrapper React responsivo (mede largura via `ResizeObserver`,
+     altura derivada `width * 1.05` clampada entre 320–440px), liga navegação e SFX.
+   - `pages/GuildReceptionScreen.tsx` — tela em si: monta o canvas + `PixelDialogBox` (mensagem
+     inicial reflete o estado real via `useGame()`/`generateMissions()` — prioriza missão
+     urgente > pendente hoje > sequência ativa > saudação padrão; cada toque na recepcionista
+     avança pra próxima das 5 mensagens) + `DailyMissionSummary` (lista as missões de hoje) +
+     parágrafo de missões da semana.
+   - Removidos (substituídos pela cena unificada): `ReceptionScene.ts`, `ReceptionCharacterScene.tsx`,
+     `GuildMapScene.ts`, `GuildMapCanvas.tsx`. `drawPixelCharacterPlaceholder.ts` continua sendo
+     o helper compartilhado de desenho do personagem.
+   - **Decisões conscientes que desviam da carta literal do pedido** (documentando o porquê):
+     `GameTopBar` **não** foi recriado dentro do Phaser — já existe como componente DOM global
+     em `App.tsx`, renderizado em toda tela; duplicá-lo dentro do canvas mostraria nível/XP/moedas
+     duas vezes na home. `RewardPopup` não foi plugado nesta tela porque missões só são
+     concluídas no Mural (`MissionBoard.tsx`), que já dispara o popup — a recepção apenas navega
+     pra lá. Testado via Playwright headless: 1 canvas no DOM, zero erros de console, toque na
+     recepcionista cicla a fala, toque no mural navega pra `/missoes`, toque num atalho
+     (Biblioteca) navega pra `/biblioteca`.
+7. **Próximo**: avaliar com o usuário se quer mais gameplay (item collection visual, animação
    de conclusão de missão) — não implementar isso sem alinhar escopo primeiro, é fácil
    estourar o tempo aqui. Também falta decidir se a acessibilidade de navegação por
-   teclado/leitor de tela do mapa (hoje só por toque/clique no canvas) importa pro usuário —
+   teclado/leitor de tela da recepção (hoje só por toque/clique no canvas) importa pro usuário —
    não foi implementada nessa rodada porque o app é de uso pessoal, mas vale perguntar antes
    de assumir que não é necessário.
-7. **Importante**: Phaser e React não devem competir pelo mesmo DOM. Cada cena Phaser vive
+8. **Importante**: Phaser e React não devem competir pelo mesmo DOM. Cada cena Phaser vive
    isolada num componente próprio; o resto do app (formulários, listas, leitor de PDF/EPUB)
    continua 100% React normal. Não converter telas de CRUD (Mural de Missões, Tesouraria etc.)
    pra Phaser — não faz sentido pra esse tipo de interface.
