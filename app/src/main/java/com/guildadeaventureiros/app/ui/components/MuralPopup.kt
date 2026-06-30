@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,11 +24,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.guildadeaventureiros.app.R
-import com.guildadeaventureiros.app.ui.theme.GuildColors
 
 /**
  * Popup do mural — abre com zoom-in suave sobre a arte detalhada do quadro de avisos.
@@ -72,7 +67,8 @@ fun MuralPopup(
                 )
 
                 MuralHyperlink(
-                    label = "TAREFAS",
+                    iconRes = R.drawable.icon_tarefas,
+                    contentDescription = "Tarefas",
                     onClick = onOpenTasks,
                     modifier = Modifier
                         .align(Alignment.TopStart)
@@ -81,7 +77,8 @@ fun MuralPopup(
                 )
 
                 MuralHyperlink(
-                    label = "CONFIG.",
+                    iconRes = R.drawable.icon_config,
+                    contentDescription = "Configurações",
                     onClick = onOpenSettings,
                     modifier = Modifier
                         .align(Alignment.TopStart)
@@ -95,7 +92,8 @@ fun MuralPopup(
 
 @Composable
 private fun MuralHyperlink(
-    label: String,
+    iconRes: Int,
+    contentDescription: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -103,15 +101,13 @@ private fun MuralHyperlink(
         modifier = modifier.clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = label,
-            color = GuildColors.TextOnParchment,
-            fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.labelLarge,
-            textAlign = TextAlign.Center,
+        Image(
+            painter = painterResource(iconRes),
+            contentDescription = contentDescription,
+            contentScale = ContentScale.Fit,
             modifier = Modifier
-                .background(GuildColors.Parchment.copy(alpha = 0.85f), RoundedCornerShape(4.dp))
-                .padding(horizontal = 6.dp, vertical = 3.dp),
+                .fillMaxWidth(0.78f)
+                .aspectRatio(1f),
         )
     }
 }

@@ -37,7 +37,7 @@ fun CharacterPortraitBar(
     onSelectPage: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.fillMaxWidth().aspectRatio(1400f / 466f)) {
+    Box(modifier = modifier.fillMaxWidth().aspectRatio(2172f / 724f)) {
         Image(
             painter = painterResource(R.drawable.nav_bar_banner),
             contentDescription = null,

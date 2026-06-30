@@ -1,22 +1,29 @@
 package com.guildadeaventureiros.app.ui.reception
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,6 +36,18 @@ import com.guildadeaventureiros.app.ui.components.RewardPopup
 import com.guildadeaventureiros.app.ui.components.SceneBackground
 import com.guildadeaventureiros.app.ui.rememberAppContainer
 import com.guildadeaventureiros.app.ui.theme.GuildColors
+import kotlinx.coroutines.delay
+
+private val receptionistIdleFrames = listOf(
+    R.drawable.receptionist_idle_0,
+    R.drawable.receptionist_idle_1,
+    R.drawable.receptionist_idle_2,
+    R.drawable.receptionist_idle_3,
+    R.drawable.receptionist_idle_4,
+    R.drawable.receptionist_idle_5,
+    R.drawable.receptionist_idle_6,
+    R.drawable.receptionist_idle_7,
+)
 
 /** Tela inicial — recepção da guilda, com a recepcionista, o balão de fala e o mural de missões. */
 @Composable
@@ -48,8 +67,28 @@ fun GuildReceptionScreen(
     val pendingCount = missions.count { it.status != com.guildadeaventureiros.app.domain.model.MissionStatus.COMPLETED }
     var muralOpen by remember { mutableStateOf(false) }
 
+    var idleFrameIndex by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(700)
+            idleFrameIndex = (idleFrameIndex + 1) % receptionistIdleFrames.size
+        }
+    }
+
     SceneBackground(backgroundRes = R.drawable.bg_reception, modifier = modifier.fillMaxSize()) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            // Rosto animado da recepcionista, sobreposto exatamente sobre o busto estático pintado no fundo.
+            Image(
+                painter = painterResource(receptionistIdleFrames[idleFrameIndex]),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .offset(x = maxWidth * 0.50f, y = maxHeight * 0.315f)
+                    .fillMaxWidth(0.45f)
+                    .aspectRatio(1f),
+            )
+
             GameTopBar(profile = profile, modifier = Modifier.align(Alignment.TopCenter))
 
             // Texto encaixado dentro do balão de fala já pintado na arte de fundo.
