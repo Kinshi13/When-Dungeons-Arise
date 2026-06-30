@@ -19,15 +19,26 @@ export const GUILD_SHORTCUTS: GuildShortcut[] = [
 export interface ReceptionistSpriteConfig {
   /** Caminho do arquivo dentro de frontend/public/, ex.: "/game/characters/receptionist-idle.png" */
   url: string;
-  /** Lado de cada frame no arquivo original, em pixels (frames quadrados, lado a lado). */
-  frameSize: number;
+  /** Largura/altura de cada frame no arquivo original, em pixels (frames lado a lado, mesma altura). */
+  frameWidth: number;
+  frameHeight: number;
   frameCount: number;
   fps: number;
 }
 
 // Defina aqui quando o spritesheet real da recepcionista existir. Enquanto for `null`, a cena
 // desenha o placeholder pixelado via Phaser.Graphics.
-export const RECEPTIONIST_SPRITE: ReceptionistSpriteConfig | null = null;
+export const RECEPTIONIST_SPRITE: ReceptionistSpriteConfig | null = {
+  url: "/game/characters/receptionist-idle.png",
+  frameWidth: 272,
+  frameHeight: 362,
+  frameCount: 4,
+  fps: 6,
+};
+
+// Caminho do fundo real da recepção (imagem única, não spritesheet). `null` = desenha o fundo
+// procedural via Phaser.Graphics (ver drawGuildBackground.ts).
+export const GUILD_BACKGROUND_IMAGE: string | null = "/game/backgrounds/guild-reception-bg.png";
 
 export const RECEPTIONIST_MESSAGES = [
   "Bem-vindo de volta, aventureiro.",

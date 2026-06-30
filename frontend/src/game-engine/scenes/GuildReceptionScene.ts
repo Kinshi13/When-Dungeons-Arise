@@ -3,7 +3,12 @@ import { drawGuildBackground } from "../sceneObjects/drawGuildBackground";
 import { createReceptionistIdleCharacter, RECEPTIONIST_SPRITE_KEY } from "../sceneObjects/createReceptionistIdleCharacter";
 import { createMissionBoardHotspot } from "../sceneObjects/createMissionBoardHotspot";
 import { createGuildShortcutButton } from "../sceneObjects/createGuildShortcutButton";
-import { RECEPTIONIST_SPRITE, type GuildShortcut } from "../guildReceptionConfig";
+import {
+  RECEPTIONIST_SPRITE,
+  GUILD_BACKGROUND_IMAGE,
+  GUILD_RECEPTION_ASSET_KEYS,
+  type GuildShortcut,
+} from "../guildReceptionConfig";
 
 export const GUILD_RECEPTION_SCENE_KEY = "GuildReceptionScene";
 
@@ -43,9 +48,12 @@ export default class GuildReceptionScene extends Phaser.Scene {
   preload() {
     if (RECEPTIONIST_SPRITE) {
       this.load.spritesheet(RECEPTIONIST_SPRITE_KEY, RECEPTIONIST_SPRITE.url, {
-        frameWidth: RECEPTIONIST_SPRITE.frameSize,
-        frameHeight: RECEPTIONIST_SPRITE.frameSize,
+        frameWidth: RECEPTIONIST_SPRITE.frameWidth,
+        frameHeight: RECEPTIONIST_SPRITE.frameHeight,
       });
+    }
+    if (GUILD_BACKGROUND_IMAGE) {
+      this.load.image(GUILD_RECEPTION_ASSET_KEYS.background, GUILD_BACKGROUND_IMAGE);
     }
   }
 

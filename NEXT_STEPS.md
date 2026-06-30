@@ -114,14 +114,32 @@ sistema de XP) pra ganho incerto.
      spritesheet real da recepcionista (a `ReceptionScene.ts` antiga aceitava `spriteUrl`, mas o
      `createReceptionistIdleCharacter.ts` novo só desenhava o placeholder, sem nenhum jeito de
      carregar arte real). Corrigido: `guildReceptionConfig.ts` ganhou
-     `ReceptionistSpriteConfig`/`RECEPTIONIST_SPRITE` (hoje `null`); `GuildReceptionScene.ts`
-     ganhou um `preload()` que carrega o spritesheet via `this.load.spritesheet(...)` quando
+     `ReceptionistSpriteConfig`/`RECEPTIONIST_SPRITE`; `GuildReceptionScene.ts` ganhou um
+     `preload()` que carrega o spritesheet via `this.load.spritesheet(...)` quando
      `RECEPTIONIST_SPRITE` não é `null`; `createReceptionistIdleCharacter.ts` agora recebe esse
      config como argumento opcional e cria uma `Phaser.GameObjects.Sprite` animada em vez do
-     placeholder. Pra ativar: salvar o arquivo em `frontend/public/game/characters/`, preencher
-     `RECEPTIONIST_SPRITE` com `url`/`frameSize`/`frameCount`/`fps`. Testado via Playwright
-     headless com `RECEPTIONIST_SPRITE` ainda `null` (caminho do placeholder): 1 canvas, zero
-     erros de console.
+     placeholder (dimensiona a `Sprite` preservando o aspect ratio do frame, em vez de esticar
+     pra quadrado).
+   - **Arte real adicionada (mesma rodada)**: o usuário gerou e enviou 3 imagens (recepcionista,
+     fundo da recepção, bibliotecária) via IA de imagem. Todas vieram com fundo "xadrez" de
+     transparência **falso** (cores RGB cinza/branco imitando o padrão de transparência de
+     editores, sem canal alpha real — bug comum de geradores de imagem). Removido
+     programaticamente via flood-fill a partir das bordas (componentes conectados que tocam a
+     borda da imagem viram alpha=0; tolerante a cores parecidas no figurino branco da
+     personagem porque a remoção é por conectividade, não por cor isolada). Specs finais:
+     - `frontend/public/game/characters/receptionist-idle.png` — spritesheet 4 frames
+       horizontais, 272×362px por frame (1088×362 total), RGBA. `RECEPTIONIST_SPRITE` em
+       `guildReceptionConfig.ts` aponta pra ele.
+     - `frontend/public/game/characters/librarian-idle.png` — mesmo formato (272×362/frame),
+       usado em `Library.tsx` via `PixelCharacterIdle` (que ganhou a prop `frameAspect` pra não
+       esticar frames não-quadrados).
+     - `frontend/public/game/backgrounds/guild-reception-bg.png` — imagem única (640×1137,
+       retrato), usada em `drawGuildBackground.ts` em modo "cover" (`Math.max` de escala +
+       centralizado) quando `GUILD_BACKGROUND_IMAGE` não é `null`.
+     - Todas redimensionadas (eram ~4x maiores) e recompactadas (paleta quantizada + máxima
+       compressão PNG) antes de entrar no repo — de 4,4 MB pra 2,0 MB no total. Testado via
+       Playwright headless nas telas `/` e `/biblioteca`: zero erros de console, sem distorção
+       visual, transparência correta.
 7. **Próximo**: avaliar com o usuário se quer mais gameplay (item collection visual, animação
    de conclusão de missão) — não implementar isso sem alinhar escopo primeiro, é fácil
    estourar o tempo aqui. Também falta decidir se a acessibilidade de navegação por
@@ -135,10 +153,10 @@ sistema de XP) pra ganho incerto.
 
 ## Pendências conhecidas (não relacionadas ao Phaser)
 
-- **Spritesheets reais dos personagens**: recepcionista, bibliotecária, tesoureira etc. ainda
-  usam um placeholder pixelado animado em CSS (`PixelCharacterIdle.tsx`). O componente já
-  aceita `spriteUrl` + `frameCount` + `fps` — é só o usuário fornecer os arquivos (sugestão:
-  salvar em `frontend/public/game/characters/` e me avisar os nomes dos arquivos).
+- **Spritesheets reais dos personagens**: recepcionista e bibliotecária já têm arte real (ver
+  item 6 acima). Jogador ("Você", `CharacterDetail.tsx`) e tesoureira (`Tesouraria.tsx`, se/quando
+  ganhar um personagem) ainda usam o placeholder pixelado animado em CSS — `PixelCharacterIdle.tsx`
+  já aceita `spriteUrl` + `frameCount` + `fps` + `frameAspect`, é só gerar e enviar a arte.
 - **Build de APK em ambiente de nuvem**: ainda não testado nesta sessão. Vai precisar instalar
   o Android SDK command-line tools (não a IDE) + JDK no ambiente de nuvem antes de rodar
   `npm run build:android` + `./gradlew assembleDebug`. Ver histórico de comandos usados

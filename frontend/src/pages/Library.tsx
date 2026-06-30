@@ -42,7 +42,14 @@ export default function Library() {
       <div className="page" style={{ paddingBottom: 0 }}>
         <h1>Biblioteca da Guilda</h1>
         <div className="reception-scene">
-          <PixelCharacterIdle name="Bibliotecária" size={90} color="var(--tarefa)" />
+          <PixelCharacterIdle
+            name="Bibliotecária"
+            spriteUrl="/game/characters/librarian-idle.png"
+            frameCount={4}
+            fps={6}
+            frameAspect={272 / 362}
+            size={120}
+          />
           <PixelDialogBox speaker="Bibliotecária">
             Bem-vindo à estante. Importe um PDF ou EPUB e ele ganha um lugar aqui — toque num livro pra continuar de
             onde parou. Meta de hoje: ler 20 minutos.

@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { GUILD_RECEPTION_ASSET_KEYS } from "../guildReceptionConfig";
 
 const WALL_COLOR = 0x251a3d;
 const WALL_TRIM_COLOR = 0x1c1430;
@@ -6,10 +7,18 @@ const FLOOR_COLOR = 0x1c1430;
 const FLOOR_LINE_COLOR = 0x2b2150;
 const BANNER_COLOR = 0x6c5ce7;
 
-// Fundo pixel art procedural da recepção (parede + bandeira da guilda + chão em grade).
-// Substituível por `guild_reception_bg` quando o asset real existir — basta trocar isto por
-// scene.load.image + scene.add.image cobrindo width x height.
+// Fundo da recepção: usa a imagem real (`guild_reception_bg`, carregada no preload da cena
+// quando GUILD_BACKGROUND_IMAGE está definido) escalada em modo "cover" pra preencher o canvas
+// sem distorcer; sem ela, desenha o fundo procedural (parede + bandeira da guilda + chão em
+// grade) via Phaser.Graphics.
 export function drawGuildBackground(scene: Phaser.Scene, width: number, height: number) {
+  if (scene.textures.exists(GUILD_RECEPTION_ASSET_KEYS.background)) {
+    const bg = scene.add.image(width / 2, height / 2, GUILD_RECEPTION_ASSET_KEYS.background);
+    const scale = Math.max(width / bg.width, height / bg.height);
+    bg.setScale(scale);
+    return;
+  }
+
   const wallHeight = height * 0.32;
 
   const g = scene.add.graphics();

@@ -8,8 +8,9 @@ const IDLE_ANIM_KEY = "receptionist-idle-anim";
 export const RECEPTIONIST_SPRITE_KEY = "receptionist-idle";
 
 function createAnimatedSprite(scene: Phaser.Scene, x: number, y: number, size: number, sprite: ReceptionistSpriteConfig) {
+  const aspect = sprite.frameWidth / sprite.frameHeight;
   const gameObject = scene.add.sprite(x, y, RECEPTIONIST_SPRITE_KEY);
-  gameObject.setDisplaySize(size, size);
+  gameObject.setDisplaySize(size * aspect, size);
 
   if (!scene.anims.exists(IDLE_ANIM_KEY)) {
     scene.anims.create({
@@ -20,8 +21,16 @@ function createAnimatedSprite(scene: Phaser.Scene, x: number, y: number, size: n
     });
   }
   gameObject.play(IDLE_ANIM_KEY);
+  gameObject.setInteractive({ useHandCursor: true });
 
   return gameObject;
+}
+
+function createPlaceholder(scene: Phaser.Scene, x: number, y: number, size: number) {
+  const character = drawPixelCharacterPlaceholder(scene, x, y, size, CHARACTER_COLOR);
+  const hitArea = new Phaser.Geom.Rectangle(-size / 2, -size * 0.7, size, size * 1.1);
+  character.setInteractive({ hitArea, hitAreaCallback: Phaser.Geom.Rectangle.Contains, useHandCursor: true });
+  return character;
 }
 
 // Recepcionista parada no balcão: bob de idle contínuo + área de toque pra alternar a fala.
@@ -34,9 +43,7 @@ export function createReceptionistIdleCharacter(
   size: number,
   sprite?: ReceptionistSpriteConfig | null
 ) {
-  const character = sprite
-    ? createAnimatedSprite(scene, x, y, size, sprite)
-    : drawPixelCharacterPlaceholder(scene, x, y, size, CHARACTER_COLOR);
+  const character = sprite ? createAnimatedSprite(scene, x, y, size, sprite) : createPlaceholder(scene, x, y, size);
 
   scene.tweens.add({
     targets: character,
@@ -46,9 +53,6 @@ export function createReceptionistIdleCharacter(
     repeat: -1,
     ease: "Sine.easeInOut",
   });
-
-  const hitArea = new Phaser.Geom.Rectangle(-size / 2, -size * 0.7, size, size * 1.1);
-  character.setInteractive({ hitArea, hitAreaCallback: Phaser.Geom.Rectangle.Contains, useHandCursor: true });
 
   return character;
 }
