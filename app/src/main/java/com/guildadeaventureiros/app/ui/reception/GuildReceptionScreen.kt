@@ -78,15 +78,40 @@ fun GuildReceptionScreen(
     SceneBackground(backgroundRes = R.drawable.bg_reception, modifier = modifier.fillMaxSize()) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             // Recepcionista animada — fundo limpo (sem personagem), então o busto inteiro vem do spritesheet.
+            // Deslocada para baixo (sem reescalar) para que a base do sprite fique atrás do balcão.
             Image(
                 painter = painterResource(receptionistIdleFrames[idleFrameIndex]),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .offset(x = maxWidth * 0.50f, y = maxHeight * 0.315f)
+                    .offset(x = maxWidth * 0.50f, y = maxHeight * 0.403f)
                     .fillMaxWidth(0.45f)
                     .aspectRatio(1f),
+            )
+
+            // Balcão de recepção — desenhado por cima do sprite para ocultar a base e eliminar o "flutuando".
+            Image(
+                painter = painterResource(R.drawable.counter_foreground),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .offset(x = maxWidth * -0.173f, y = maxHeight * 0.441f)
+                    .fillMaxWidth(1.346f)
+                    .aspectRatio(1448f / 1086f),
+            )
+
+            // Pena decorativa — reaplicada por cima do sprite, repousando junto à capa para não cobrir o rosto.
+            Image(
+                painter = painterResource(R.drawable.feather_decor),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .offset(x = maxWidth * 0.660f, y = maxHeight * 0.510f)
+                    .fillMaxWidth(0.12f)
+                    .aspectRatio(1024f / 1536f),
             )
 
             GameTopBar(profile = profile, modifier = Modifier.align(Alignment.TopCenter))
