@@ -26,32 +26,178 @@ continua compilando pelo mesmo pipeline Capacitor pra Android. Reescrever em Kot
 jogaria fora toda a lógica de dados (storage local, leitor de PDF/EPUB, notificações,
 sistema de XP) pra ganho incerto.
 
-## Plano do Phaser (ainda não iniciado)
+## Plano do Phaser
 
-1. **Instalar**: `npm install phaser` dentro de `frontend/`.
-2. **Criar `frontend/src/game-engine/`** com:
-   - `PhaserGameCanvas.tsx` — componente React que monta/desmonta uma instância Phaser num
-     `<div>` ref, faz bridge de eventos entre Phaser e React (ex: callbacks quando o jogador
-     clica num personagem ou completa uma ação no mini-jogo).
-   - `scenes/` — cenas Phaser (ex: `ReceptionScene.ts` pra recepção animada, futuras cenas de
-     exploração/mini-jogos).
-3. **Primeiro uso recomendado**: trocar o `PixelCharacterIdle` (hoje placeholder CSS) da tela
-   `GuildReception.tsx` por uma cena Phaser simples com sprite animado de verdade — escopo
-   pequeno, prova de conceito, não mexe em nenhuma outra tela.
-4. **Depois**: avaliar com o usuário se quer gameplay mais profundo (ex: mini-exploração da
-   guilda, item collection visual, animações de conclusão de missão) — não implementar isso
-   sem alinhar escopo primeiro, é fácil estourar o tempo aqui.
-5. **Importante**: Phaser e React não devem competir pelo mesmo DOM. Cada cena Phaser vive
+1. ✅ **Instalado**: `phaser` está em `frontend/package.json` (dependency).
+2. ✅ **Criado `frontend/src/game-engine/`** com:
+   - `PhaserGameCanvas.tsx` — componente React genérico que monta/desmonta uma instância
+     Phaser num `<div>` ref (recebe `sceneClass`, `sceneKey`, `width`, `height`, `data`).
+   - `scenes/ReceptionScene.ts` — cena da recepção: sem `spriteUrl` desenha um placeholder
+     pixelado via `Phaser.Graphics` (mesma silhueta de antes) com tween de idle bob; com
+     `spriteUrl` toca a spritesheet de verdade quando ela existir (frames quadrados de
+     `size`×`size`, igual à convenção que já existia no `PixelCharacterIdle`).
+   - `ReceptionCharacterScene.tsx` — wrapper com a mesma interface de props do antigo
+     `PixelCharacterIdle` (`name`, `spriteUrl`, `frameCount`, `fps`, `size`, `color`), pra
+     ficar fácil de trocar em outras telas quando fizer sentido.
+3. ✅ **Feito**: `GuildReception.tsx` agora usa `ReceptionCharacterScene` no lugar do
+   `PixelCharacterIdle` pra Recepcionista — prova de conceito validada (testado com
+   Playwright headless: canvas monta, zero erros de console, visual idêntico ao placeholder
+   anterior, só que renderizado dentro de um `<canvas>` Phaser de verdade).
+4. **Pendência de build**: o bundle JS principal passou de ~700 kB pra ~2,57 MB por causa do
+   Phaser, o que estourou o limite padrão de precache do `vite-plugin-pwa` (2 MiB). Resolvido
+   subindo `workbox.maximumFileSizeToCacheInBytes` pra 4 MiB em `vite.config.ts`. Se o bundle
+   continuar crescendo, considerar lazy-load (`React.lazy`) do `game-engine` — hoje nenhuma
+   tela do app usa lazy loading, então não foi feito pra manter consistência, mas é a primeira
+   coisa a avaliar se o tempo de carregamento inicial virar problema.
+5. ✅ **Feito — mini-exploração da guilda**: a grade estática de botões (`room-grid` /
+   `PixelRoomButton`, removidos) virou um mapa Phaser navegável:
+   - `scenes/GuildMapScene.ts` — desenha o "chão" da guilda com grid sutil, 6 salas como
+     prédios coloridos (retângulo + label), e o personagem do jogador. Tocar numa sala faz o
+     personagem andar até lá (tween com velocidade fixa, não é teleporte) e só dispara a
+     navegação (`onEnterRoom`) quando ele chega.
+   - `GuildMapCanvas.tsx` — wrapper React que mede a largura do container via
+     `ResizeObserver` (mapa é responsivo, ao contrário do personagem fixo da recepção) e liga
+     `onEnterRoom` a `useNavigate()` + som de moeda, igual o antigo `PixelRoomButton` fazia.
+   - `drawPixelCharacterPlaceholder.ts` — desenho do personagem placeholder extraído da
+     `ReceptionScene` pra ser reaproveitado também no mapa (mesmo personagem em dois lugares).
+   - `GuildReception.tsx` define `GUILD_ROOMS` (id/label/rota/cor/posição 0..1 no mapa) e
+     renderiza `<GuildMapCanvas rooms={GUILD_ROOMS} />` no lugar do grid antigo.
+   - **Bug real encontrado e corrigido durante a implementação**: passar `data` pro Phaser via
+     `scene: SceneClass` na config do `Game` + `game.scene.start(key, data)` depois do evento
+     `READY` cria uma corrida — a cena já roda `create()` uma vez com `data` undefined antes do
+     `start()` explícito rodar, jogando `TypeError` (`Cannot read properties of undefined`) e
+     deixando canvases órfãos no DOM. Corrigido em `PhaserGameCanvas.tsx`: não usar `scene:` na
+     config do `Game`; em vez disso, logo após criar o `Game`, chamar
+     `game.scene.add(sceneKey, sceneClass, true, data)`, que já recebe os dados de init no
+     mesmo passo que inicia a cena (sem corrida). Confirmado com teste Playwright headless
+     (tap numa sala → personagem anda → navega pra rota certa, zero erros de console, 1 único
+     canvas no DOM).
+6. ✅ **Feito — tela `GuildReceptionScreen` (substituiu a recepção anterior)**: a recepção virou
+   uma única cena Phaser coesa (`game-engine/scenes/GuildReceptionScene.ts`), em vez de dois
+   canvases separados (personagem + mapa). Estrutura modular, espelhando os nomes pedidos:
+   - `sceneObjects/drawGuildBackground.ts` — fundo procedural (parede + bandeira da guilda +
+     chão em grade), placeholder pro asset `guild_reception_bg`.
+   - `sceneObjects/createReceptionistIdleCharacter.ts` — recepcionista com bob de idle +
+     área de toque (alterna a fala). Aceita um `ReceptionistSpriteConfig` opcional: sem ele
+     desenha o placeholder via `Phaser.Graphics`; com ele toca uma `Sprite` animada a partir do
+     spritesheet carregado no `preload()` de `GuildReceptionScene.ts`.
+   - `sceneObjects/createMissionBoardHotspot.ts` — mural de missões, visualmente em destaque
+     (maior, dourado) com selo vermelho quando há missão vencendo hoje/atrasada.
+   - `sceneObjects/createBuildingHotspot.ts` — desenho base de "prédio interativo" reaproveitado
+     pelo mural e pelos atalhos.
+   - `sceneObjects/createGuildShortcutButton.ts` — atalhos pra Biblioteca, Tesouraria, Sala do
+     Tempo, Diário e Ajustes (rota `/regras`, que já embute o `Settings.tsx`).
+   - `guildReceptionConfig.ts` — configuração dos atalhos (rota/cor/posição), as 5 mensagens
+     fixas da recepcionista e as chaves de preload reservadas pros assets reais
+     (`guild_reception_bg`, `receptionist_idle`, `mission_board`, `shortcut_*`, `xp_icon`,
+     `coin_icon`, `reward_popup`, `dialog_box`) — nenhuma é carregada ainda, tudo é desenhado
+     via `Phaser.Graphics`; basta trocar por `scene.load.image` quando os arquivos existirem.
+   - `GuildReceptionCanvas.tsx` — wrapper React responsivo (mede largura via `ResizeObserver`,
+     altura derivada `width * 1.05` clampada entre 320–440px), liga navegação e SFX.
+   - `pages/GuildReceptionScreen.tsx` — tela em si: monta o canvas + `PixelDialogBox` (mensagem
+     inicial reflete o estado real via `useGame()`/`generateMissions()` — prioriza missão
+     urgente > pendente hoje > sequência ativa > saudação padrão; cada toque na recepcionista
+     avança pra próxima das 5 mensagens) + `DailyMissionSummary` (lista as missões de hoje) +
+     parágrafo de missões da semana.
+   - Removidos (substituídos pela cena unificada): `ReceptionScene.ts`, `ReceptionCharacterScene.tsx`,
+     `GuildMapScene.ts`, `GuildMapCanvas.tsx`. `drawPixelCharacterPlaceholder.ts` continua sendo
+     o helper compartilhado de desenho do personagem.
+   - **Decisões conscientes que desviam da carta literal do pedido** (documentando o porquê):
+     `GameTopBar` **não** foi recriado dentro do Phaser — já existe como componente DOM global
+     em `App.tsx`, renderizado em toda tela; duplicá-lo dentro do canvas mostraria nível/XP/moedas
+     duas vezes na home. `RewardPopup` não foi plugado nesta tela porque missões só são
+     concluídas no Mural (`MissionBoard.tsx`), que já dispara o popup — a recepção apenas navega
+     pra lá. Testado via Playwright headless: 1 canvas no DOM, zero erros de console, toque na
+     recepcionista cicla a fala, toque no mural navega pra `/missoes`, toque num atalho
+     (Biblioteca) navega pra `/biblioteca`.
+   - **Correção feita numa rodada seguinte**: a consolidação inicial tinha perdido o suporte a
+     spritesheet real da recepcionista (a `ReceptionScene.ts` antiga aceitava `spriteUrl`, mas o
+     `createReceptionistIdleCharacter.ts` novo só desenhava o placeholder, sem nenhum jeito de
+     carregar arte real). Corrigido: `guildReceptionConfig.ts` ganhou
+     `ReceptionistSpriteConfig`/`RECEPTIONIST_SPRITE`; `GuildReceptionScene.ts` ganhou um
+     `preload()` que carrega o spritesheet via `this.load.spritesheet(...)` quando
+     `RECEPTIONIST_SPRITE` não é `null`; `createReceptionistIdleCharacter.ts` agora recebe esse
+     config como argumento opcional e cria uma `Phaser.GameObjects.Sprite` animada em vez do
+     placeholder (dimensiona a `Sprite` preservando o aspect ratio do frame, em vez de esticar
+     pra quadrado).
+   - **Arte real adicionada (mesma rodada)**: o usuário gerou e enviou 3 imagens (recepcionista,
+     fundo da recepção, bibliotecária) via IA de imagem. Todas vieram com fundo "xadrez" de
+     transparência **falso** (cores RGB cinza/branco imitando o padrão de transparência de
+     editores, sem canal alpha real — bug comum de geradores de imagem). Removido
+     programaticamente via flood-fill a partir das bordas (componentes conectados que tocam a
+     borda da imagem viram alpha=0; tolerante a cores parecidas no figurino branco da
+     personagem porque a remoção é por conectividade, não por cor isolada). Specs finais:
+     - `frontend/public/game/characters/receptionist-idle.png` — spritesheet 4 frames
+       horizontais, 272×362px por frame (1088×362 total), RGBA. `RECEPTIONIST_SPRITE` em
+       `guildReceptionConfig.ts` aponta pra ele.
+     - `frontend/public/game/characters/librarian-idle.png` — mesmo formato (272×362/frame),
+       usado em `Library.tsx` via `PixelCharacterIdle` (que ganhou a prop `frameAspect` pra não
+       esticar frames não-quadrados).
+     - `frontend/public/game/backgrounds/guild-reception-bg.png` — imagem única (640×1137,
+       retrato), usada em `drawGuildBackground.ts` em modo "cover" (`Math.max` de escala +
+       centralizado) quando `GUILD_BACKGROUND_IMAGE` não é `null`.
+     - Todas redimensionadas (eram ~4x maiores) e recompactadas (paleta quantizada + máxima
+       compressão PNG) antes de entrar no repo — de 4,4 MB pra 2,0 MB no total. Testado via
+       Playwright headless nas telas `/` e `/biblioteca`: zero erros de console, sem distorção
+       visual, transparência correta.
+7. **Próximo**: avaliar com o usuário se quer mais gameplay (item collection visual, animação
+   de conclusão de missão) — não implementar isso sem alinhar escopo primeiro, é fácil
+   estourar o tempo aqui. Também falta decidir se a acessibilidade de navegação por
+   teclado/leitor de tela da recepção (hoje só por toque/clique no canvas) importa pro usuário —
+   não foi implementada nessa rodada porque o app é de uso pessoal, mas vale perguntar antes
+   de assumir que não é necessário.
+8. **Importante**: Phaser e React não devem competir pelo mesmo DOM. Cada cena Phaser vive
    isolada num componente próprio; o resto do app (formulários, listas, leitor de PDF/EPUB)
    continua 100% React normal. Não converter telas de CRUD (Mural de Missões, Tesouraria etc.)
    pra Phaser — não faz sentido pra esse tipo de interface.
 
+9. **Pivô de design (rodada mais recente)**: o usuário não gostou das prévias anteriores e mandou
+   5 imagens de referência (recepcionista, recepção da guilda, bibliotecária, biblioteca, e o
+   quadro de missões) com 4 pedidos concretos, todos implementados:
+   - **Sem personagem do jogador**: `CharacterDetail.tsx` (`/perfil`) não renderiza mais nenhum
+     `PixelCharacterIdle` — só os cards de stats (nível, moedas, sequência, XP). O app é
+     inteiramente por toque, sem avatar do jogador.
+   - **Navegação por swipe ampliada**: `useSwipeNav.ts` — `TAB_ROUTES` ganhou `/biblioteca` entre
+     `/tesouraria` e `/`. Resultado: a partir da Recepção, deslizar pra esquerda abre a Biblioteca,
+     deslizar pra direita abre a Tesouraria (mesma lógica de índice ±1 que já existia pras outras
+     4 salas, sem gesture nova).
+   - **Pop-up do mural com blur**: tocar no mural na Recepção não navega mais direto pra
+     `/missoes` — abre `MissionBoardPopup.tsx` (novo componente, `createPortal` + `framer-motion`,
+     mesmo padrão do `RewardPopup`), com fundo desfocado de verdade (`backdrop-filter: blur(6px)`,
+     primeiro uso desse recurso no app) e animação fade-in + zoom suave (sem o "bounce" de mola do
+     RewardPopup — intencional, é uma janela de consulta rápida, não uma recompensa). O botão "Ver
+     mural completo" dentro do pop-up é que leva pra `/missoes` de fato. Pra viabilizar isso,
+     `GuildReceptionCanvas` ganhou a prop `onEnterMissionBoard` (antes navegava direto, sozinho);
+     quem decide o que acontece é `GuildReceptionScreen` agora.
+   - **Arte real do mural**: `frontend/public/game/ui/mission-board-popup.png` — processada com a
+     mesma técnica de flood-fill a partir das bordas (não era checkerboard falso dessa vez, só um
+     fundo branco/cinza-claro liso, mas o método funciona igual), redimensionada de 1254×1254 pra
+     640×640 e comprimida.
+   - **Imagens de referência NÃO usadas como asset direto**: as 4 imagens da recepcionista+recepção
+     e bibliotecária+biblioteca (`IMG_2959`, `IMG_2960`, e as outras duas) são mockups com
+     personagem+fundo já compostos numa imagem só — não dá pra "encaixar" isso no pipeline atual
+     (fundo e personagem são renderizados separados, character por cima do bg). Foram usadas só
+     como referência de clima/paleta (already-similar: parede roxa, mural dourado, tons de
+     madeira). Se o usuário quiser trocar visualmente de verdade, precisa gerar nos formatos que o
+     código já aceita: spritesheet de personagem (mesma convenção de `receptionist-idle.png`,
+     frames quadrados ou não lado a lado) e imagem de fundo única (mesma convenção de
+     `guild-reception-bg.png`).
+   - **APK beta exportado**: Android SDK (cmdline-tools + platform-tools + `platforms;android-36`
+     + `build-tools;36.0.0`) instalado neste ambiente de nuvem (não fica persistido entre sessões —
+     reinstalar do zero se for buildar de novo: baixar
+     `commandlinetools-linux-11076708_latest.zip` de `dl.google.com/android/repository/`, aceitar
+     licenças com `sdkmanager --licenses`, instalar os 3 pacotes acima, criar
+     `frontend/android/local.properties` com `sdk.dir=<caminho do sdk>`, então
+     `npm run build:android && cd android && ./gradlew assembleDebug`). APK gerado em
+     `frontend/android/app/build/outputs/apk/debug/app-debug.apk` (~11,3 MB) e entregue ao usuário
+     via SendUserFile.
+
 ## Pendências conhecidas (não relacionadas ao Phaser)
 
-- **Spritesheets reais dos personagens**: recepcionista, bibliotecária, tesoureira etc. ainda
-  usam um placeholder pixelado animado em CSS (`PixelCharacterIdle.tsx`). O componente já
-  aceita `spriteUrl` + `frameCount` + `fps` — é só o usuário fornecer os arquivos (sugestão:
-  salvar em `frontend/public/game/characters/` e me avisar os nomes dos arquivos).
+- **Spritesheets reais dos personagens**: recepcionista e bibliotecária já têm arte real (ver
+  item 6 acima). Jogador ("Você", `CharacterDetail.tsx`) e tesoureira (`Tesouraria.tsx`, se/quando
+  ganhar um personagem) ainda usam o placeholder pixelado animado em CSS — `PixelCharacterIdle.tsx`
+  já aceita `spriteUrl` + `frameCount` + `fps` + `frameAspect`, é só gerar e enviar a arte.
 - **Build de APK em ambiente de nuvem**: ainda não testado nesta sessão. Vai precisar instalar
   o Android SDK command-line tools (não a IDE) + JDK no ambiente de nuvem antes de rodar
   `npm run build:android` + `./gradlew assembleDebug`. Ver histórico de comandos usados

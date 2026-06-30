@@ -2,7 +2,7 @@ import { NavLink, Route, Routes, useLocation, useNavigate } from "react-router-d
 import { motion, MotionConfig } from "framer-motion";
 import { useEffect } from "react";
 import { App as CapApp } from "@capacitor/app";
-import GuildReception from "./pages/GuildReception";
+import GuildReceptionScreen from "./pages/GuildReceptionScreen";
 import MissionBoard from "./pages/MissionBoard";
 import TimeRoom from "./pages/TimeRoom";
 import Treasury from "./pages/Treasury";
@@ -81,7 +81,7 @@ function App() {
 
         <main className="main" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
           <Routes>
-            <Route path="/" element={<GuildReception />} />
+            <Route path="/" element={<GuildReceptionScreen />} />
             <Route path="/missoes" element={<MissionBoard />} />
             <Route path="/sala-do-tempo" element={<TimeRoom />} />
             <Route path="/tesouraria" element={<Treasury />} />

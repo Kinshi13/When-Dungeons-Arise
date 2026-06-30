@@ -4,6 +4,9 @@ interface PixelCharacterIdleProps {
   frameCount?: number;
   fps?: number;
   size?: number;
+  /** Largura/altura de cada frame do spritesheet original (1 = quadrado). Evita esticar/achatar
+   * personagens cujo frame não é quadrado, ex.: 543x724 -> 543/724. */
+  frameAspect?: number;
   color?: string;
 }
 
@@ -16,9 +19,11 @@ export default function PixelCharacterIdle({
   frameCount = 1,
   fps = 4,
   size = 96,
+  frameAspect = 1,
   color = "var(--accent)",
 }: PixelCharacterIdleProps) {
   if (spriteUrl) {
+    const width = size * frameAspect;
     return (
       <div
         className="pixel-character-sprite"
@@ -26,7 +31,7 @@ export default function PixelCharacterIdle({
         aria-label={name}
         style={
           {
-            width: size,
+            width,
             height: size,
             backgroundImage: `url(${spriteUrl})`,
             backgroundSize: `${frameCount * 100}% 100%`,

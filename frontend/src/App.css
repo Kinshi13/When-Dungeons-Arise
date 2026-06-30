@@ -1246,39 +1246,51 @@
   }
 }
 
-.room-button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  background: var(--surface);
+.guild-reception-wrap {
+  margin-top: 16px;
   border: var(--pixel-border);
   border-radius: 8px;
-  padding: 12px 8px;
   box-shadow: var(--pixel-shadow-sm);
-  cursor: pointer;
-  color: var(--text);
+  overflow: hidden;
+  line-height: 0;
 }
 
-.room-button-icon {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.daily-mission-summary {
+  margin-top: 16px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: var(--pixel-border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--pixel-shadow-sm);
+}
+
+.daily-mission-summary-title {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 0.62rem;
   color: var(--accent);
 }
 
-.room-button-label {
-  font-size: 0.78rem;
-  text-align: center;
+.daily-mission-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.room-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 16px;
+.daily-mission-summary-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 1.05rem;
+}
+
+.daily-mission-summary-list li.done {
+  opacity: 0.55;
+  text-decoration: line-through;
 }
 
 .reward-popup {
@@ -1322,6 +1334,53 @@
   padding: 3px 10px;
   font-size: 0.9rem;
   color: var(--outro);
+}
+
+/* Pop-up do mural de missões — abre ao tocar no quadro na Recepção, fundo desfocado */
+
+.mission-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 5, 16, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 220;
+}
+
+.mission-popup {
+  background: var(--surface);
+  border: var(--pixel-border);
+  border-radius: 10px;
+  box-shadow: 6px 6px 0 var(--border);
+  max-width: 360px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  text-align: center;
+  padding: 0 20px 20px;
+}
+
+.mission-popup-art {
+  width: 100%;
+  max-width: 220px;
+  margin: -10px auto 4px;
+  display: block;
+  image-rendering: pixelated;
+}
+
+.mission-popup h2 {
+  margin-bottom: 12px;
+}
+
+.mission-popup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 .mission-card {
@@ -1393,6 +1452,15 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 14px;
+}
+
+.phaser-game-canvas {
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.phaser-game-canvas canvas {
+  image-rendering: pixelated;
 }
 
 .reception-scene .pixel-dialog {
