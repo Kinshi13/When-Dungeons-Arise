@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MissionDao {
-    @Query("SELECT * FROM missions ORDER BY createdAtEpochMilli DESC")
+    @Query("SELECT * FROM missions ORDER BY createdAtEpochMilli ASC")
     fun observeAll(): Flow<List<MissionEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
