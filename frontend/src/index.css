@@ -31,6 +31,35 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* Tema "Claro" — paleta mais suave (azul claro, bege), pensada pra quem
+   prefere algo diferente do roxo escuro padrão. Mantém as bordas pretas (o
+   contorno "pixel art" continua igual) e o texto claro: os fundos de cada
+   tela são arte fixa e sempre escura/pintada, e boa parte do texto do app
+   fica direto sobre essa arte (não só dentro de cartões) — um cartão branco
+   com texto escuro deixaria esse texto ilegível nessas partes. Por isso o
+   "clareamento" aqui é nos cartões/superfícies (de roxo escuro pra azul e
+   bege médios), mantendo o texto claro legível em qualquer lugar. */
+[data-theme="claro"] {
+  --bg: #33516c;
+  --surface: #3f6488;
+  --surface-raised: #7d6a4c;
+  --border: #000000;
+  --text: #f5f0e6;
+  --text-h: #ffffff;
+  --text-muted: #d8cdb8;
+
+  --accent: #7dd3fc;
+  --accent-ink: #0b2438;
+  --accent-2: #f0d9a3;
+  --reuniao: #8f89f0;
+  --tarefa: #4fe08a;
+  --outro: #f0d9a3;
+  --danger: #ff8095;
+  --success: #4fe08a;
+
+  color-scheme: dark;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -39,8 +68,8 @@ body {
   margin: 0;
   font-family: var(--font-body);
   background:
-    radial-gradient(circle at 20% 10%, rgba(108, 92, 231, 0.25), transparent 40%),
-    radial-gradient(circle at 85% 90%, rgba(79, 214, 232, 0.18), transparent 45%),
+    radial-gradient(circle at 20% 10%, rgba(95, 179, 224, 0.22), transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(231, 201, 143, 0.28), transparent 45%),
     var(--bg);
   min-height: 100svh;
 }

@@ -21,10 +21,10 @@ import {
   type NotificationPrefs,
   type NotificationScreen,
 } from "../notificationPrefs";
-import { useSettings, type UiScale } from "../contexts/SettingsContext";
+import { useSettings, UI_SCALE_MIN, UI_SCALE_MAX, UI_SCALE_STEP } from "../contexts/SettingsContext";
 import { listMonitoredApps, upsertMonitoredApp, removeMonitoredApp, type MonitoredApp } from "../notificationAppPrefs";
 import { syncMonitoredPackages } from "../notificationBridge";
-import { TrashIcon, PlusIcon } from "../icons";
+import { TrashIcon, PlusIcon, MinusIcon } from "../icons";
 
 const NOTIFICATION_SCREENS: NotificationScreen[] = ["agenda", "calendario", "contas", "financas"];
 
@@ -32,12 +32,6 @@ function upcomingHolidays() {
   const year = new Date().getFullYear();
   return [...getBrazilianHolidays(year), ...getBrazilianHolidays(year + 1)];
 }
-
-const UI_SCALE_LABEL: Record<UiScale, string> = {
-  "100": "Original (100%)",
-  "75": "Reduzido (-25%)",
-  "50": "Compacto (-50%)",
-};
 
 export default function Settings() {
   const [granted, setGranted] = useState(false);
@@ -292,17 +286,41 @@ export default function Settings() {
       </section>
 
       <section className="settings-section">
-        <h2>Tamanho da interface</h2>
-        <div className="filters">
-          {(["100", "75", "50"] as UiScale[]).map((scale) => (
-            <button
-              key={scale}
-              className={uiScale === scale ? "filter active" : "filter"}
-              onClick={() => setUiScale(scale)}
-            >
-              {UI_SCALE_LABEL[scale]}
-            </button>
-          ))}
+        <h2>Tamanho do texto e das informações</h2>
+        <p className="hint">
+          Ajusta só o texto, os textos e as caixas de informação — o fundo de cada tela continua
+          do mesmo tamanho, sem deixar faixas vazias nas laterais.
+        </p>
+        <div className="ui-scale-bar">
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label="Diminuir"
+            onClick={() => setUiScale(Math.max(UI_SCALE_MIN, uiScale - UI_SCALE_STEP))}
+            disabled={uiScale <= UI_SCALE_MIN}
+          >
+            <MinusIcon width={16} height={16} />
+          </button>
+          <input
+            type="range"
+            className="ui-scale-slider"
+            min={UI_SCALE_MIN}
+            max={UI_SCALE_MAX}
+            step={UI_SCALE_STEP}
+            value={uiScale}
+            onChange={(e) => setUiScale(Number(e.target.value))}
+            aria-label="Tamanho do texto e das informações"
+          />
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label="Aumentar"
+            onClick={() => setUiScale(Math.min(UI_SCALE_MAX, uiScale + UI_SCALE_STEP))}
+            disabled={uiScale >= UI_SCALE_MAX}
+          >
+            <PlusIcon width={16} height={16} />
+          </button>
+          <span className="ui-scale-pct">{uiScale}%</span>
         </div>
       </section>
 

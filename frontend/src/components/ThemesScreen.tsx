@@ -1,13 +1,21 @@
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeftIcon } from "../icons";
+import { ChevronLeftIcon, CheckIcon } from "../icons";
+import { useSettings, THEME_LABEL, type ThemeId } from "../contexts/SettingsContext";
 
 interface ThemesScreenProps {
   open: boolean;
   onClose: () => void;
 }
 
+const THEME_SWATCH_COLORS: Record<ThemeId, [string, string, string]> = {
+  escuro: ["#0f0a1e", "#1c1430", "#ffd23f"],
+  claro: ["#33516c", "#7d6a4c", "#7dd3fc"],
+};
+
 export default function ThemesScreen({ open, onClose }: ThemesScreenProps) {
+  const { theme, setTheme } = useSettings();
+
   return createPortal(
     <AnimatePresence>
       {open && (
@@ -30,8 +38,26 @@ export default function ThemesScreen({ open, onClose }: ThemesScreenProps) {
               <strong>Temas</strong>
             </div>
 
+            <div className="theme-picker">
+              {(Object.keys(THEME_LABEL) as ThemeId[]).map((id) => (
+                <button
+                  key={id}
+                  className={`theme-swatch-card${theme === id ? " active" : ""}`}
+                  onClick={() => setTheme(id)}
+                >
+                  <span className="theme-swatch-preview">
+                    {THEME_SWATCH_COLORS[id].map((color, i) => (
+                      <span key={i} className="theme-swatch-dot" style={{ background: color }} />
+                    ))}
+                  </span>
+                  <span>{THEME_LABEL[id]}</span>
+                  {theme === id && <CheckIcon width={16} height={16} />}
+                </button>
+              ))}
+            </div>
+
             <div className="themes-placeholder">
-              <p>Em produção, seja paciente.</p>
+              <p>Mais temas em breve — em produção, seja paciente.</p>
             </div>
           </div>
         </motion.div>

@@ -13,7 +13,7 @@ import CharacterDetail from "./pages/CharacterDetail";
 import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
 import Splash from "./components/Splash";
-import { useSettings, UI_ZOOM_BY_SCALE } from "./contexts/SettingsContext";
+import { useSettings } from "./contexts/SettingsContext";
 import { useSwipeNav, sectionOf, MAIN_ORDER, pendingSwipeDirection } from "./useSwipeNav";
 import { isNativePlatform } from "./notifications";
 import { playSfx } from "./sound";
@@ -142,7 +142,7 @@ function useAndroidBackButton() {
 }
 
 function App() {
-  const { uiScale, animationsEnabled } = useSettings();
+  const { animationsEnabled } = useSettings();
   const { onTouchStart, onTouchMove, onTouchEnd, x, preview } = useSwipeNav();
   const location = useLocation();
   useAndroidBackButton();
@@ -238,7 +238,7 @@ function App() {
           {renderBackgroundContent(pageBackground)}
         </motion.div>
       </motion.div>
-      <div className="app" style={{ zoom: UI_ZOOM_BY_SCALE[uiScale] } as React.CSSProperties}>
+      <div className="app">
         <main className="main" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
           <motion.div className="slide-drag-layer" style={{ x }}>
             {preview && (

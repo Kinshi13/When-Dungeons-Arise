@@ -260,7 +260,7 @@
   min-width: 38px;
   height: 38px;
   padding: 0 10px;
-  border-radius: 4px;
+  border-radius: 10px;
   border: var(--pixel-border);
   background: var(--surface-raised);
   color: var(--text);
@@ -320,7 +320,7 @@
   flex: 1 1 120px;
   padding: 8px 10px;
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   background: var(--surface);
   color: var(--text);
 }
@@ -360,7 +360,7 @@
 .reminder-item {
   background: var(--surface);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow-sm);
   padding: 10px 12px;
   display: flex;
@@ -383,6 +383,7 @@
   width: 10px;
   height: 10px;
   border: 2px solid var(--border);
+  border-radius: 50%;
   vertical-align: middle;
 }
 
@@ -424,6 +425,7 @@
   color: var(--accent-ink);
   padding: 2px 8px;
   border: 2px solid var(--border);
+  border-radius: 999px;
 }
 
 .badge-priority {
@@ -443,7 +445,7 @@
   background: var(--surface);
   color: var(--text);
   padding: 5px 12px;
-  border-radius: 4px;
+  border-radius: 10px;
   font-size: 0.95rem;
   cursor: pointer;
 }
@@ -459,7 +461,7 @@
 .plan-card {
   background: var(--surface);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow);
   padding: 14px;
 }
@@ -501,7 +503,7 @@
 .small {
   font-size: 0.85rem;
   padding: 4px 10px;
-  border-radius: 4px;
+  border-radius: 10px;
   border: 2px solid var(--accent);
   background: var(--surface);
   color: var(--accent);
@@ -519,7 +521,7 @@
   flex: 1 1 100px;
   padding: 8px 10px;
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   background: var(--surface);
   color: var(--text);
 }
@@ -529,7 +531,7 @@
 .settings-section {
   background: var(--surface);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow);
   padding: 14px;
   margin-bottom: 12px;
@@ -540,7 +542,7 @@
   color: var(--accent-ink);
   border: var(--pixel-border);
   padding: 9px 14px;
-  border-radius: 4px;
+  border-radius: 10px;
   cursor: pointer;
   box-shadow: var(--pixel-shadow-sm);
 }
@@ -572,6 +574,25 @@
   align-items: flex-start;
 }
 
+.ui-scale-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ui-scale-slider {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.ui-scale-pct {
+  min-width: 44px;
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 .notif-screen-hint {
   display: block;
   font-size: 0.75rem;
@@ -590,7 +611,7 @@
 .monitored-app-row {
   background: var(--surface-raised);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   padding: 10px 12px;
 }
 
@@ -629,7 +650,7 @@
 .calendar-panel {
   background: var(--surface);
   border: var(--pixel-border);
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: var(--pixel-shadow);
   padding: 12px;
   margin-bottom: 14px;
@@ -680,7 +701,7 @@
   background: var(--surface);
   color: var(--text);
   padding: 5px 12px;
-  border-radius: 4px;
+  border-radius: 10px;
   font-size: 0.9rem;
   cursor: pointer;
   text-transform: capitalize;
@@ -713,7 +734,7 @@
   aspect-ratio: 1;
   border: 2px solid var(--border);
   background: var(--surface);
-  border-radius: 4px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -753,7 +774,7 @@
 .day-panel {
   background: var(--surface);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow);
   padding: 14px;
 }
@@ -776,7 +797,7 @@
   gap: 10px;
   background: var(--surface-raised);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow);
   padding: 12px 14px;
   margin-bottom: 10px;
@@ -804,7 +825,7 @@
 .summary-card {
   background: var(--surface);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow-sm);
   padding: 8px 10px;
   display: flex;
@@ -865,7 +886,7 @@
 .analysis-card {
   background: var(--surface);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow-sm);
   padding: 10px 12px;
   display: flex;
@@ -876,7 +897,7 @@
 .analysis-savings-card {
   background: var(--surface);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow-sm);
   padding: 12px;
   display: flex;
@@ -916,7 +937,7 @@
 .bill-item {
   background: var(--surface);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow-sm);
   padding: 10px 12px;
   display: flex;
@@ -982,7 +1003,7 @@
 .popup-card {
   background: var(--surface);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: 6px 6px 0 var(--border);
   padding: 18px;
   max-width: 400px;
@@ -998,7 +1019,7 @@
   background: var(--accent);
   color: var(--accent-ink);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   cursor: pointer;
   box-shadow: var(--pixel-shadow-sm);
   font-size: 1.05rem;
@@ -1057,6 +1078,7 @@
 
 .drawer-tabs {
   display: flex;
+  gap: 3px;
   border-bottom: var(--pixel-border);
 }
 
@@ -1066,6 +1088,7 @@
   padding: 12px 2px;
   background: var(--surface);
   border: none;
+  border-radius: 10px 10px 0 0;
   color: var(--text-muted);
   font-size: 0.8rem;
   cursor: pointer;
@@ -1093,7 +1116,7 @@
 .calculator-display {
   background: var(--surface-raised);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   padding: 12px;
   text-align: right;
 }
@@ -1120,7 +1143,7 @@
   padding: 14px 0;
   background: var(--surface-raised);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   color: var(--text);
   font-size: 1.1rem;
   cursor: pointer;
@@ -1177,7 +1200,7 @@
 .note-card {
   background: var(--surface-raised);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow-sm);
   padding: 10px 12px;
   display: flex;
@@ -1277,7 +1300,7 @@
 .note-editor-title {
   padding: 9px 10px;
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   background: var(--surface);
   color: var(--text-h);
   font-size: 1.1rem;
@@ -1317,7 +1340,7 @@
   gap: 6px;
   background: var(--surface-raised);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   padding: 8px 10px;
   font-size: 0.85rem;
   width: 100%;
@@ -1345,7 +1368,7 @@
 .checklist-card {
   background: var(--surface-raised);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
@@ -1508,7 +1531,7 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 3px;
+  border-radius: 12px;
 }
 
 .library-drawer-handle {
@@ -1552,7 +1575,7 @@
   gap: 6px;
   border: none;
   background: rgba(15, 10, 30, 0.4);
-  border-radius: 6px;
+  border-radius: 10px;
   padding: 8px 6px;
   cursor: pointer;
 }
@@ -1749,7 +1772,7 @@
 .epub-theme-swatch {
   flex: 1;
   border: 2px solid var(--border);
-  border-radius: 4px;
+  border-radius: 10px;
   padding: 8px 4px;
   font-family: Georgia, serif;
   font-weight: 700;
@@ -1811,7 +1834,7 @@
   width: 40px;
   height: 4px;
   background: var(--text-muted);
-  border-radius: 2px;
+  border-radius: 10px;
 }
 
 .book-sheet-delete {
@@ -1832,7 +1855,7 @@
 .book-cover {
   background: var(--surface-raised);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow);
   display: flex;
   flex-direction: column;
@@ -1919,7 +1942,7 @@
   height: 10px;
   background: var(--surface-raised);
   border: 2px solid var(--border);
-  border-radius: 6px;
+  border-radius: 10px;
   overflow: hidden;
 }
 
@@ -2012,7 +2035,7 @@
   gap: 6px;
   background: var(--surface);
   border: var(--pixel-border);
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 12px 8px;
   box-shadow: var(--pixel-shadow-sm);
   cursor: pointer;
@@ -2087,7 +2110,7 @@
   background: var(--surface);
   border: var(--pixel-border);
   border-left-width: 5px;
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow-sm);
   padding: 10px 12px;
   display: flex;
@@ -2167,7 +2190,7 @@
   width: 100%;
   background: var(--surface-raised);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow-sm);
   padding: 12px 14px;
   color: var(--text-h);
@@ -2187,7 +2210,7 @@
 .notif-access-card {
   background: var(--surface-raised);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow-sm);
   padding: 12px;
   display: flex;
@@ -2224,7 +2247,7 @@
 .notif-card {
   background: var(--surface-raised);
   border: var(--pixel-border);
-  border-radius: 4px;
+  border-radius: 10px;
   box-shadow: var(--pixel-shadow-sm);
   padding: 10px 12px;
   display: flex;
@@ -2355,6 +2378,48 @@
   color: #4a3418;
   text-decoration: underline;
   cursor: pointer;
+}
+
+.theme-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 4px 0;
+}
+
+.theme-swatch-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: var(--pixel-border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: var(--pixel-shadow-sm);
+}
+
+.theme-swatch-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255, 210, 63, 0.4);
+}
+
+.theme-swatch-preview {
+  display: flex;
+  gap: 3px;
+}
+
+.theme-swatch-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+}
+
+.theme-swatch-card span:not(.theme-swatch-preview) {
+  flex: 1;
+  text-align: left;
 }
 
 .themes-placeholder {

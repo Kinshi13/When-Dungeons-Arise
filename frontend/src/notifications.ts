@@ -28,10 +28,11 @@ const NOTIFICATION_CHANNELS = [
   { id: "financas", name: "Finanças", description: "Alertas de gastos acima do normal na semana ou no mês." },
 ] as const;
 
-// Cor dourada padrão do app — mesmo tom de destaque usado na interface — para
-// o ícone de todas as notificações, dando uma identidade visual simples e
-// consistente independente da categoria.
-const NOTIFICATION_ICON_COLOR = "#ffd23f";
+// Azul claro simples e discreto para o ícone de todas as notificações — lê
+// bem tanto no modo claro quanto no escuro do Android, e é o mesmo tom usado
+// no tema "Claro" do app, dando uma identidade visual simples e consistente
+// independente da categoria.
+const NOTIFICATION_ICON_COLOR = "#5fb3e0";
 
 export async function setupNotificationChannels() {
   if (!isNativePlatform()) return;
