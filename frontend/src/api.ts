@@ -1,6 +1,7 @@
 import { createId, table } from "./storage";
 import { saveFile, loadFile, deleteFile } from "./blobStore";
 import { buildRecurringOccurrences } from "./game/recurrence";
+import { buildInstallmentExpenses } from "./game/installments";
 import {
   scheduleReminderNotification,
   cancelReminderNotification,
@@ -34,6 +35,9 @@ export interface Expense {
   amount: number;
   description?: string | null;
   date: string;
+  installmentGroupId?: string | null;
+  installmentIndex?: number | null;
+  installmentTotal?: number | null;
 }
 
 export type DocumentType = "pdf" | "epub";
@@ -144,12 +148,20 @@ export const api = {
       if (params?.to) items = items.filter((e) => e.date <= params.to!);
       return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     },
-    create: async (data: { amount: number; description?: string; date?: string }) => {
+    create: async (data: { amount: number; description?: string; date?: string; installments?: number }) => {
+      const date = data.date ?? new Date().toISOString();
+
+      if (data.installments && data.installments > 1) {
+        const expenses = buildInstallmentExpenses({ amount: data.amount, description: data.description, date }, data.installments, createId);
+        for (const expense of expenses) expenseTable.insert(expense);
+        return expenses[0];
+      }
+
       const expense: Expense = {
         id: createId(),
         amount: data.amount,
         description: data.description,
-        date: data.date ?? new Date().toISOString(),
+        date,
       };
       expenseTable.insert(expense);
       return expense;

@@ -215,7 +215,7 @@ export default function Calendar() {
               </li>
             ) : (
               <li key={entry.id} className="reminder-item calendar-bill-note">
-                <Link to="/tesouraria">
+                <Link to="/tesouraria/contas">
                   <span className={`dot dot-conta${entry.marker !== "vence" ? " dot-conta-paga" : ""}`} />
                   <strong>{entry.bill.title}</strong>
                   <div className="meta">

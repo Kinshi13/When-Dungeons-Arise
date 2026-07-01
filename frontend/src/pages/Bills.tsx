@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { api, type Bill, type BillKind, type BillType } from "../api";
+import { api, type Bill, type BillKind, type BillType, type Expense } from "../api";
 import { TrashIcon, PlusIcon } from "../icons";
 import { useGame, type RewardPopupData } from "../game/GameContext";
 import RewardPopup from "../components/game/RewardPopup";
@@ -49,6 +49,7 @@ function urgencyClass(days: number) {
 
 export default function Bills() {
   const [bills, setBills] = useState<Bill[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [filter, setFilter] = useState<Filter>("vencimentos");
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
@@ -61,12 +62,24 @@ export default function Bills() {
   const { grantReward } = useGame();
 
   async function load() {
-    setBills(await api.bills.list());
+    const [billsData, expensesData] = await Promise.all([api.bills.list(), api.expenses.list()]);
+    setBills(billsData);
+    setExpenses(expensesData);
   }
 
   useEffect(() => {
     load();
   }, []);
+
+  const monthExpensesTotal = useMemo(() => {
+    const now = new Date();
+    return expenses
+      .filter((e) => {
+        const d = new Date(e.date);
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      })
+      .reduce((sum, e) => sum + e.amount, 0);
+  }, [expenses]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -152,6 +165,13 @@ export default function Bills() {
   return (
     <div className="page">
       <h1>Contas</h1>
+
+      <div className="finance-summary">
+        <div className="summary-card">
+          <span className="summary-label">Gastos este mês</span>
+          <strong className="summary-value">{formatBRL(monthExpensesTotal)}</strong>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="form">
         <input placeholder="Nome da conta" value={title} onChange={(e) => setTitle(e.target.value)} required />

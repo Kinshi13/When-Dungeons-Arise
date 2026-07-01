@@ -1,7 +1,18 @@
 import { useRef, type TouchEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-const TAB_ROUTES = ["/missoes", "/tesouraria", "/", "/sala-do-tempo", "/regras"];
+// Sequência única de navegação por swipe. Sub-telas de uma área (como as abas
+// da Tesouraria) entram como mais passos aqui — ao chegar na borda de um grupo,
+// o swipe continua naturalmente para a área principal vizinha na barra inferior.
+const TAB_ROUTES = [
+  "/missoes",
+  "/tesouraria/financas",
+  "/tesouraria/contas",
+  "/tesouraria/calculadora",
+  "/",
+  "/sala-do-tempo",
+  "/regras",
+];
 
 const SWIPE_THRESHOLD = 60;
 

@@ -1,4 +1,4 @@
-import { NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { motion, MotionConfig } from "framer-motion";
 import { useEffect } from "react";
 import { App as CapApp } from "@capacitor/app";
@@ -27,7 +27,9 @@ const MotionNavLink = motion.create(NavLink);
 const PAGE_BACKGROUNDS: Record<string, { src: string; blurred?: boolean }> = {
   "/": { src: "/guild-reception-bg.png" },
   "/sala-do-tempo": { src: "/calendar-bg.png", blurred: true },
-  "/tesouraria": { src: "/finance-bg.png", blurred: true },
+  "/tesouraria/financas": { src: "/finance-bg.png", blurred: true },
+  "/tesouraria/contas": { src: "/finance-bg.png", blurred: true },
+  "/tesouraria/calculadora": { src: "/finance-bg.png", blurred: true },
 };
 
 const tabMotion = {
@@ -97,7 +99,10 @@ function App() {
             <Route path="/" element={<GuildReception />} />
             <Route path="/missoes" element={<MissionBoard />} />
             <Route path="/sala-do-tempo" element={<TimeRoom />} />
-            <Route path="/tesouraria" element={<Treasury />} />
+            <Route path="/tesouraria" element={<Navigate to="/tesouraria/financas" replace />} />
+            <Route path="/tesouraria/financas" element={<Treasury />} />
+            <Route path="/tesouraria/contas" element={<Treasury />} />
+            <Route path="/tesouraria/calculadora" element={<Treasury />} />
             <Route path="/diario" element={<AdventureDiary />} />
             <Route path="/biblioteca" element={<Library />} />
             <Route path="/regras" element={<RulesBook />} />

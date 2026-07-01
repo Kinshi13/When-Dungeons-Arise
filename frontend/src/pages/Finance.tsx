@@ -17,6 +17,7 @@ export default function Finance() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
+  const [installments, setInstallments] = useState("1");
   const [error, setError] = useState<string | null>(null);
   const [reward, setReward] = useState<RewardPopupData | null>(null);
   const { grantReward } = useGame();
@@ -37,10 +38,16 @@ export default function Finance() {
       setError("Informe um valor válido.");
       return;
     }
+    const installmentTotal = Math.max(1, Math.round(Number(installments)) || 1);
     try {
-      await api.expenses.create({ amount: value, description: description || undefined });
+      await api.expenses.create({
+        amount: value,
+        description: description || undefined,
+        installments: installmentTotal,
+      });
       setAmount("");
       setDescription("");
+      setInstallments("1");
       setReward(grantReward("despesaRegistrada"));
       await load();
     } catch (err: any) {
@@ -96,6 +103,15 @@ export default function Finance() {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+        <input
+          type="number"
+          min={1}
+          inputMode="numeric"
+          placeholder="Parcelas"
+          value={installments}
+          onChange={(e) => setInstallments(e.target.value)}
+          title="Em quantas vezes esse gasto foi parcelado"
+        />
         <button type="submit" className="icon-btn primary" aria-label="Registrar gasto">
           <PlusIcon width={18} height={18} />
         </button>
@@ -122,6 +138,11 @@ export default function Finance() {
                   <div>
                     <strong>{formatBRL(exp.amount)}</strong>
                     {exp.description && <div className="meta">{exp.description}</div>}
+                    {!!exp.installmentTotal && exp.installmentTotal > 1 && (
+                      <div className="meta">
+                        Parcela {exp.installmentIndex}/{exp.installmentTotal}
+                      </div>
+                    )}
                   </div>
                   <button className="icon-btn" onClick={() => handleDelete(exp.id)} aria-label="Excluir gasto">
                     <TrashIcon width={18} height={18} />
