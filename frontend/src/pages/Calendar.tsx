@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { api, type Reminder, type ReminderType } from "../api";
+import { Link } from "react-router-dom";
+import { api, type Bill, type Reminder, type ReminderType } from "../api";
+import { buildCalendarEntries, toDateKey, type CalendarEntry } from "../game/calendarEntries";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon } from "../icons";
 import { playSfx } from "../sound";
 
@@ -14,11 +16,17 @@ const MONTHS_SHORT = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "S
 const typeLabel: Record<ReminderType, string> = {
   REUNIAO: "Reunião",
   TAREFA: "Tarefa",
-  OUTRO: "Outro",
+  OUTRO: "Evento",
 };
 
-function toDateKey(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function formatBRL(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function billNoteLabel(entry: Extract<CalendarEntry, { kind: "bill" }>) {
+  if (entry.marker === "paga") return "Conta paga";
+  if (entry.marker === "recebida") return "Recebido";
+  return entry.bill.kind === "RECEBER" ? "A receber" : "Vencimento";
 }
 
 function buildMonthGrid(year: number, month: number) {
@@ -38,35 +46,27 @@ export default function Calendar() {
   const [month, setMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState<string>(toDateKey(today));
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
   const [title, setTitle] = useState("");
   const [time, setTime] = useState("09:00");
   const [type, setType] = useState<ReminderType>("OUTRO");
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
-    setReminders(await api.reminders.list());
+    const [remindersData, billsData] = await Promise.all([api.reminders.list(), api.bills.list()]);
+    setReminders(remindersData);
+    setBills(billsData);
   }
 
   useEffect(() => {
     load();
   }, []);
 
-  const remindersByDay = useMemo(() => {
-    const map = new Map<string, Reminder[]>();
-    for (const r of reminders) {
-      const key = toDateKey(new Date(r.dateTime));
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(r);
-    }
-    for (const list of map.values()) {
-      list.sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
-    }
-    return map;
-  }, [reminders]);
+  const entriesByDay = useMemo(() => buildCalendarEntries(reminders, bills), [reminders, bills]);
 
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month]);
   const todayKey = toDateKey(today);
-  const dayReminders = remindersByDay.get(selectedDay) ?? [];
+  const dayEntries = entriesByDay.get(selectedDay) ?? [];
 
   function goPrevMonth() {
     if (month === 0) {
@@ -108,64 +108,73 @@ export default function Calendar() {
 
   return (
     <div className="page calendar-page">
-      <div className="calendar-header">
-        <button className="icon-btn" onClick={goPrevMonth} aria-label="Mês anterior">
-          <ChevronLeftIcon />
-        </button>
-        <div className="calendar-title">
-          <strong>{MONTHS[month]}</strong>
-          <span>{year}</span>
-        </div>
-        <button className="icon-btn" onClick={goNextMonth} aria-label="Próximo mês">
-          <ChevronRightIcon />
-        </button>
-      </div>
-
-      <div className="month-strip">
-        {MONTHS_SHORT.map((m, i) => (
-          <button
-            key={m}
-            className={i === month ? "month-chip active" : "month-chip"}
-            onClick={() => setMonth(i)}
-          >
-            {m}
+      <div className="calendar-panel">
+        <div className="calendar-header">
+          <button className="icon-btn" onClick={goPrevMonth} aria-label="Mês anterior">
+            <ChevronLeftIcon />
           </button>
-        ))}
-      </div>
+          <div className="calendar-title">
+            <strong>{MONTHS[month]}</strong>
+            <span>{year}</span>
+          </div>
+          <button className="icon-btn" onClick={goNextMonth} aria-label="Próximo mês">
+            <ChevronRightIcon />
+          </button>
+        </div>
 
-      <div className="weekday-row">
-        {WEEKDAYS.map((w) => (
-          <span key={w}>{w}</span>
-        ))}
-      </div>
-
-      <div className="month-grid">
-        {grid.map((date, i) => {
-          if (!date) return <div key={i} className="day-cell empty" />;
-          const key = toDateKey(date);
-          const dayItems = remindersByDay.get(key) ?? [];
-          const isToday = key === todayKey;
-          const isSelected = key === selectedDay;
-          return (
-            <motion.button
-              key={i}
-              className={`day-cell${isToday ? " is-today" : ""}${isSelected ? " is-selected" : ""}`}
-              onClick={() => setSelectedDay(key)}
-              whileTap={{ scale: 0.85 }}
-              animate={isSelected ? { scale: 1.06 } : { scale: 1 }}
-              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+        <div className="month-strip">
+          {MONTHS_SHORT.map((m, i) => (
+            <button
+              key={m}
+              className={i === month ? "month-chip active" : "month-chip"}
+              onClick={() => setMonth(i)}
             >
-              <span className="day-number">{date.getDate()}</span>
-              {dayItems.length > 0 && (
-                <span className="day-dots">
-                  {dayItems.slice(0, 3).map((r) => (
-                    <span key={r.id} className={`dot dot-${r.type.toLowerCase()}`} />
-                  ))}
-                </span>
-              )}
-            </motion.button>
-          );
-        })}
+              {m}
+            </button>
+          ))}
+        </div>
+
+        <div className="weekday-row">
+          {WEEKDAYS.map((w) => (
+            <span key={w}>{w}</span>
+          ))}
+        </div>
+
+        <div className="month-grid">
+          {grid.map((date, i) => {
+            if (!date) return <div key={i} className="day-cell empty" />;
+            const key = toDateKey(date);
+            const dayItems = entriesByDay.get(key) ?? [];
+            const isToday = key === todayKey;
+            const isSelected = key === selectedDay;
+            return (
+              <motion.button
+                key={i}
+                className={`day-cell${isToday ? " is-today" : ""}${isSelected ? " is-selected" : ""}`}
+                onClick={() => setSelectedDay(key)}
+                whileTap={{ scale: 0.85 }}
+                animate={isSelected ? { scale: 1.06 } : { scale: 1 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
+              >
+                <span className="day-number">{date.getDate()}</span>
+                {dayItems.length > 0 && (
+                  <span className="day-dots">
+                    {dayItems.slice(0, 3).map((entry) =>
+                      entry.kind === "reminder" ? (
+                        <span key={entry.id} className={`dot dot-${entry.reminder.type.toLowerCase()}`} />
+                      ) : (
+                        <span
+                          key={entry.id}
+                          className={`dot dot-conta${entry.marker !== "vence" ? " dot-conta-paga" : ""}`}
+                        />
+                      )
+                    )}
+                  </span>
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
 
       <AnimatePresence mode="wait">
@@ -186,21 +195,37 @@ export default function Calendar() {
         </h2>
 
         <ul className="list">
-          {dayReminders.map((r) => (
-            <li key={r.id} className="reminder-item">
-              <div>
-                <span className={`dot dot-${r.type.toLowerCase()}`} />
-                <strong>{r.title}</strong>
-                <div className="meta">
-                  {new Date(r.dateTime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} · {typeLabel[r.type]}
+          {dayEntries.map((entry) =>
+            entry.kind === "reminder" ? (
+              <li key={entry.id} className="reminder-item">
+                <div>
+                  <span className={`dot dot-${entry.reminder.type.toLowerCase()}`} />
+                  <strong>{entry.reminder.title}</strong>
+                  <div className="meta">
+                    {new Date(entry.reminder.dateTime).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}{" "}
+                    · {typeLabel[entry.reminder.type]}
+                  </div>
                 </div>
-              </div>
-              <button className="icon-btn" onClick={() => handleDelete(r.id)} aria-label="Excluir lembrete">
-                <TrashIcon width={18} height={18} />
-              </button>
-            </li>
-          ))}
-          {dayReminders.length === 0 && <p className="hint">Nenhum lembrete neste dia.</p>}
+                <button className="icon-btn" onClick={() => handleDelete(entry.id)} aria-label="Excluir lembrete">
+                  <TrashIcon width={18} height={18} />
+                </button>
+              </li>
+            ) : (
+              <li key={entry.id} className="reminder-item calendar-bill-note">
+                <Link to="/tesouraria">
+                  <span className={`dot dot-conta${entry.marker !== "vence" ? " dot-conta-paga" : ""}`} />
+                  <strong>{entry.bill.title}</strong>
+                  <div className="meta">
+                    {formatBRL(entry.bill.amount)} · {billNoteLabel(entry)}
+                  </div>
+                </Link>
+              </li>
+            )
+          )}
+          {dayEntries.length === 0 && <p className="hint">Nada marcado neste dia.</p>}
         </ul>
 
         <form onSubmit={handleSubmit} className="form day-form">
@@ -225,7 +250,7 @@ export default function Calendar() {
           >
             <option value="REUNIAO">Reunião</option>
             <option value="TAREFA">Tarefa</option>
-            <option value="OUTRO">Outro</option>
+            <option value="OUTRO">Evento</option>
           </select>
           <button type="submit" className="icon-btn primary" aria-label="Adicionar lembrete">
             <PlusIcon />

@@ -1,4 +1,5 @@
 import { CoinIcon } from "../../icons";
+import type { Priority } from "../../api";
 
 export type MissionCategory = "diaria" | "semanal" | "especial";
 
@@ -12,6 +13,7 @@ interface PixelMissionCardProps {
   title: string;
   dueLabel?: string;
   category: MissionCategory;
+  priority?: Priority;
   rewardXp: number;
   rewardCoins: number;
   done?: boolean;
@@ -22,6 +24,7 @@ export default function PixelMissionCard({
   title,
   dueLabel,
   category,
+  priority,
   rewardXp,
   rewardCoins,
   done,
@@ -31,6 +34,7 @@ export default function PixelMissionCard({
     <div className={`mission-card mission-${category}${done ? " mission-done" : ""}`}>
       <div className="mission-card-top">
         <span className="badge">{CATEGORY_LABEL[category]}</span>
+        {priority === "ALTA" && <span className="badge badge-priority">Prioridade</span>}
         {dueLabel && <span className="meta">{dueLabel}</span>}
       </div>
       <strong className="mission-card-title">{title}</strong>

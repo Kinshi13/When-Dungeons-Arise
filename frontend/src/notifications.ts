@@ -68,7 +68,7 @@ function billAlertId(billId: string, daysBefore: number): number {
 export async function scheduleBillNotifications(bill: Bill) {
   if (!isNativePlatform()) return;
   await cancelBillNotifications(bill.id);
-  if (bill.paid) return;
+  if (bill.status !== "PENDENTE") return;
 
   const due = new Date(bill.dueDate);
   const notifications = BILL_ALERT_DAYS.map((days) => {

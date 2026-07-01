@@ -1,5 +1,6 @@
 import { createId, table } from "./storage";
 import { saveFile, loadFile, deleteFile } from "./blobStore";
+import { buildRecurringOccurrences } from "./game/recurrence";
 import {
   scheduleReminderNotification,
   cancelReminderNotification,
@@ -8,6 +9,7 @@ import {
 } from "./notifications";
 
 export type ReminderType = "REUNIAO" | "TAREFA" | "OUTRO";
+export type Priority = "BAIXA" | "MEDIA" | "ALTA";
 
 export interface Reminder {
   id: string;
@@ -15,6 +17,7 @@ export interface Reminder {
   description?: string | null;
   dateTime: string;
   type: ReminderType;
+  priority: Priority;
   done?: boolean;
 }
 
@@ -51,6 +54,8 @@ export interface ReadingProgress {
 }
 
 export type BillType = "CARTAO" | "BOLETO" | "ASSINATURA" | "OUTRO";
+export type BillKind = "PAGAR" | "RECEBER" | "ASSINATURA";
+export type BillStatus = "PENDENTE" | "PAGA" | "RECEBIDA";
 
 export interface Bill {
   id: string;
@@ -58,8 +63,12 @@ export interface Bill {
   amount: number;
   dueDate: string;
   type: BillType;
+  kind: BillKind;
+  status: BillStatus;
   priority: boolean;
-  paid: boolean;
+  paidDate?: string | null;
+  recurring: boolean;
+  recurrenceId?: string | null;
 }
 
 // Todos os dados ficam salvos no próprio dispositivo (localStorage do WebView).
@@ -84,6 +93,7 @@ export const api = {
         description: data.description,
         dateTime: data.dateTime ?? new Date().toISOString(),
         type: data.type ?? "OUTRO",
+        priority: data.priority ?? "MEDIA",
         done: false,
       };
       reminderTable.insert(reminder);
@@ -151,30 +161,69 @@ export const api = {
   bills: {
     list: async () =>
       [...billTable.list()].sort((a, b) => {
-        if (a.paid !== b.paid) return a.paid ? 1 : -1;
+        const aSettled = a.status !== "PENDENTE";
+        const bSettled = b.status !== "PENDENTE";
+        if (aSettled !== bSettled) return aSettled ? 1 : -1;
         return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
       }),
-    create: async (data: { title: string; amount: number; dueDate: string; type: BillType; priority?: boolean }) => {
+    create: async (data: {
+      title: string;
+      amount: number;
+      dueDate: string;
+      type: BillType;
+      kind?: BillKind;
+      priority?: boolean;
+      recurring?: boolean;
+    }) => {
       const bill: Bill = {
         id: createId(),
         title: data.title,
         amount: data.amount,
         dueDate: data.dueDate,
         type: data.type,
+        kind: data.kind ?? (data.type === "ASSINATURA" ? "ASSINATURA" : "PAGAR"),
+        status: "PENDENTE",
         priority: data.priority ?? false,
-        paid: false,
+        paidDate: null,
+        recurring: data.recurring ?? false,
+        recurrenceId: null,
       };
       billTable.insert(bill);
       await scheduleBillNotifications(bill);
+
+      if (bill.recurring) {
+        for (const occurrence of buildRecurringOccurrences(bill, createId)) {
+          billTable.insert(occurrence);
+          await scheduleBillNotifications(occurrence);
+        }
+      }
       return bill;
     },
     update: async (id: string, data: Partial<Bill>) => {
-      const updated = billTable.update(id, data);
+      const existing = billTable.get(id);
+      if (!existing) throw new Error("Conta não encontrada");
+
+      const patch: Partial<Bill> = { ...data };
+      if (data.status && data.status !== "PENDENTE" && existing.status === "PENDENTE") {
+        patch.paidDate = data.paidDate ?? new Date().toISOString();
+      } else if (data.status === "PENDENTE") {
+        patch.paidDate = null;
+      }
+
+      const updated = billTable.update(id, patch);
       if (!updated) throw new Error("Conta não encontrada");
-      if (updated.paid) {
+
+      if (updated.status !== "PENDENTE") {
         await cancelBillNotifications(updated.id);
       } else {
         await scheduleBillNotifications(updated);
+      }
+
+      if (data.recurring && !existing.recurring) {
+        for (const occurrence of buildRecurringOccurrences(updated, createId)) {
+          billTable.insert(occurrence);
+          await scheduleBillNotifications(occurrence);
+        }
       }
       return updated;
     },

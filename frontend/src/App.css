@@ -26,7 +26,7 @@
   transform: scale(1.08);
 }
 
-.reception-bg {
+.page-bg {
   position: fixed;
   inset: 0;
   z-index: 0;
@@ -34,11 +34,16 @@
   pointer-events: none;
 }
 
-.reception-bg img {
+.page-bg img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: top center;
+}
+
+.page-bg-blurred img {
+  filter: blur(6px) brightness(0.55);
+  transform: scale(1.06);
 }
 
 .pixel-icon {
@@ -247,6 +252,21 @@
   border-color: var(--accent);
 }
 
+.recurring-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text);
+  flex: 1 1 100%;
+}
+
+.recurring-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
 /* Listas genéricas */
 
 .list {
@@ -299,12 +319,33 @@
   background: var(--outro);
 }
 
+.dot-conta {
+  background: var(--danger);
+}
+
+.dot-conta-paga {
+  background: var(--success);
+}
+
+.calendar-bill-note a {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--text);
+  text-decoration: none;
+}
+
 .badge {
   font-size: 0.85rem;
   background: var(--accent);
   color: var(--accent-ink);
   padding: 2px 8px;
   border: 2px solid var(--border);
+}
+
+.badge-priority {
+  background: var(--danger);
+  color: var(--text-h);
 }
 
 .filters {
@@ -459,6 +500,15 @@
 
 .calendar-page h1 {
   display: none;
+}
+
+.calendar-panel {
+  background: var(--surface);
+  border: var(--pixel-border);
+  border-radius: 8px;
+  box-shadow: var(--pixel-shadow);
+  padding: 12px;
+  margin-bottom: 14px;
 }
 
 .calendar-header {

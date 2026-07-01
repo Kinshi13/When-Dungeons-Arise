@@ -1,4 +1,4 @@
-import type { Reminder, ReminderType } from "../api";
+import type { Priority, Reminder, ReminderType } from "../api";
 import type { MissionCategory } from "../components/game/PixelMissionCard";
 import { REWARDS, type RewardKey } from "./rewardService";
 
@@ -8,6 +8,7 @@ export interface Mission {
   title: string;
   dueLabel: string;
   category: MissionCategory;
+  priority: Priority;
   rewardKey: RewardKey;
   rewardXp: number;
   rewardCoins: number;
@@ -57,6 +58,7 @@ export function generateMissions(reminders: Reminder[]): {
       title: r.title,
       dueLabel: dueLabelFor(days),
       category: categoryFor(r, days),
+      priority: r.priority ?? "MEDIA",
       rewardKey,
       rewardXp: reward.xp,
       rewardCoins: reward.coins,

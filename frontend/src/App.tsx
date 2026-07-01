@@ -23,6 +23,13 @@ import "./App.css";
 
 const MotionNavLink = motion.create(NavLink);
 
+// Fundo dedicado por tela. Rotas fora deste mapa caem no GIF ambiente padrão.
+const PAGE_BACKGROUNDS: Record<string, { src: string; blurred?: boolean }> = {
+  "/": { src: "/guild-reception-bg.png" },
+  "/sala-do-tempo": { src: "/calendar-bg.png", blurred: true },
+  "/tesouraria": { src: "/finance-bg.png", blurred: true },
+};
+
 const tabMotion = {
   whileTap: { scale: 0.85, y: 2 },
   transition: { type: "spring" as const, stiffness: 500, damping: 20 },
@@ -56,7 +63,7 @@ function App() {
   useAndroidBackButton();
 
   const isReader = location.pathname.startsWith("/leitor");
-  const isHome = location.pathname === "/";
+  const pageBackground = PAGE_BACKGROUNDS[location.pathname];
 
   if (isReader) {
     return (
@@ -71,9 +78,9 @@ function App() {
   return (
     <MotionConfig reducedMotion={animationsEnabled ? "never" : "always"}>
       <Splash />
-      {isHome ? (
-        <div className="reception-bg" aria-hidden="true">
-          <img src="/guild-reception-bg.png" alt="" />
+      {pageBackground ? (
+        <div className={`page-bg${pageBackground.blurred ? " page-bg-blurred" : ""}`} aria-hidden="true">
+          <img src={pageBackground.src} alt="" />
         </div>
       ) : (
         <div className="ambient-bg" aria-hidden="true">

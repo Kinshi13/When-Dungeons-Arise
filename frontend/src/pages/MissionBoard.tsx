@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { api, type Reminder, type ReminderType } from "../api";
+import { api, type Priority, type Reminder, type ReminderType } from "../api";
 import { generateMissions, type Mission } from "../game/missionGenerator";
 import { useGame, type RewardPopupData } from "../game/GameContext";
 import PixelMissionCard from "../components/game/PixelMissionCard";
@@ -10,8 +10,10 @@ import { playSfx } from "../sound";
 export default function MissionBoard() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [dateTime, setDateTime] = useState("");
   const [type, setType] = useState<ReminderType>("OUTRO");
+  const [priority, setPriority] = useState<Priority>("MEDIA");
   const [reward, setReward] = useState<RewardPopupData | null>(null);
   const { grantReward } = useGame();
 
@@ -26,10 +28,18 @@ export default function MissionBoard() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title || !dateTime) return;
-    await api.reminders.create({ title, dateTime: new Date(dateTime).toISOString(), type });
+    await api.reminders.create({
+      title,
+      description: description || undefined,
+      dateTime: new Date(dateTime).toISOString(),
+      type,
+      priority,
+    });
     setTitle("");
+    setDescription("");
     setDateTime("");
     setType("OUTRO");
+    setPriority("MEDIA");
     await load();
   }
 
@@ -56,15 +66,26 @@ export default function MissionBoard() {
           onFocus={() => playSfx("drop")}
         />
         <input
+          placeholder="Descrição (opcional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          onFocus={() => playSfx("drop")}
+        />
+        <input
           type="datetime-local"
           value={dateTime}
           onChange={(e) => setDateTime(e.target.value)}
           onFocus={() => playSfx("drop")}
         />
         <select value={type} onChange={(e) => setType(e.target.value as ReminderType)}>
-          <option value="OUTRO">Simples</option>
-          <option value="TAREFA">Média</option>
-          <option value="REUNIAO">Importante</option>
+          <option value="OUTRO">Evento</option>
+          <option value="TAREFA">Tarefa</option>
+          <option value="REUNIAO">Reunião</option>
+        </select>
+        <select value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
+          <option value="BAIXA">Prioridade baixa</option>
+          <option value="MEDIA">Prioridade média</option>
+          <option value="ALTA">Prioridade alta</option>
         </select>
         <button type="submit" className="icon-btn primary" aria-label="Adicionar missão">
           <PlusIcon width={18} height={18} />
@@ -81,6 +102,7 @@ export default function MissionBoard() {
                 title={m.title}
                 dueLabel={m.dueLabel}
                 category={m.category}
+                priority={m.priority}
                 rewardXp={m.rewardXp}
                 rewardCoins={m.rewardCoins}
                 onComplete={() => handleComplete(m)}
@@ -100,6 +122,7 @@ export default function MissionBoard() {
                 title={m.title}
                 dueLabel={m.dueLabel}
                 category={m.category}
+                priority={m.priority}
                 rewardXp={m.rewardXp}
                 rewardCoins={m.rewardCoins}
                 onComplete={() => handleComplete(m)}
@@ -119,6 +142,7 @@ export default function MissionBoard() {
                 title={m.title}
                 dueLabel={m.dueLabel}
                 category={m.category}
+                priority={m.priority}
                 rewardXp={m.rewardXp}
                 rewardCoins={m.rewardCoins}
                 onComplete={() => handleComplete(m)}
