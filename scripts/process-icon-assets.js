@@ -51,9 +51,13 @@ async function buildIcon(name, rimStyle = "hard") {
   const style = RIM_STYLES[rimStyle];
   const raw = await removeNeutralBackground(path.join(REF, `${name}-source.png`));
   const box = await contentBoundingBox(raw);
-  const side = Math.max(box.width, box.height);
-  const pad = Math.round(side * PADDING_RATIO);
-  const squareSide = side + pad * 2;
+
+  // Preserva a proporção original do conteúdo (não força um canvas quadrado) —
+  // ícones estreitos/altos (ex: a pena) ficariam minúsculos se fossem espremidos
+  // num quadrado antes do resize. O padding é relativo a cada eixo do próprio
+  // desenho; o .resize(fit:"contain") depois é que encaixa no quadrado final.
+  const padX = Math.round(box.width * PADDING_RATIO);
+  const padY = Math.round(box.height * PADDING_RATIO);
 
   // Materializa cada etapa em um buffer PNG antes de seguir — encadear
   // extract+extend+resize numa mesma pipeline (a partir de raw pixels)
@@ -61,10 +65,10 @@ async function buildIcon(name, rimStyle = "hard") {
   const extractedBuf = await sharp(raw.data, { raw: raw.info }).extract(box).png().toBuffer();
   const extendedBuf = await sharp(extractedBuf)
     .extend({
-      top: Math.floor((squareSide - box.height) / 2),
-      bottom: Math.ceil((squareSide - box.height) / 2),
-      left: Math.floor((squareSide - box.width) / 2),
-      right: Math.ceil((squareSide - box.width) / 2),
+      top: padY,
+      bottom: padY,
+      left: padX,
+      right: padX,
       background: { r: 0, g: 0, b: 0, alpha: 0 },
     })
     .png()
@@ -126,7 +130,7 @@ async function main() {
   require("fs").mkdirSync(OUT, { recursive: true });
   // icon-financas/icon-lembrete/icon-config/icon-guilda não são mais gerados —
   // a barra inferior agora usa tabbar-bg.png com os 5 ícones já desenhados nela.
-  await buildIcon("icon-add", "hard");
+  await buildIcon("icon-add", "glow");
   await buildIcon("icon-diario", "glow");
   await buildIcon("icon-biblioteca", "glow");
   await buildTabbarIntegratedArt();
