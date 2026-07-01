@@ -14,6 +14,27 @@ Tudo isso já está **implementado e funcionando**: ver `README.md` na raiz pra 
 completa das telas e do sistema de recompensas. Não é preciso reler o histórico do chat —
 o `README.md` + este arquivo cobrem o necessário.
 
+### Atualização recente (sessão de reformulação da navegação)
+
+Várias telas ganharam sub-rotas + swipe unificado (`useSwipeNav.ts` trata tudo como uma
+sequência única: Mural → Tesouraria (Finanças/Contas/Calculadora/Porcentagem) → Guilda →
+Sala do Tempo (Calendário/Agenda) → Ajustes — ao passar da borda de um grupo de sub-abas, o
+swipe cai naturalmente na área vizinha). Esse é o padrão a seguir se mais telas ganharem
+sub-abas no futuro.
+
+- **Recepção (Home)**: fundo estático (`guild-reception-bg.png`), sem cards/diálogo/boneco.
+  Atalhos de Diário/Biblioteca viram ícones pequenos colados nas bordas esquerda/direita,
+  com a faixa vertical inteira de cada lado clicável (não só o ícone).
+- **Sala do Tempo**: `/sala-do-tempo/calendario` (integrado com Finanças, mostra contas) e
+  `/sala-do-tempo/agenda` (só eventos/reuniões/tarefas + feriados nacionais, sem contas).
+- **Tesouraria**: `/tesouraria/{financas,contas,calculadora,porcentagem}`. Contas ganhou
+  status (pendente/paga/recebida), recorrência mensal automática e filtros. Finanças ganhou
+  parcelamento (`game/installments.ts`). Porcentagem é calculadora de %, juros simples/compostos.
+- **Diário**: virou app de notas de verdade — `/diario/notas` (texto livre, como antes) e
+  `/diario/listas` (checklists com `components/Lists.tsx`, `Note.items`).
+- Fundos por tela ficam centralizados em `App.tsx` (`PAGE_BACKGROUNDS`), com blur aplicado via
+  CSS (`.page-bg-blurred`), não na imagem — fácil de recalibrar sem regenerar assets.
+
 ## Decisão tomada: não reescrever, adicionar Phaser
 
 O usuário queria mais "sensação de jogo de verdade" (gameplay, não só tema visual) e cogitou
@@ -48,6 +69,23 @@ sistema de XP) pra ganho incerto.
 
 ## Pendências conhecidas (não relacionadas ao Phaser)
 
+- **Widget Android de notas adesivas (adiado a pedido do usuário)**: ele pediu pra explorar a
+  ideia de um widget de tela inicial pra notas do Diário. Investiguei a viabilidade nesta sessão
+  e o usuário decidiu adiar — retomar só se ele pedir explicitamente. Contexto pra quando isso
+  acontecer:
+  - É código nativo Android de verdade (não dá pra fazer só em JS/React): um
+    `AppWidgetProvider` (Kotlin) + layout XML em `RemoteViews` (views nativas restritas, não o
+    WebView) + registro de `<receiver>` no `AndroidManifest.xml`.
+  - Como as notas ficam no `localStorage` do WebView, o widget não lê os dados direto — precisa
+    de um plugin Capacitor pequeno que espelhe as notas/listas pra um storage nativo
+    (SharedPreferences ou SQLite) toda vez que o usuário salva algo.
+  - Este ambiente de nuvem não tem Android SDK/emulador (`ANDROID_HOME` vazio, sem `adb`) — não
+    dá pra testar/validar esse código aqui. Precisa ser buildado e testado localmente no Android
+    Studio pelo usuário (ou numa sessão com acesso a emulador/dispositivo).
+- **Marca d'água nas artes temporárias do Diário**: `diario-notas-bg.png` e
+  `diario-listas-bg.png` vieram de imagens de personagem com marca d'água de terceiros
+  (avisado e aceito pelo usuário como temporário). Trocar quando a arte final chegar — basta
+  atualizar `design-source/assets-ref/` e rodar `scripts/optimize-screen-backgrounds.js`.
 - **Spritesheets reais dos personagens**: recepcionista, bibliotecária, tesoureira etc. ainda
   usam um placeholder pixelado animado em CSS (`PixelCharacterIdle.tsx`). O componente já
   aceita `spriteUrl` + `frameCount` + `fps` — é só o usuário fornecer os arquivos (sugestão:
