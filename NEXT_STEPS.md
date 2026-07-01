@@ -90,11 +90,34 @@ sistema de XP) pra ganho incerto.
   usam um placeholder pixelado animado em CSS (`PixelCharacterIdle.tsx`). O componente já
   aceita `spriteUrl` + `frameCount` + `fps` — é só o usuário fornecer os arquivos (sugestão:
   salvar em `frontend/public/game/characters/` e me avisar os nomes dos arquivos).
-- **Build de APK em ambiente de nuvem**: ainda não testado nesta sessão. Vai precisar instalar
-  o Android SDK command-line tools (não a IDE) + JDK no ambiente de nuvem antes de rodar
-  `npm run build:android` + `./gradlew assembleDebug`. Ver histórico de comandos usados
-  localmente como referência (`ANDROID_HOME`, `JAVA_HOME` apontando pro JDK do Android Studio
-  — na nuvem vai ser um JDK genérico, não o do Android Studio).
+- **Build de APK em ambiente de nuvem**: funciona. O SDK não vem pré-instalado no ambiente de
+  nuvem, mas dá pra instalar em poucos minutos numa sessão nova:
+  ```bash
+  mkdir -p /opt/android-sdk/cmdline-tools
+  cd /tmp && curl -sS -o cmdline-tools.zip \
+    "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+  unzip -q cmdline-tools.zip
+  mkdir -p /opt/android-sdk/cmdline-tools/latest
+  mv cmdline-tools/* /opt/android-sdk/cmdline-tools/latest/
+
+  export ANDROID_HOME=/opt/android-sdk
+  export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+  yes | sdkmanager --licenses
+  sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+  # versões devem bater com compileSdkVersion/targetSdkVersion em
+  # frontend/android/variables.gradle — hoje ambos 36.
+
+  cd frontend && npm run build:android   # tsc + vite build + cap sync android
+  cd android
+  chmod +x gradlew   # o bit de execução já foi corrigido no commit, mas por garantia
+  echo "sdk.dir=/opt/android-sdk" > local.properties
+  ./gradlew clean assembleDebug
+  # APK sai em android/app/build/outputs/apk/debug/app-debug.apk
+  ```
+  Não precisa de `google-services.json` (o build detecta a ausência e pula o plugin do
+  Firebase automaticamente). `*.apk` está no `.gitignore` — não commitar o binário; entregar
+  direto pro usuário (ex: `SendUserFile`) ou copiar pra `lembretes-app-debug.apk` na raiz
+  (mesmo caminho que o README já documenta, mas o arquivo em si nunca vai pro git).
 - **iOS**: descartado por enquanto (precisa de Mac/serviço de build pago ou gratuito limitado).
   Não retomar sem o usuário pedir explicitamente.
 - **Backend Express/Prisma** (`backend/`): não é mais usado pelo app (tudo é local-first hoje).
