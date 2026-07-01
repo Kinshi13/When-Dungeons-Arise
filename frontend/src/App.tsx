@@ -1,6 +1,6 @@
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { motion, MotionConfig } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { App as CapApp } from "@capacitor/app";
 import GuildReception from "./pages/GuildReception";
 import MissionBoard from "./pages/MissionBoard";
@@ -15,7 +15,7 @@ import DueBillsPopup from "./components/DueBillsPopup";
 import Splash from "./components/Splash";
 import GameTopBar from "./components/game/GameTopBar";
 import { useSettings, UI_ZOOM_BY_SCALE } from "./contexts/SettingsContext";
-import { useSwipeNav } from "./useSwipeNav";
+import { useSwipeNav, sectionOf, MAIN_ORDER } from "./useSwipeNav";
 import { isNativePlatform } from "./notifications";
 import { playSfx } from "./sound";
 import "./App.css";
@@ -40,6 +40,8 @@ const tabMotion = {
   transition: { type: "spring" as const, stiffness: 500, damping: 20 },
 };
 
+const SLIDE_ENTER_TRANSITION = { type: "spring" as const, stiffness: 380, damping: 34 };
+
 function useAndroidBackButton() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -63,13 +65,36 @@ function useAndroidBackButton() {
 
 function App() {
   const { uiScale, animationsEnabled } = useSettings();
-  const { onTouchStart, onTouchEnd } = useSwipeNav();
+  const { onTouchStart, onTouchMove, onTouchEnd, x } = useSwipeNav();
   const location = useLocation();
   useAndroidBackButton();
 
   const isReader = location.pathname.startsWith("/leitor");
   const pageBackground = PAGE_BACKGROUNDS[location.pathname];
   const isSpecialScreen = location.pathname.startsWith("/diario") || location.pathname === "/biblioteca";
+
+  // Direção do slide entre as 5 telas principais, calculada durante o render
+  // (não em efeito) pra já estar pronta a tempo do <motion.div> de entrada
+  // montar com o "initial" certo. Trocas dentro da mesma tela (sub-abas) ou
+  // envolvendo telas fora da barra (Diário, Biblioteca, Perfil, Leitor) não
+  // animam — direção fica 0 e a troca continua instantânea. "/tesouraria" e
+  // "/sala-do-tempo" (sem sub-rota) são só um pulo intermediário de redirect
+  // — ignorados aqui pra não "consumir" a direção antes da rota final assentar.
+  const prevPathRef = useRef(location.pathname);
+  const prevSectionIndexRef = useRef<number | null>(null);
+  let slideDirection = 0;
+  const isRedirectStub = location.pathname === "/tesouraria" || location.pathname === "/sala-do-tempo";
+  if (!isRedirectStub && prevPathRef.current !== location.pathname) {
+    const section = sectionOf(location.pathname);
+    const sectionIndex = section ? MAIN_ORDER.indexOf(section) : null;
+    const prevIndex = prevSectionIndexRef.current;
+    if (section !== null && prevIndex !== null && sectionIndex !== prevIndex) {
+      slideDirection = sectionIndex! > prevIndex ? 1 : -1;
+    }
+    if (sectionIndex !== null) prevSectionIndexRef.current = sectionIndex;
+    prevPathRef.current = location.pathname;
+  }
+  const slideKey = sectionOf(location.pathname) ?? location.pathname;
 
   if (isReader) {
     return (
@@ -84,39 +109,61 @@ function App() {
   return (
     <MotionConfig reducedMotion={animationsEnabled ? "never" : "always"}>
       <Splash />
-      {pageBackground ? (
-        <div className={`page-bg${pageBackground.blurred ? " page-bg-blurred" : ""}`} aria-hidden="true">
-          <img src={pageBackground.src} alt="" />
-        </div>
-      ) : (
-        <div className="ambient-bg" aria-hidden="true">
-          <img src="/ambient-bg.gif" alt="" />
-        </div>
-      )}
+      {/* O fundo desliza junto (mesma direção/chave do conteúdo) — sem isso a
+          arte ficaria parada enquanto só o conteúdo acompanhasse o dedo. */}
+      <motion.div className="page-bg-slide-layer" style={{ x }} aria-hidden="true">
+        <motion.div
+          key={slideKey}
+          className="page-bg-slide-inner"
+          initial={slideDirection !== 0 ? { x: slideDirection > 0 ? "100%" : "-100%" } : false}
+          animate={{ x: 0 }}
+          transition={SLIDE_ENTER_TRANSITION}
+        >
+          {pageBackground ? (
+            <div className={`page-bg${pageBackground.blurred ? " page-bg-blurred" : ""}`}>
+              <img src={pageBackground.src} alt="" />
+            </div>
+          ) : (
+            <div className="ambient-bg">
+              <img src="/ambient-bg.gif" alt="" />
+            </div>
+          )}
+        </motion.div>
+      </motion.div>
       <div className="app" style={{ zoom: UI_ZOOM_BY_SCALE[uiScale] } as React.CSSProperties}>
         <div className="top-bar">
           <GameTopBar />
         </div>
 
-        <main className="main" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-          <Routes>
-            <Route path="/" element={<GuildReception />} />
-            <Route path="/missoes" element={<MissionBoard />} />
-            <Route path="/sala-do-tempo" element={<Navigate to="/sala-do-tempo/calendario" replace />} />
-            <Route path="/sala-do-tempo/calendario" element={<TimeRoom />} />
-            <Route path="/sala-do-tempo/agenda" element={<TimeRoom />} />
-            <Route path="/tesouraria" element={<Navigate to="/tesouraria/financas" replace />} />
-            <Route path="/tesouraria/financas" element={<Treasury />} />
-            <Route path="/tesouraria/contas" element={<Treasury />} />
-            <Route path="/tesouraria/calculadora" element={<Treasury />} />
-            <Route path="/tesouraria/porcentagem" element={<Treasury />} />
-            <Route path="/diario" element={<Navigate to="/diario/notas" replace />} />
-            <Route path="/diario/notas" element={<AdventureDiary />} />
-            <Route path="/diario/listas" element={<AdventureDiary />} />
-            <Route path="/biblioteca" element={<Library />} />
-            <Route path="/regras" element={<RulesBook />} />
-            <Route path="/perfil" element={<CharacterDetail />} />
-          </Routes>
+        <main className="main" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
+          <motion.div className="slide-drag-layer" style={{ x }}>
+            <motion.div
+              key={slideKey}
+              className="slide-enter-layer"
+              initial={slideDirection !== 0 ? { x: slideDirection > 0 ? "100%" : "-100%" } : false}
+              animate={{ x: 0 }}
+              transition={SLIDE_ENTER_TRANSITION}
+            >
+              <Routes>
+                <Route path="/" element={<GuildReception />} />
+                <Route path="/missoes" element={<MissionBoard />} />
+                <Route path="/sala-do-tempo" element={<Navigate to="/sala-do-tempo/calendario" replace />} />
+                <Route path="/sala-do-tempo/calendario" element={<TimeRoom />} />
+                <Route path="/sala-do-tempo/agenda" element={<TimeRoom />} />
+                <Route path="/tesouraria" element={<Navigate to="/tesouraria/financas" replace />} />
+                <Route path="/tesouraria/financas" element={<Treasury />} />
+                <Route path="/tesouraria/contas" element={<Treasury />} />
+                <Route path="/tesouraria/calculadora" element={<Treasury />} />
+                <Route path="/tesouraria/porcentagem" element={<Treasury />} />
+                <Route path="/diario" element={<Navigate to="/diario/notas" replace />} />
+                <Route path="/diario/notas" element={<AdventureDiary />} />
+                <Route path="/diario/listas" element={<AdventureDiary />} />
+                <Route path="/biblioteca" element={<Library />} />
+                <Route path="/regras" element={<RulesBook />} />
+                <Route path="/perfil" element={<CharacterDetail />} />
+              </Routes>
+            </motion.div>
+          </motion.div>
         </main>
         <DueBillsPopup />
         <nav className={`tabbar${isSpecialScreen ? " tabbar-tucked" : ""}`}>

@@ -10,12 +10,25 @@
   z-index: 1;
 }
 
-.ambient-bg {
+/* Camada fixa que segura o fundo da tela — desliza junto com o conteúdo (ver
+   .slide-drag-layer/.slide-enter-layer em App.tsx) em vez de ficar parada
+   enquanto só o primeiro plano acompanha o dedo. */
+.page-bg-slide-layer {
   position: fixed;
   inset: 0;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
+}
+
+.page-bg-slide-inner {
+  position: absolute;
+  inset: 0;
+}
+
+.ambient-bg {
+  position: absolute;
+  inset: 0;
 }
 
 .ambient-bg img {
@@ -27,11 +40,8 @@
 }
 
 .page-bg {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
 }
 
 .page-bg img {
@@ -109,6 +119,21 @@
   flex: 1;
   padding-bottom: 88px;
   position: relative;
+  overflow-x: hidden;
+}
+
+/* Camada que acompanha o dedo durante o arraste entre as 5 telas principais
+   (some após o gesto — some para 0 assim que a navegação é confirmada). */
+.slide-drag-layer {
+  min-height: 100%;
+}
+
+/* Camada que anima a entrada da tela nova, vinda do lado certo (esquerda ou
+   direita conforme a ordem das telas na barra), tanto por swipe quanto por
+   toque direto na aba. Sub-abas da mesma tela reaproveitam a mesma chave,
+   então não remontam nem animam — só a troca de tela mesmo entra deslizando. */
+.slide-enter-layer {
+  min-height: 100%;
 }
 
 .page {
