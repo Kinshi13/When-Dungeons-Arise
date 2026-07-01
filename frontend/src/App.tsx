@@ -14,7 +14,7 @@ import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
 import Splash from "./components/Splash";
 import GameTopBar from "./components/game/GameTopBar";
-import { TabBellIcon, TabCoinsIcon, TabHomeCalendarIcon, TabGuildIcon, TabGearIcon } from "./icons2";
+import { TabHomeCalendarIcon, TabGuildIcon } from "./icons2";
 import { useSettings, UI_ZOOM_BY_SCALE } from "./contexts/SettingsContext";
 import { useSwipeNav } from "./useSwipeNav";
 import { isNativePlatform } from "./notifications";
@@ -121,11 +121,11 @@ function App() {
         <DueBillsPopup />
         <nav className="tabbar">
           <MotionNavLink to="/missoes" className="tab" onClick={() => playSfx("coin")} {...tabMotion}>
-            <TabBellIcon width={22} height={22} />
+            <img className="tab-icon" src="/icons-nav/icon-lembrete.png" alt="" width={22} height={22} />
             <span>Mural</span>
           </MotionNavLink>
           <MotionNavLink to="/tesouraria" className="tab" onClick={() => playSfx("coin")} {...tabMotion}>
-            <TabCoinsIcon width={22} height={22} />
+            <img className="tab-icon" src="/icons-nav/icon-financas.png" alt="" width={22} height={22} />
             <span>Tesouraria</span>
           </MotionNavLink>
           <MotionNavLink to="/" end className="tab tab-home" onClick={() => playSfx("coin")} {...tabMotion}>
@@ -137,7 +137,7 @@ function App() {
             <span>Tempo</span>
           </MotionNavLink>
           <MotionNavLink to="/regras" className="tab" onClick={() => playSfx("coin")} {...tabMotion}>
-            <TabGearIcon width={22} height={22} />
+            <img className="tab-icon" src="/icons-nav/icon-config.png" alt="" width={22} height={22} />
             <span>Ajustes</span>
           </MotionNavLink>
         </nav>

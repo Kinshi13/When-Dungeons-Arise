@@ -1,12 +1,19 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { api, type Note } from "../api";
-import { TrashIcon, PlusIcon } from "../icons";
-import { playSfx } from "../sound";
+import ListEditorSheet from "./ListEditorSheet";
+
+function previewItems(list: Note) {
+  const items = list.items ?? [];
+  if (items.length === 0) return "Lista vazia.";
+  return items
+    .slice(0, 3)
+    .map((i) => i.text)
+    .join(" · ");
+}
 
 export default function Lists() {
   const [lists, setLists] = useState<Note[]>([]);
-  const [newListTitle, setNewListTitle] = useState("");
-  const [itemDrafts, setItemDrafts] = useState<Record<string, string>>({});
+  const [editingListId, setEditingListId] = useState<string | null>(null);
 
   async function load() {
     setLists(await api.notes.list("LISTA"));
@@ -16,12 +23,12 @@ export default function Lists() {
     load();
   }, []);
 
-  async function handleCreateList(e: FormEvent) {
-    e.preventDefault();
-    if (!newListTitle.trim()) return;
-    await api.notes.create({ type: "LISTA", title: newListTitle.trim() });
-    setNewListTitle("");
+  const editingList = lists.find((l) => l.id === editingListId) ?? null;
+
+  async function handleCreate() {
+    const list = await api.notes.create({ type: "LISTA", title: "Nova lista" });
     await load();
+    setEditingListId(list.id);
   }
 
   async function handleDeleteList(id: string) {
@@ -29,105 +36,72 @@ export default function Lists() {
     await load();
   }
 
-  async function handleAddItem(listId: string) {
-    const text = (itemDrafts[listId] ?? "").trim();
-    if (!text) return;
-    await api.notes.addItem(listId, text);
-    setItemDrafts((d) => ({ ...d, [listId]: "" }));
-    playSfx("drop");
+  async function handleRename(id: string, title: string) {
+    setLists((prev) => prev.map((l) => (l.id === id ? { ...l, title } : l)));
+    await api.notes.update(id, { title });
+  }
+
+  async function handleAddItem(id: string, text: string) {
+    await api.notes.addItem(id, text);
     await load();
   }
 
-  async function handleToggleItem(listId: string, itemId: string) {
-    await api.notes.toggleItem(listId, itemId);
+  async function handleToggleItem(id: string, itemId: string) {
+    await api.notes.toggleItem(id, itemId);
     await load();
   }
 
-  async function handleRemoveItem(listId: string, itemId: string) {
-    await api.notes.removeItem(listId, itemId);
+  async function handleRemoveItem(id: string, itemId: string) {
+    await api.notes.removeItem(id, itemId);
     await load();
+  }
+
+  function handleCloseEditor() {
+    const list = lists.find((l) => l.id === editingListId);
+    setEditingListId(null);
+    if (list && !list.title.trim()) {
+      handleDeleteList(list.id);
+    } else {
+      load();
+    }
   }
 
   return (
     <div className="notes-panel">
-      <form onSubmit={handleCreateList} className="form">
-        <input
-          placeholder="Nova lista (ex: Compras)"
-          value={newListTitle}
-          onChange={(e) => setNewListTitle(e.target.value)}
-          onFocus={() => playSfx("drop")}
-        />
-        <button type="submit" className="icon-btn primary" aria-label="Criar lista">
-          <PlusIcon width={18} height={18} />
-        </button>
-      </form>
-
-      <ul className="list">
+      <div className="notes-grid">
         {lists.map((list) => {
           const items = list.items ?? [];
           const doneCount = items.filter((i) => i.done).length;
-          const draft = itemDrafts[list.id] ?? "";
           return (
-            <li key={list.id} className="checklist-card">
-              <div className="checklist-card-header">
-                <strong>{list.title}</strong>
-                <div className="checklist-card-actions">
-                  {items.length > 0 && (
-                    <span className="meta">
-                      {doneCount}/{items.length}
-                    </span>
-                  )}
-                  <button className="icon-btn" onClick={() => handleDeleteList(list.id)} aria-label="Excluir lista">
-                    <TrashIcon width={16} height={16} />
-                  </button>
-                </div>
+            <button key={list.id} className="note-card" onClick={() => setEditingListId(list.id)}>
+              <div className="note-card-header">
+                <strong className="note-card-title">{list.title}</strong>
+                {items.length > 0 && (
+                  <span className="meta">
+                    {doneCount}/{items.length}
+                  </span>
+                )}
               </div>
-
-              <ul className="checklist-items">
-                {items.map((item) => (
-                  <li key={item.id} className={`checklist-item${item.done ? " done" : ""}`}>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={item.done}
-                        onChange={() => handleToggleItem(list.id, item.id)}
-                      />
-                      <span>{item.text}</span>
-                    </label>
-                    <button
-                      className="icon-btn"
-                      onClick={() => handleRemoveItem(list.id, item.id)}
-                      aria-label="Remover item"
-                    >
-                      <TrashIcon width={14} height={14} />
-                    </button>
-                  </li>
-                ))}
-                {items.length === 0 && <p className="hint">Lista vazia — adicione um item abaixo.</p>}
-              </ul>
-
-              <form
-                className="form checklist-add-form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleAddItem(list.id);
-                }}
-              >
-                <input
-                  placeholder="Novo item"
-                  value={draft}
-                  onChange={(e) => setItemDrafts((d) => ({ ...d, [list.id]: e.target.value }))}
-                  onFocus={() => playSfx("drop")}
-                />
-                <button type="submit" className="icon-btn primary" aria-label="Adicionar item">
-                  <PlusIcon width={16} height={16} />
-                </button>
-              </form>
-            </li>
+              <p className="note-card-preview">{previewItems(list)}</p>
+            </button>
           );
         })}
-        {lists.length === 0 && <p className="hint">Nenhuma lista ainda. Crie uma acima.</p>}
-      </ul>
+        {lists.length === 0 && <p className="hint">Nenhuma lista ainda. Toque no + pra criar uma.</p>}
+      </div>
+
+      <button className="fab fab-left" onClick={handleCreate} aria-label="Nova lista">
+        <img src="/icons-nav/icon-add.png" alt="" />
+      </button>
+
+      <ListEditorSheet
+        list={editingList}
+        onClose={handleCloseEditor}
+        onRename={handleRename}
+        onDelete={handleDeleteList}
+        onAddItem={handleAddItem}
+        onToggleItem={handleToggleItem}
+        onRemoveItem={handleRemoveItem}
+      />
     </div>
   );
 }

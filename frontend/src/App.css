@@ -123,9 +123,13 @@
   justify-content: space-between;
   overflow-x: auto;
   gap: 2px;
-  background: var(--surface);
+  background: var(--surface) url("/icons-nav/tabbar-bg.png") center top / cover no-repeat;
   border-top: var(--pixel-border);
   padding: 8px 6px 10px;
+}
+
+.tab-icon {
+  object-fit: contain;
 }
 
 .tab {
@@ -951,37 +955,126 @@
   gap: 12px;
 }
 
-.notes-form {
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  padding-bottom: 72px;
+}
+
+.note-card {
+  background: var(--surface-raised);
+  border: var(--pixel-border);
+  border-radius: 4px;
+  box-shadow: var(--pixel-shadow-sm);
+  padding: 10px 12px;
+  display: flex;
   flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+  min-height: 84px;
+}
+
+.note-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.note-card-title {
+  font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-card-preview {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.fab {
+  position: fixed;
+  left: 16px;
+  bottom: 94px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  z-index: 5;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5));
+}
+
+.fab img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.fab:active {
+  transform: scale(0.92);
+}
+
+.note-editor-sheet,
+.list-editor-sheet {
+  max-height: 70vh;
   align-items: stretch;
 }
 
-.notes-form textarea {
+.note-editor-title {
+  padding: 9px 10px;
+  border: var(--pixel-border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text-h);
+  font-size: 1.1rem;
+  width: 100%;
+}
+
+.note-editor-content {
   padding: 9px 10px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
   color: var(--text);
   font-family: var(--font-body);
+  font-size: 1rem;
   resize: vertical;
+  width: 100%;
 }
 
-.note-item {
-  background: var(--surface-raised);
-  border: var(--pixel-border);
-  border-radius: 4px;
-  padding: 10px 12px;
+.note-editor-actions {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
 }
 
-.note-item-body p {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  margin-top: 4px;
-  white-space: pre-wrap;
+.list-editor-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.list-editor-header .note-editor-title {
+  flex: 1;
+}
+
+.list-editor-items {
+  width: 100%;
+  overflow-y: auto;
+  max-height: 30vh;
 }
 
 /* Listas (Diário) */
