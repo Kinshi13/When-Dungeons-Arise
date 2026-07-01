@@ -114,57 +114,37 @@
 
 .tabbar {
   position: fixed;
+  z-index: 2;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  height: 64px;
+  height: 96px;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
   overflow-x: auto;
   gap: 2px;
   background: var(--surface) url("/icons-nav/tabbar-bg.png") center center / cover no-repeat;
   border-top: var(--pixel-border);
-  padding: 0 10px;
-}
-
-.tab-icon {
-  object-fit: contain;
+  padding: 0;
 }
 
 .tab {
   flex: 1 1 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
   text-decoration: none;
-  color: var(--text-muted);
-  padding: 8px 6px;
-  border-radius: 4px;
   white-space: nowrap;
   transition: transform 0.1s ease;
 }
 
-
 .tab.active {
-  color: var(--accent-ink);
-  background: var(--accent);
-  box-shadow: var(--pixel-shadow-sm);
+  background: rgba(255, 210, 63, 0.28);
 }
 
 .tab:active {
   transform: translateY(2px);
-}
-
-.tab-home {
-  margin-top: -14px;
-}
-
-.tab-home img {
-  width: 46px;
-  height: 46px;
 }
 
 /* Botões e ícones */

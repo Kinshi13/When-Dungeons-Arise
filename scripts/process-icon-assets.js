@@ -6,9 +6,14 @@ const OUT = path.join(__dirname, "..", "frontend", "public", "icons-nav");
 
 const ICON_SIZE = 128;
 const PADDING_RATIO = 0.1; // margem uniforme ao redor do conteúdo (+ espaço pra borda), igual pra todos
-const RIM_BLUR = 4.5; // raio do blur usado pra "dilatar" a silhueta antes de binarizar
-const RIM_THRESHOLD = 8; // corte binário sobre a máscara borrada — dá uma borda com aresta dura, não um glow
-const RIM_OPACITY = 0.95; // quase opaca — pra ler como borda de verdade, não um brilho sutil
+
+// Dois estilos de contorno: "hard" (aresta dura, tipo borda) e "glow" (halo suave,
+// baixa opacidade). O usuário preferiu o glow suave nos ícones da Recepção
+// (Diário/Biblioteca) depois de comparar os dois.
+const RIM_STYLES = {
+  hard: { blur: 4.5, threshold: 8, opacity: 0.95 },
+  glow: { blur: 2.2, threshold: null, linear: 2.6, opacity: 0.32 },
+};
 
 // Remove fundo branco/xadrez (quase-cinza neutro e claro), preservando cores
 // saturadas do desenho (dourado, roxo etc.) mesmo quando claras.
@@ -42,7 +47,8 @@ async function contentBoundingBox({ data, info }) {
   return { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
 }
 
-async function buildIcon(name) {
+async function buildIcon(name, rimStyle = "hard") {
+  const style = RIM_STYLES[rimStyle];
   const raw = await removeNeutralBackground(path.join(REF, `${name}-source.png`));
   const box = await contentBoundingBox(raw);
   const side = Math.max(box.width, box.height);
@@ -69,21 +75,19 @@ async function buildIcon(name) {
     .png()
     .toBuffer();
 
-  // Máscara de alfa dilatada (blur + corte binário — dá uma borda de aresta dura,
-  // não um glow gradual) pra servir de contorno branco atrás do ícone.
-  const alphaMask = await sharp(resizedBuf)
-    .ensureAlpha()
-    .extractChannel(3)
-    .blur(RIM_BLUR)
-    .threshold(RIM_THRESHOLD)
-    .toBuffer();
+  // Máscara de alfa dilatada via blur, servindo de contorno branco atrás do ícone.
+  // Estilo "hard" binariza (threshold) pra virar uma borda de aresta dura; estilo
+  // "glow" mantém o gradiente do blur e amplifica com .linear() pra um halo suave.
+  let alphaPipeline = sharp(resizedBuf).ensureAlpha().extractChannel(3).blur(style.blur);
+  alphaPipeline = style.threshold != null ? alphaPipeline.threshold(style.threshold) : alphaPipeline.linear(style.linear, 0);
+  const alphaMask = await alphaPipeline.toBuffer();
   const rimAlphaRaw = await sharp(alphaMask).raw().toBuffer();
   const rimRGBA = Buffer.alloc(ICON_SIZE * ICON_SIZE * 4);
   for (let i = 0, j = 0; i < ICON_SIZE * ICON_SIZE; i++, j += 4) {
     rimRGBA[j] = 255;
     rimRGBA[j + 1] = 255;
     rimRGBA[j + 2] = 255;
-    rimRGBA[j + 3] = Math.round(Math.min(255, rimAlphaRaw[i]) * RIM_OPACITY);
+    rimRGBA[j + 3] = Math.round(Math.min(255, rimAlphaRaw[i]) * style.opacity);
   }
   const rimBuf = await sharp(rimRGBA, { raw: { width: ICON_SIZE, height: ICON_SIZE, channels: 4 } }).png().toBuffer();
 
@@ -92,39 +96,40 @@ async function buildIcon(name) {
     .png({ compressionLevel: 9 })
     .toFile(path.join(OUT, `${name}.png`));
 
-  console.log(`${name}.png gerado (conteúdo original ${box.width}x${box.height})`);
+  console.log(`${name}.png gerado (conteúdo original ${box.width}x${box.height}, estilo ${rimStyle})`);
 }
 
-// Recorte fixo (coordenadas descobertas inspecionando o banner original): o
-// estandarte tem scrollwork/fitas/brasão perto do topo e franjas soltas embaixo —
-// só a faixa central é madeira lisa sem padrão, exatamente onde os ícones vão
-// ficar. Região escolhida já fica bem perto do aspect ratio final (evita esticar).
-const TABBAR_PLANK_REGION = { left: 460, top: 376, width: 1260, height: 184 };
+// Recorte fixo (coordenadas descobertas inspecionando a arte): a barra nova já
+// vem com os 5 ícones desenhados direto nela, cada um no seu quadro decorado.
+// A região abaixo isola só a fileira dos 5 quadros (sem o topo com brasão/fitas
+// nem as franjas penduradas embaixo), bem centralizada e uniformemente espaçada
+// — por isso dá pra dividir em 5 colunas iguais no CSS e cair certinho em cada
+// ícone (bell=Mural, balança=Tesouraria, bússola=Guilda, calendário=Tempo,
+// engrenagem=Ajustes), na mesma ordem de sempre.
+const TABBAR_ICON_ROW_REGION = { left: 260, top: 228, width: 1660, height: 360 };
 
-async function buildTabbarBackground() {
-  const raw = await removeNeutralBackground(path.join(REF, "tabbar-bg-source.png"));
+async function buildTabbarIntegratedArt() {
+  const raw = await removeNeutralBackground(path.join(REF, "tabbar-integrated-source.png"));
   const extractedBuf = await sharp(raw.data, { raw: raw.info })
-    .extract(TABBAR_PLANK_REGION)
+    .extract(TABBAR_ICON_ROW_REGION)
     .flatten({ background: { r: 28, g: 20, b: 48 } })
     .png()
     .toBuffer();
   await sharp(extractedBuf)
-    .resize(960, 140, { fit: "cover" })
-    .png({ compressionLevel: 9, quality: 85 })
+    .resize(1400, 303)
+    .png({ compressionLevel: 9, quality: 90 })
     .toFile(path.join(OUT, "tabbar-bg.png"));
-  console.log("tabbar-bg.png gerado (faixa de madeira lisa, sem scrollwork/fitas)");
+  console.log("tabbar-bg.png gerado (fileira dos 5 ícones integrados)");
 }
 
 async function main() {
   require("fs").mkdirSync(OUT, { recursive: true });
-  await buildIcon("icon-add");
-  await buildIcon("icon-financas");
-  await buildIcon("icon-lembrete");
-  await buildIcon("icon-config");
-  await buildIcon("icon-guilda");
-  await buildIcon("icon-diario");
-  await buildIcon("icon-biblioteca");
-  await buildTabbarBackground();
+  // icon-financas/icon-lembrete/icon-config/icon-guilda não são mais gerados —
+  // a barra inferior agora usa tabbar-bg.png com os 5 ícones já desenhados nela.
+  await buildIcon("icon-add", "hard");
+  await buildIcon("icon-diario", "glow");
+  await buildIcon("icon-biblioteca", "glow");
+  await buildTabbarIntegratedArt();
 }
 
 main().catch((err) => {

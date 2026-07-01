@@ -14,7 +14,6 @@ import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
 import Splash from "./components/Splash";
 import GameTopBar from "./components/game/GameTopBar";
-import { TabHomeCalendarIcon } from "./icons2";
 import { useSettings, UI_ZOOM_BY_SCALE } from "./contexts/SettingsContext";
 import { useSwipeNav } from "./useSwipeNav";
 import { isNativePlatform } from "./notifications";
@@ -120,21 +119,11 @@ function App() {
         </main>
         <DueBillsPopup />
         <nav className="tabbar">
-          <MotionNavLink to="/missoes" className="tab" aria-label="Mural" onClick={() => playSfx("coin")} {...tabMotion}>
-            <img className="tab-icon" src="/icons-nav/icon-lembrete.png" alt="" width={38} height={38} />
-          </MotionNavLink>
-          <MotionNavLink to="/tesouraria" className="tab" aria-label="Tesouraria" onClick={() => playSfx("coin")} {...tabMotion}>
-            <img className="tab-icon" src="/icons-nav/icon-financas.png" alt="" width={38} height={38} />
-          </MotionNavLink>
-          <MotionNavLink to="/" end className="tab tab-home" aria-label="Guilda" onClick={() => playSfx("coin")} {...tabMotion}>
-            <img className="tab-icon" src="/icons-nav/icon-guilda.png" alt="" width={46} height={46} />
-          </MotionNavLink>
-          <MotionNavLink to="/sala-do-tempo" className="tab" aria-label="Tempo" onClick={() => playSfx("coin")} {...tabMotion}>
-            <TabHomeCalendarIcon width={38} height={38} />
-          </MotionNavLink>
-          <MotionNavLink to="/regras" className="tab" aria-label="Ajustes" onClick={() => playSfx("coin")} {...tabMotion}>
-            <img className="tab-icon" src="/icons-nav/icon-config.png" alt="" width={38} height={38} />
-          </MotionNavLink>
+          <MotionNavLink to="/missoes" className="tab" aria-label="Mural" onClick={() => playSfx("coin")} {...tabMotion} />
+          <MotionNavLink to="/tesouraria" className="tab" aria-label="Tesouraria" onClick={() => playSfx("coin")} {...tabMotion} />
+          <MotionNavLink to="/" end className="tab" aria-label="Guilda" onClick={() => playSfx("coin")} {...tabMotion} />
+          <MotionNavLink to="/sala-do-tempo" className="tab" aria-label="Tempo" onClick={() => playSfx("coin")} {...tabMotion} />
+          <MotionNavLink to="/regras" className="tab" aria-label="Ajustes" onClick={() => playSfx("coin")} {...tabMotion} />
         </nav>
       </div>
     </MotionConfig>
