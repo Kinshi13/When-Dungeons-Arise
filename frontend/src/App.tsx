@@ -32,6 +32,8 @@ const PAGE_BACKGROUNDS: Record<string, { src: string; blurred?: boolean }> = {
   "/tesouraria/contas": { src: "/finance-bg.png", blurred: true },
   "/tesouraria/calculadora": { src: "/finance-bg.png", blurred: true },
   "/tesouraria/porcentagem": { src: "/finance-bg.png", blurred: true },
+  "/diario/notas": { src: "/diario-notas-bg.png", blurred: true },
+  "/diario/listas": { src: "/diario-listas-bg.png", blurred: true },
 };
 
 const tabMotion = {
@@ -108,7 +110,9 @@ function App() {
             <Route path="/tesouraria/contas" element={<Treasury />} />
             <Route path="/tesouraria/calculadora" element={<Treasury />} />
             <Route path="/tesouraria/porcentagem" element={<Treasury />} />
-            <Route path="/diario" element={<AdventureDiary />} />
+            <Route path="/diario" element={<Navigate to="/diario/notas" replace />} />
+            <Route path="/diario/notas" element={<AdventureDiary />} />
+            <Route path="/diario/listas" element={<AdventureDiary />} />
             <Route path="/biblioteca" element={<Library />} />
             <Route path="/regras" element={<RulesBook />} />
             <Route path="/perfil" element={<CharacterDetail />} />

@@ -1,4 +1,5 @@
-import PixelRoomButton from "../components/game/PixelRoomButton";
+import { Link } from "react-router-dom";
+import { playSfx } from "../sound";
 import { BookIcon, DiaryIcon } from "../icons";
 
 export default function GuildReception() {
@@ -6,10 +7,26 @@ export default function GuildReception() {
     <div className="page reception-page">
       <h1 className="sr-only">Recepção da Guilda</h1>
 
-      <div className="reception-shortcuts">
-        <PixelRoomButton to="/diario" label="Diário" icon={<DiaryIcon width={22} height={22} />} />
-        <PixelRoomButton to="/biblioteca" label="Biblioteca" icon={<BookIcon width={22} height={22} />} />
-      </div>
+      <Link
+        to="/diario"
+        className="reception-edge-tap reception-edge-left"
+        aria-label="Diário"
+        onClick={() => playSfx("coin")}
+      >
+        <span className="reception-edge-icon">
+          <DiaryIcon width={13} height={13} />
+        </span>
+      </Link>
+      <Link
+        to="/biblioteca"
+        className="reception-edge-tap reception-edge-right"
+        aria-label="Biblioteca"
+        onClick={() => playSfx("coin")}
+      >
+        <span className="reception-edge-icon">
+          <BookIcon width={13} height={13} />
+        </span>
+      </Link>
     </div>
   );
 }

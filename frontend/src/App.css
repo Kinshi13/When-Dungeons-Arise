@@ -103,6 +103,7 @@
 .main {
   flex: 1;
   padding-bottom: 88px;
+  position: relative;
 }
 
 .page {
@@ -983,6 +984,72 @@
   white-space: pre-wrap;
 }
 
+/* Listas (Diário) */
+
+.checklist-card {
+  background: var(--surface-raised);
+  border: var(--pixel-border);
+  border-radius: 4px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checklist-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.checklist-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.checklist-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.checklist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.checklist-item label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.checklist-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.checklist-item.done span {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.checklist-add-form {
+  margin-bottom: 0;
+}
+
 /* Estante de documentos */
 
 .shelf-header {
@@ -1500,22 +1567,39 @@
   padding: 0;
 }
 
-.reception-shortcuts {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 78px;
-  width: 100%;
-  max-width: 480px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  padding: 10px 12px;
+.reception-edge-tap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 17%;
+  display: flex;
+  align-items: center;
   z-index: 1;
 }
 
-.reception-shortcuts .room-button {
-  background: rgba(28, 20, 48, 0.75);
+.reception-edge-left {
+  left: 0;
+  justify-content: flex-start;
+}
+
+.reception-edge-right {
+  right: 0;
+  justify-content: flex-end;
+}
+
+.reception-edge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  background: var(--surface);
+  border: var(--pixel-border);
+  border-radius: 50%;
+  padding: 4px;
+  color: var(--accent);
+  margin: 0 4px;
+  box-shadow: var(--pixel-shadow-sm);
 }
 
 .library-page {

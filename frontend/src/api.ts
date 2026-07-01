@@ -22,10 +22,20 @@ export interface Reminder {
   done?: boolean;
 }
 
+export type NoteType = "NOTA" | "LISTA";
+
+export interface ChecklistItem {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
 export interface Note {
   id: string;
+  type: NoteType;
   title: string;
   content: string;
+  items?: ChecklistItem[];
   createdAt: string;
   updatedAt: string;
 }
@@ -122,23 +132,53 @@ export const api = {
     },
   },
   notes: {
-    list: async () =>
-      [...noteTable.list()].sort(
-        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-      ),
-    create: async (data: { title: string; content: string }) => {
+    list: async (type?: NoteType) => {
+      // Notas criadas antes da distinção Nota/Lista não têm "type" salvo — tratamos como NOTA.
+      const items = type ? noteTable.list().filter((n) => (n.type ?? "NOTA") === type) : noteTable.list();
+      return [...items].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    },
+    create: async (data: { type?: NoteType; title: string; content?: string; items?: ChecklistItem[] }) => {
       const now = new Date().toISOString();
-      const note: Note = { id: createId(), title: data.title, content: data.content, createdAt: now, updatedAt: now };
+      const note: Note = {
+        id: createId(),
+        type: data.type ?? "NOTA",
+        title: data.title,
+        content: data.content ?? "",
+        items: data.items ?? (data.type === "LISTA" ? [] : undefined),
+        createdAt: now,
+        updatedAt: now,
+      };
       noteTable.insert(note);
       return note;
     },
-    update: async (id: string, data: Partial<Pick<Note, "title" | "content">>) => {
+    update: async (id: string, data: Partial<Pick<Note, "title" | "content" | "items">>) => {
       const updated = noteTable.update(id, { ...data, updatedAt: new Date().toISOString() });
       if (!updated) throw new Error("Nota não encontrada");
       return updated;
     },
     remove: async (id: string) => {
       noteTable.remove(id);
+    },
+    addItem: async (id: string, text: string) => {
+      const note = noteTable.get(id);
+      if (!note) throw new Error("Lista não encontrada");
+      const items = [...(note.items ?? []), { id: createId(), text, done: false }];
+      const updated = noteTable.update(id, { items, updatedAt: new Date().toISOString() });
+      return updated!;
+    },
+    toggleItem: async (id: string, itemId: string) => {
+      const note = noteTable.get(id);
+      if (!note) throw new Error("Lista não encontrada");
+      const items = (note.items ?? []).map((item) => (item.id === itemId ? { ...item, done: !item.done } : item));
+      const updated = noteTable.update(id, { items, updatedAt: new Date().toISOString() });
+      return updated!;
+    },
+    removeItem: async (id: string, itemId: string) => {
+      const note = noteTable.get(id);
+      if (!note) throw new Error("Lista não encontrada");
+      const items = (note.items ?? []).filter((item) => item.id !== itemId);
+      const updated = noteTable.update(id, { items, updatedAt: new Date().toISOString() });
+      return updated!;
     },
   },
   expenses: {

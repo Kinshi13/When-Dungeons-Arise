@@ -13,7 +13,7 @@ export default function Notes() {
   const { grantReward } = useGame();
 
   async function load() {
-    setNotes(await api.notes.list());
+    setNotes(await api.notes.list("NOTA"));
   }
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function Notes() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim() && !content.trim()) return;
-    await api.notes.create({ title: title.trim() || "Sem título", content });
+    await api.notes.create({ type: "NOTA", title: title.trim() || "Sem título", content });
     setTitle("");
     setContent("");
     setReward(grantReward("notaCriada"));

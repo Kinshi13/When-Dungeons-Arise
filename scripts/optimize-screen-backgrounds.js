@@ -9,7 +9,9 @@ const OUT = path.join(__dirname, "..", "frontend", "public");
 // assim dá pra ajustar a intensidade sem regenerar o arquivo.
 const SCREENS = [
   { src: "Calendario-temp.jpg", out: "calendar-bg.png" },
-  { src: "Financas-temp.jpg", out: "finance-bg.png" },
+  { src: "Financas.png", out: "finance-bg.png" },
+  { src: "Financas-temp.jpg", out: "diario-notas-bg.png" },
+  { src: "Calendario-temp.jpg", out: "diario-listas-bg.png" },
 ];
 
 async function main() {
