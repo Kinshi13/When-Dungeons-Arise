@@ -5,9 +5,10 @@ const REF = path.join(__dirname, "..", "design-source", "assets-ref", "icons");
 const OUT = path.join(__dirname, "..", "frontend", "public", "icons-nav");
 
 const ICON_SIZE = 128;
-const PADDING_RATIO = 0.08; // margem uniforme ao redor do conteúdo, igual pra todos
-const RIM_BLUR = 2.2; // raio do "dilate" (aproximado via blur) pra borda branca
-const RIM_OPACITY = 0.32; // opacidade da borda branca — sutil, não um contorno forte
+const PADDING_RATIO = 0.1; // margem uniforme ao redor do conteúdo (+ espaço pra borda), igual pra todos
+const RIM_BLUR = 4.5; // raio do blur usado pra "dilatar" a silhueta antes de binarizar
+const RIM_THRESHOLD = 8; // corte binário sobre a máscara borrada — dá uma borda com aresta dura, não um glow
+const RIM_OPACITY = 0.95; // quase opaca — pra ler como borda de verdade, não um brilho sutil
 
 // Remove fundo branco/xadrez (quase-cinza neutro e claro), preservando cores
 // saturadas do desenho (dourado, roxo etc.) mesmo quando claras.
@@ -68,8 +69,14 @@ async function buildIcon(name) {
     .png()
     .toBuffer();
 
-  // Máscara de alfa "dilatada" via blur, pra servir de borda branca suave atrás do ícone.
-  const alphaMask = await sharp(resizedBuf).ensureAlpha().extractChannel(3).blur(RIM_BLUR).linear(2.6, 0).toBuffer();
+  // Máscara de alfa dilatada (blur + corte binário — dá uma borda de aresta dura,
+  // não um glow gradual) pra servir de contorno branco atrás do ícone.
+  const alphaMask = await sharp(resizedBuf)
+    .ensureAlpha()
+    .extractChannel(3)
+    .blur(RIM_BLUR)
+    .threshold(RIM_THRESHOLD)
+    .toBuffer();
   const rimAlphaRaw = await sharp(alphaMask).raw().toBuffer();
   const rimRGBA = Buffer.alloc(ICON_SIZE * ICON_SIZE * 4);
   for (let i = 0, j = 0; i < ICON_SIZE * ICON_SIZE; i++, j += 4) {
@@ -115,6 +122,8 @@ async function main() {
   await buildIcon("icon-lembrete");
   await buildIcon("icon-config");
   await buildIcon("icon-guilda");
+  await buildIcon("icon-diario");
+  await buildIcon("icon-biblioteca");
   await buildTabbarBackground();
 }
 

@@ -89,7 +89,7 @@ export default function Lists() {
         {lists.length === 0 && <p className="hint">Nenhuma lista ainda. Toque no + pra criar uma.</p>}
       </div>
 
-      <button className="fab fab-left" onClick={handleCreate} aria-label="Nova lista">
+      <button className="fab fab-right" onClick={handleCreate} aria-label="Nova lista">
         <img src="/icons-nav/icon-add.png" alt="" />
       </button>
 

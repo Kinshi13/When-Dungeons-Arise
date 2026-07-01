@@ -103,6 +103,7 @@ export default function MissionBoard() {
                 dueLabel={m.dueLabel}
                 category={m.category}
                 priority={m.priority}
+                fromNote={m.fromNote}
                 rewardXp={m.rewardXp}
                 rewardCoins={m.rewardCoins}
                 onComplete={() => handleComplete(m)}
@@ -123,6 +124,7 @@ export default function MissionBoard() {
                 dueLabel={m.dueLabel}
                 category={m.category}
                 priority={m.priority}
+                fromNote={m.fromNote}
                 rewardXp={m.rewardXp}
                 rewardCoins={m.rewardCoins}
                 onComplete={() => handleComplete(m)}
@@ -143,6 +145,7 @@ export default function MissionBoard() {
                 dueLabel={m.dueLabel}
                 category={m.category}
                 priority={m.priority}
+                fromNote={m.fromNote}
                 rewardXp={m.rewardXp}
                 rewardCoins={m.rewardCoins}
                 onComplete={() => handleComplete(m)}

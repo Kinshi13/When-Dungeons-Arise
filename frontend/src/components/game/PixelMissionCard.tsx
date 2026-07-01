@@ -17,6 +17,7 @@ interface PixelMissionCardProps {
   rewardXp: number;
   rewardCoins: number;
   done?: boolean;
+  fromNote?: boolean;
   onComplete?: () => void;
 }
 
@@ -28,10 +29,14 @@ export default function PixelMissionCard({
   rewardXp,
   rewardCoins,
   done,
+  fromNote,
   onComplete,
 }: PixelMissionCardProps) {
   return (
-    <div className={`mission-card mission-${category}${done ? " mission-done" : ""}`}>
+    <div
+      className={`mission-card mission-${category}${done ? " mission-done" : ""}`}
+      style={fromNote ? { opacity: 0.85 } : undefined}
+    >
       <div className="mission-card-top">
         <span className="badge">{CATEGORY_LABEL[category]}</span>
         {priority === "ALTA" && <span className="badge badge-priority">Prioridade</span>}

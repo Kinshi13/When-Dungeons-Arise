@@ -174,7 +174,13 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
                   <span className="day-dots">
                     {dayItems.slice(0, 3).map((entry) => {
                       if (entry.kind === "reminder") {
-                        return <span key={entry.id} className={`dot dot-${entry.reminder.type.toLowerCase()}`} />;
+                        return (
+                          <span
+                            key={entry.id}
+                            className={`dot dot-${entry.reminder.type.toLowerCase()}`}
+                            style={entry.reminder.fromNote ? { opacity: 0.85 } : undefined}
+                          />
+                        );
                       }
                       if (entry.kind === "holiday") {
                         return <span key={entry.id} className="dot dot-feriado" />;
@@ -215,7 +221,11 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
           {dayEntries.map((entry) => {
             if (entry.kind === "reminder") {
               return (
-                <li key={entry.id} className="reminder-item">
+                <li
+                  key={entry.id}
+                  className="reminder-item"
+                  style={entry.reminder.fromNote ? { opacity: 0.85 } : undefined}
+                >
                   <div>
                     <span className={`dot dot-${entry.reminder.type.toLowerCase()}`} />
                     <strong>{entry.reminder.title}</strong>

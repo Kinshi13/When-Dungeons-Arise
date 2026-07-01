@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { playSfx } from "../sound";
-import { BookIcon, DiaryIcon } from "../icons";
 
 export default function GuildReception() {
   return (
@@ -13,9 +12,7 @@ export default function GuildReception() {
         aria-label="Diário"
         onClick={() => playSfx("coin")}
       >
-        <span className="reception-edge-icon">
-          <DiaryIcon width={13} height={13} />
-        </span>
+        <img className="reception-edge-icon" src="/icons-nav/icon-diario.png" alt="" />
       </Link>
       <Link
         to="/biblioteca"
@@ -23,9 +20,7 @@ export default function GuildReception() {
         aria-label="Biblioteca"
         onClick={() => playSfx("coin")}
       >
-        <span className="reception-edge-icon">
-          <BookIcon width={13} height={13} />
-        </span>
+        <img className="reception-edge-icon" src="/icons-nav/icon-biblioteca.png" alt="" />
       </Link>
     </div>
   );

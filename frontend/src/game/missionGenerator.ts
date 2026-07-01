@@ -13,6 +13,7 @@ export interface Mission {
   rewardXp: number;
   rewardCoins: number;
   done: boolean;
+  fromNote: boolean;
 }
 
 const TYPE_TO_REWARD_KEY: Record<ReminderType, RewardKey> = {
@@ -63,6 +64,7 @@ export function generateMissions(reminders: Reminder[]): {
       rewardXp: reward.xp,
       rewardCoins: reward.coins,
       done: !!r.done,
+      fromNote: !!r.fromNote,
     };
   });
 

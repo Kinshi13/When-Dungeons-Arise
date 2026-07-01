@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, type Note } from "../api";
 import { playSfx } from "../sound";
 import { useGame, type RewardPopupData } from "../game/GameContext";
+import { findDateMention } from "../game/dateDetector";
 import RewardPopup from "./game/RewardPopup";
 import NoteEditorSheet from "./NoteEditorSheet";
 
@@ -63,16 +64,24 @@ export default function Notes() {
   return (
     <div className="notes-panel">
       <div className="notes-grid">
-        {notes.map((note) => (
-          <button key={note.id} className="note-card" onClick={() => setEditingNote(note)}>
-            <strong className="note-card-title">{note.title}</strong>
-            <p className="note-card-preview">{previewText(note.content)}</p>
-          </button>
-        ))}
+        {notes.map((note) => {
+          const hasDate = !!findDateMention(`${note.title} ${note.content}`);
+          return (
+            <button
+              key={note.id}
+              className="note-card"
+              style={hasDate ? { opacity: 0.85 } : undefined}
+              onClick={() => setEditingNote(note)}
+            >
+              <strong className="note-card-title">{note.title}</strong>
+              <p className="note-card-preview">{previewText(note.content)}</p>
+            </button>
+          );
+        })}
         {notes.length === 0 && <p className="hint">Nenhuma nota ainda. Toque no + pra criar uma.</p>}
       </div>
 
-      <button className="fab fab-left" onClick={handleCreate} aria-label="Nova nota">
+      <button className="fab fab-right" onClick={handleCreate} aria-label="Nova nota">
         <img src="/icons-nav/icon-add.png" alt="" />
       </button>
 

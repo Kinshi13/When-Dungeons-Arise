@@ -20,6 +20,7 @@ export interface Reminder {
   type: ReminderType;
   priority: Priority;
   done?: boolean;
+  fromNote?: boolean;
 }
 
 export type NoteType = "NOTA" | "LISTA";
@@ -109,6 +110,7 @@ export const api = {
         type: data.type ?? "OUTRO",
         priority: data.priority ?? "MEDIA",
         done: false,
+        fromNote: data.fromNote ?? false,
       };
       reminderTable.insert(reminder);
       await scheduleReminderNotification(reminder);
