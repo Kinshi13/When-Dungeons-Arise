@@ -718,13 +718,13 @@
 /* Finanças */
 
 .finance-summary {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   margin-bottom: 14px;
 }
 
 .summary-card {
-  flex: 1;
   background: var(--surface);
   border: var(--pixel-border);
   border-radius: 4px;
@@ -745,6 +745,66 @@
   font-family: var(--font-display);
   font-size: 0.82rem;
   color: var(--accent);
+}
+
+.summary-delta {
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+.summary-delta.up {
+  color: var(--danger);
+}
+
+.summary-delta.down {
+  color: var(--success);
+}
+
+.summary-delta.neutral {
+  color: var(--text-muted);
+}
+
+.expense-superficial-row {
+  margin-bottom: 0;
+}
+
+.expense-superficial-badge {
+  display: inline-block;
+  margin-top: 4px;
+  background: rgba(255, 210, 63, 0.18);
+  color: var(--accent);
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.analysis-card {
+  background: var(--surface);
+  border: var(--pixel-border);
+  border-radius: 4px;
+  box-shadow: var(--pixel-shadow-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.analysis-savings-card {
+  background: var(--surface);
+  border: var(--pixel-border);
+  border-radius: 4px;
+  box-shadow: var(--pixel-shadow-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .expense-day {

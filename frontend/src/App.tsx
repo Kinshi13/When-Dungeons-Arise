@@ -28,6 +28,7 @@ const PAGE_BACKGROUNDS: Record<string, { src: string; blurred?: boolean }> = {
   "/sala-do-tempo/agenda": { src: "/calendar-bg.png", blurred: true },
   "/tesouraria/financas": { src: "/finance-bg.png", blurred: true },
   "/tesouraria/contas": { src: "/finance-bg.png", blurred: true },
+  "/tesouraria/analises": { src: "/finance-bg.png", blurred: true },
   "/tesouraria/calculadora": { src: "/finance-bg.png", blurred: true },
   "/tesouraria/porcentagem": { src: "/finance-bg.png", blurred: true },
   "/diario/notas": { src: "/diario-notas-bg.png", blurred: true },
@@ -181,6 +182,7 @@ function App() {
                 <Route path="/tesouraria" element={<Navigate to="/tesouraria/financas" replace />} />
                 <Route path="/tesouraria/financas" element={<Treasury />} />
                 <Route path="/tesouraria/contas" element={<Treasury />} />
+                <Route path="/tesouraria/analises" element={<Treasury />} />
                 <Route path="/tesouraria/calculadora" element={<Treasury />} />
                 <Route path="/tesouraria/porcentagem" element={<Treasury />} />
                 <Route path="/diario" element={<Navigate to="/diario/notas" replace />} />

@@ -50,6 +50,23 @@ export interface Expense {
   installmentGroupId?: string | null;
   installmentIndex?: number | null;
   installmentTotal?: number | null;
+  // Marcado na hora do lançamento — gasto supérfluo, candidato a cortar do
+  // orçamento. Usado pela aba Análises pra calcular potencial de economia.
+  superficial?: boolean;
+}
+
+// Resumo diário de gastos — recalculado automaticamente sempre que um gasto
+// daquele dia é criado/removido (não é uma "foto" congelada, então nunca fica
+// desatualizado se um gasto atrasado for lançado depois). Semana e mês não têm
+// tabela própria: são somas desses resumos diários, calculadas sob demanda.
+export interface DailySummary {
+  id: string; // "YYYY-MM-DD"
+  date: string; // mesmo valor do id
+  total: number;
+  count: number;
+  superficialTotal: number;
+  superficialCount: number;
+  updatedAt: string;
 }
 
 export type DocumentType = "pdf" | "epub";
@@ -96,6 +113,45 @@ const expenseTable = table<Expense>("expenses");
 const billTable = table<Bill>("bills");
 const documentTable = table<DocumentMeta>("documents");
 const readingProgressTable = table<ReadingProgress>("reading-progress");
+const dailySummaryTable = table<DailySummary>("daily-summaries");
+
+function dateKeyOf(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function recomputeDailySummary(dateKey: string) {
+  const dayExpenses = expenseTable.list().filter((e) => dateKeyOf(e.date) === dateKey);
+  if (dayExpenses.length === 0) {
+    dailySummaryTable.remove(dateKey);
+    return;
+  }
+  const superficialItems = dayExpenses.filter((e) => e.superficial);
+  const summary: DailySummary = {
+    id: dateKey,
+    date: dateKey,
+    total: dayExpenses.reduce((sum, e) => sum + e.amount, 0),
+    count: dayExpenses.length,
+    superficialTotal: superficialItems.reduce((sum, e) => sum + e.amount, 0),
+    superficialCount: superficialItems.length,
+    updatedAt: new Date().toISOString(),
+  };
+  if (dailySummaryTable.get(dateKey)) {
+    dailySummaryTable.update(dateKey, summary);
+  } else {
+    dailySummaryTable.insert(summary);
+  }
+}
+
+// Migração de primeira execução — preenche o resumo diário pra quem já tinha
+// gastos lançados antes dessa função existir. Depois disso, os próprios
+// create/remove de despesa mantêm tudo em dia sozinhos.
+function ensureDailySummariesBackfilled() {
+  if (dailySummaryTable.list().length > 0) return;
+  const dateKeys = new Set(expenseTable.list().map((e) => dateKeyOf(e.date)));
+  for (const key of dateKeys) recomputeDailySummary(key);
+}
+ensureDailySummariesBackfilled();
 
 export const api = {
   reminders: {
@@ -192,26 +248,50 @@ export const api = {
       if (params?.to) items = items.filter((e) => e.date <= params.to!);
       return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     },
-    create: async (data: { amount: number; description?: string; date?: string; installments?: number }) => {
+    create: async (data: {
+      amount: number;
+      description?: string;
+      date?: string;
+      installments?: number;
+      superficial?: boolean;
+    }) => {
       const date = data.date ?? new Date().toISOString();
+      let created: Expense[];
 
       if (data.installments && data.installments > 1) {
-        const expenses = buildInstallmentExpenses({ amount: data.amount, description: data.description, date }, data.installments, createId);
-        for (const expense of expenses) expenseTable.insert(expense);
-        return expenses[0];
+        created = buildInstallmentExpenses(
+          { amount: data.amount, description: data.description, date, superficial: data.superficial },
+          data.installments,
+          createId
+        );
+        for (const expense of created) expenseTable.insert(expense);
+      } else {
+        const expense: Expense = {
+          id: createId(),
+          amount: data.amount,
+          description: data.description,
+          date,
+          superficial: data.superficial,
+        };
+        expenseTable.insert(expense);
+        created = [expense];
       }
 
-      const expense: Expense = {
-        id: createId(),
-        amount: data.amount,
-        description: data.description,
-        date,
-      };
-      expenseTable.insert(expense);
-      return expense;
+      for (const key of new Set(created.map((e) => dateKeyOf(e.date)))) recomputeDailySummary(key);
+      return created[0];
     },
     remove: async (id: string) => {
+      const expense = expenseTable.get(id);
       expenseTable.remove(id);
+      if (expense) recomputeDailySummary(dateKeyOf(expense.date));
+    },
+  },
+  dailySummaries: {
+    list: async (params?: { from?: string; to?: string }) => {
+      let items = dailySummaryTable.list();
+      if (params?.from) items = items.filter((s) => s.date >= params.from!);
+      if (params?.to) items = items.filter((s) => s.date <= params.to!);
+      return items.sort((a, b) => (a.date < b.date ? 1 : -1));
     },
   },
   bills: {

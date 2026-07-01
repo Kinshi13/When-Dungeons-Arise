@@ -10,6 +10,7 @@ const FLAT_SEQUENCE = [
   "/missoes",
   "/tesouraria/financas",
   "/tesouraria/contas",
+  "/tesouraria/analises",
   "/tesouraria/calculadora",
   "/tesouraria/porcentagem",
   "/",

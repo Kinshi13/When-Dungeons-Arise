@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { api, type Expense } from "../api";
+import { api, type DailySummary, type Expense } from "../api";
+import { compareWeek, compareMonth, type PeriodComparison } from "../game/financeAnalysis";
 import { TrashIcon, PlusIcon } from "../icons";
 import { useGame } from "../game/GameContext";
 import RewardPopup from "../components/game/RewardPopup";
@@ -13,17 +14,33 @@ function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+function ComparisonBadge({ comparison }: { comparison: PeriodComparison }) {
+  if (comparison.percentChange === null) return null;
+  const rounded = Math.round(comparison.percentChange);
+  if (rounded === 0) return <span className="summary-delta neutral">= que antes</span>;
+  const up = rounded > 0;
+  return (
+    <span className={`summary-delta ${up ? "up" : "down"}`}>
+      {up ? "▲" : "▼"} {Math.abs(rounded)}% {up ? "a mais" : "a menos"}
+    </span>
+  );
+}
+
 export default function Finance() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [dailySummaries, setDailySummaries] = useState<DailySummary[]>([]);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [installments, setInstallments] = useState("1");
+  const [superficial, setSuperficial] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reward, setReward] = useState<RewardPopupData | null>(null);
   const { grantReward } = useGame();
 
   async function load() {
-    setExpenses(await api.expenses.list());
+    const [expenseItems, summaryItems] = await Promise.all([api.expenses.list(), api.dailySummaries.list()]);
+    setExpenses(expenseItems);
+    setDailySummaries(summaryItems);
   }
 
   useEffect(() => {
@@ -44,10 +61,12 @@ export default function Finance() {
         amount: value,
         description: description || undefined,
         installments: installmentTotal,
+        superficial,
       });
       setAmount("");
       setDescription("");
       setInstallments("1");
+      setSuperficial(false);
       setReward(grantReward("despesaRegistrada"));
       await load();
     } catch (err: any) {
@@ -70,10 +89,13 @@ export default function Finance() {
     return [...map.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
   }, [expenses]);
 
-  const todayKey = toDateKey(new Date());
+  const today = new Date();
+  const todayKey = toDateKey(today);
   const todayTotal = groups.find(([key]) => key === todayKey)?.[1]
     .reduce((sum, e) => sum + e.amount, 0) ?? 0;
   const monthTotal = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const weekComparison = useMemo(() => compareWeek(dailySummaries, today), [dailySummaries]);
+  const monthComparison = useMemo(() => compareMonth(dailySummaries, today), [dailySummaries]);
 
   return (
     <div className="page">
@@ -83,6 +105,16 @@ export default function Finance() {
         <div className="summary-card">
           <span className="summary-label">Hoje</span>
           <strong className="summary-value">{formatBRL(todayTotal)}</strong>
+        </div>
+        <div className="summary-card">
+          <span className="summary-label">Esta semana</span>
+          <strong className="summary-value">{formatBRL(weekComparison.currentTotal)}</strong>
+          <ComparisonBadge comparison={weekComparison} />
+        </div>
+        <div className="summary-card">
+          <span className="summary-label">Este mês</span>
+          <strong className="summary-value">{formatBRL(monthComparison.currentTotal)}</strong>
+          <ComparisonBadge comparison={monthComparison} />
         </div>
         <div className="summary-card">
           <span className="summary-label">Total</span>
@@ -112,6 +144,10 @@ export default function Finance() {
           onChange={(e) => setInstallments(e.target.value)}
           title="Em quantas vezes esse gasto foi parcelado"
         />
+        <label className="slider-row expense-superficial-row">
+          <span>Superficial (dá pra cortar)</span>
+          <input type="checkbox" checked={superficial} onChange={(e) => setSuperficial(e.target.checked)} />
+        </label>
         <button type="submit" className="icon-btn primary" aria-label="Registrar gasto">
           <PlusIcon width={18} height={18} />
         </button>
@@ -143,6 +179,7 @@ export default function Finance() {
                         Parcela {exp.installmentIndex}/{exp.installmentTotal}
                       </div>
                     )}
+                    {exp.superficial && <span className="expense-superficial-badge">Superficial</span>}
                   </div>
                   <button className="icon-btn" onClick={() => handleDelete(exp.id)} aria-label="Excluir gasto">
                     <TrashIcon width={18} height={18} />
