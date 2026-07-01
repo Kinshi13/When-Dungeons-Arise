@@ -26,6 +26,10 @@
   transform: scale(1.08);
 }
 
+.ambient-bg-hidden {
+  display: none;
+}
+
 .pixel-icon {
   image-rendering: pixelated;
   object-fit: contain;
@@ -1388,6 +1392,14 @@
   margin-bottom: 18px;
 }
 
+.reception-page {
+  background-image: url("/guild-reception-bg.svg");
+  background-size: cover;
+  background-position: top center;
+  background-repeat: no-repeat;
+  min-height: 100%;
+}
+
 .reception-scene {
   display: flex;
   align-items: center;
@@ -1398,6 +1410,46 @@
 .reception-scene .pixel-dialog {
   flex: 1;
   margin-bottom: 0;
+}
+
+.home-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.home-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface);
+  border: var(--pixel-border);
+  border-radius: 6px;
+  box-shadow: var(--pixel-shadow-sm);
+  padding: 10px 12px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.home-summary-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.home-summary-count {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+.home-summary-next {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .library-page {

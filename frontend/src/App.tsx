@@ -14,8 +14,7 @@ import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
 import Splash from "./components/Splash";
 import GameTopBar from "./components/game/GameTopBar";
-import { TabBellIcon, TabCoinsIcon, TabHomeCalendarIcon, TabGuildIcon } from "./icons2";
-import { DiaryIcon } from "./icons";
+import { TabBellIcon, TabCoinsIcon, TabHomeCalendarIcon, TabGuildIcon, TabGearIcon } from "./icons2";
 import { useSettings, UI_ZOOM_BY_SCALE } from "./contexts/SettingsContext";
 import { useSwipeNav } from "./useSwipeNav";
 import { isNativePlatform } from "./notifications";
@@ -57,6 +56,7 @@ function App() {
   useAndroidBackButton();
 
   const isReader = location.pathname.startsWith("/leitor");
+  const isHome = location.pathname === "/";
 
   if (isReader) {
     return (
@@ -71,7 +71,7 @@ function App() {
   return (
     <MotionConfig reducedMotion={animationsEnabled ? "never" : "always"}>
       <Splash />
-      <div className="ambient-bg" aria-hidden="true">
+      <div className={`ambient-bg${isHome ? " ambient-bg-hidden" : ""}`} aria-hidden="true">
         <img src="/ambient-bg.gif" alt="" />
       </div>
       <div className="app" style={{ zoom: UI_ZOOM_BY_SCALE[uiScale] } as React.CSSProperties}>
@@ -109,9 +109,9 @@ function App() {
             <TabHomeCalendarIcon width={22} height={22} />
             <span>Tempo</span>
           </MotionNavLink>
-          <MotionNavLink to="/diario" className="tab" onClick={() => playSfx("coin")} {...tabMotion}>
-            <DiaryIcon width={22} height={22} />
-            <span>Diário</span>
+          <MotionNavLink to="/regras" className="tab" onClick={() => playSfx("coin")} {...tabMotion}>
+            <TabGearIcon width={22} height={22} />
+            <span>Ajustes</span>
           </MotionNavLink>
         </nav>
       </div>

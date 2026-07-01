@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { api, type Reminder } from "../api";
+import { Link } from "react-router-dom";
+import { api, type Bill, type Reminder } from "../api";
 import { generateMissions } from "../game/missionGenerator";
+import { buildHomeSummary } from "../game/homeSummary";
 import { useGame } from "../game/GameContext";
 import PixelDialogBox from "../components/game/PixelDialogBox";
 import PixelCharacterIdle from "../components/game/PixelCharacterIdle";
@@ -17,14 +19,17 @@ function greeting() {
 
 export default function GuildReception() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
   const { level, coins } = useGame();
 
   useEffect(() => {
     api.reminders.list().then((all) => setReminders(all.filter((r) => !r.done)));
+    api.bills.list().then(setBills);
   }, []);
 
   const { daily, weekly } = generateMissions(reminders);
   const pendingToday = daily.length;
+  const summaryCards = buildHomeSummary(reminders, bills);
 
   return (
     <div className="page reception-page">
@@ -46,6 +51,16 @@ export default function GuildReception() {
           ? `Mais ${weekly.length} missão${weekly.length > 1 ? "ões" : ""} chegando esta semana.`
           : "Sem missões previstas para os próximos dias."}
       </p>
+
+      <div className="home-summary-grid">
+        {summaryCards.map((card) => (
+          <Link key={card.key} to={card.to} className="home-summary-card">
+            <span className="home-summary-label">{card.label}</span>
+            <strong className="home-summary-count">{card.count}</strong>
+            <span className="home-summary-next">{card.nextLabel ?? "Nada por perto"}</span>
+          </Link>
+        ))}
+      </div>
 
       <div className="room-grid">
         <PixelRoomButton to="/missoes" label="Mural de Missões" icon={<TabBellIcon width={26} height={26} />} />
