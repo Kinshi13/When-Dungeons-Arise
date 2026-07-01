@@ -29,6 +29,9 @@ function ComparisonBadge({ comparison }: { comparison: PeriodComparison }) {
 export default function Finance() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [dailySummaries, setDailySummaries] = useState<DailySummary[]>([]);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [editingWallet, setEditingWallet] = useState(false);
+  const [walletInput, setWalletInput] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [installments, setInstallments] = useState("1");
@@ -38,14 +41,29 @@ export default function Finance() {
   const { grantReward } = useGame();
 
   async function load() {
-    const [expenseItems, summaryItems] = await Promise.all([api.expenses.list(), api.dailySummaries.list()]);
+    const [expenseItems, summaryItems, balance] = await Promise.all([
+      api.expenses.list(),
+      api.dailySummaries.list(),
+      api.wallet.getBalance(),
+    ]);
     setExpenses(expenseItems);
     setDailySummaries(summaryItems);
+    setWalletBalance(balance);
   }
 
   useEffect(() => {
     load();
   }, []);
+
+  async function handleSetWalletBase(e: FormEvent) {
+    e.preventDefault();
+    const value = Number(walletInput.replace(",", "."));
+    if (Number.isNaN(value)) return;
+    await api.wallet.setBase(value);
+    setEditingWallet(false);
+    setWalletInput("");
+    await load();
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -100,6 +118,35 @@ export default function Finance() {
   return (
     <div className="page">
       <h1>Finanças</h1>
+
+      <div className="wallet-card">
+        <div>
+          <span className="summary-label">Carteira</span>
+          <strong className="wallet-balance">{formatBRL(walletBalance ?? 0)}</strong>
+        </div>
+        {!editingWallet && (
+          <button className="small" onClick={() => setEditingWallet(true)}>
+            Ajustar saldo
+          </button>
+        )}
+      </div>
+      {editingWallet && (
+        <form onSubmit={handleSetWalletBase} className="form wallet-adjust-form">
+          <input
+            inputMode="decimal"
+            placeholder="Saldo real atual (R$)"
+            value={walletInput}
+            onChange={(e) => setWalletInput(e.target.value)}
+            autoFocus
+          />
+          <button type="submit" className="icon-btn primary" aria-label="Confirmar saldo">
+            <PlusIcon width={16} height={16} />
+          </button>
+          <button type="button" className="small" onClick={() => setEditingWallet(false)}>
+            Cancelar
+          </button>
+        </form>
+      )}
 
       <div className="finance-summary">
         <div className="summary-card">

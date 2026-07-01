@@ -1,4 +1,4 @@
-import type { DailySummary, Expense } from "../api";
+import type { Bill, DailySummary, Expense } from "../api";
 
 export interface PeriodComparison {
   currentTotal: number;
@@ -108,4 +108,33 @@ export function superficialTotal(expenses: Expense[], fromDate: Date, toDate: Da
   return expenses
     .filter((e) => e.superficial && toDateKey(new Date(e.date)) >= fromKey && toDateKey(new Date(e.date)) <= toKey)
     .reduce((sum, e) => sum + e.amount, 0);
+}
+
+export interface BalanceForecast {
+  currentBalance: number;
+  pendingOut: number; // contas PAGAR/ASSINATURA ainda pendentes este mês
+  pendingIn: number; // contas RECEBER ainda pendentes este mês
+  projectedBalance: number;
+}
+
+// Quanto sobraria depois de quitar as contas pendentes com vencimento este
+// mês — só as deste mês, pra combinar com o fechamento mensal já usado no
+// resto da aba Análises.
+export function forecastMonthEndBalance(currentBalance: number, bills: Bill[], today: Date): BalanceForecast {
+  const monthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+  const pendingThisMonth = bills.filter((b) => b.status === "PENDENTE" && b.dueDate.slice(0, 7) === monthKey);
+
+  const pendingOut = pendingThisMonth
+    .filter((b) => b.kind !== "RECEBER")
+    .reduce((sum, b) => sum + b.amount, 0);
+  const pendingIn = pendingThisMonth
+    .filter((b) => b.kind === "RECEBER")
+    .reduce((sum, b) => sum + b.amount, 0);
+
+  return {
+    currentBalance,
+    pendingOut,
+    pendingIn,
+    projectedBalance: currentBalance - pendingOut + pendingIn,
+  };
 }

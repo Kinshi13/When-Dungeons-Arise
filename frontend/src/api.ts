@@ -115,6 +115,26 @@ const documentTable = table<DocumentMeta>("documents");
 const readingProgressTable = table<ReadingProgress>("reading-progress");
 const dailySummaryTable = table<DailySummary>("daily-summaries");
 
+// Carteira — não é uma lista, é um único valor base ajustado manualmente pelo
+// usuário (mesmo padrão de storage simples do SettingsContext), então fica
+// fora do helper table().
+const WALLET_KEY = "lembretes-app:wallet";
+
+interface WalletBase {
+  baseAmount: number;
+  baseSetAt: string;
+}
+
+function loadWalletBase(): WalletBase {
+  try {
+    const raw = localStorage.getItem(WALLET_KEY);
+    if (!raw) return { baseAmount: 0, baseSetAt: new Date(0).toISOString() };
+    return JSON.parse(raw);
+  } catch {
+    return { baseAmount: 0, baseSetAt: new Date(0).toISOString() };
+  }
+}
+
 function dateKeyOf(iso: string): string {
   const d = new Date(iso);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -366,6 +386,36 @@ export const api = {
     remove: async (id: string) => {
       billTable.remove(id);
       await cancelBillNotifications(id);
+    },
+  },
+  wallet: {
+    // Saldo é sempre recalculado a partir dos gastos e contas já existentes —
+    // não existe um "livro-caixa" à parte pra manter sincronizado. Qualquer
+    // gasto novo (lançado à mão ou pela Central de Notificações) e qualquer
+    // conta marcada como paga/recebida entram na conta automaticamente,
+    // porque ambos os fluxos já passam por api.expenses.create/api.bills.update.
+    getBase: async (): Promise<WalletBase> => loadWalletBase(),
+    setBase: async (amount: number): Promise<WalletBase> => {
+      const base: WalletBase = { baseAmount: amount, baseSetAt: new Date().toISOString() };
+      localStorage.setItem(WALLET_KEY, JSON.stringify(base));
+      return base;
+    },
+    getBalance: async (): Promise<number> => {
+      const base = loadWalletBase();
+      const expensesSince = expenseTable.list().filter((e) => e.date >= base.baseSetAt);
+      const settledBillsSince = billTable
+        .list()
+        .filter((b) => b.status !== "PENDENTE" && b.paidDate && b.paidDate >= base.baseSetAt);
+
+      const expenseTotal = expensesSince.reduce((sum, e) => sum + e.amount, 0);
+      const billsOut = settledBillsSince
+        .filter((b) => b.kind !== "RECEBER")
+        .reduce((sum, b) => sum + b.amount, 0);
+      const billsIn = settledBillsSince
+        .filter((b) => b.kind === "RECEBER")
+        .reduce((sum, b) => sum + b.amount, 0);
+
+      return base.baseAmount - expenseTotal - billsOut + billsIn;
     },
   },
   documents: {

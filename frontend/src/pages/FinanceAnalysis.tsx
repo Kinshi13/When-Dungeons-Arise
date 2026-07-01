@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, type DailySummary, type Expense } from "../api";
-import { compareWeek, compareMonth, findFrequentExpenses, superficialTotal, type PeriodComparison } from "../game/financeAnalysis";
+import { api, type Bill, type DailySummary, type Expense } from "../api";
+import {
+  compareWeek,
+  compareMonth,
+  findFrequentExpenses,
+  superficialTotal,
+  forecastMonthEndBalance,
+  type PeriodComparison,
+} from "../game/financeAnalysis";
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -30,17 +37,24 @@ function ComparisonCard({ title, comparison }: { title: string; comparison: Peri
 export default function FinanceAnalysis() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [dailySummaries, setDailySummaries] = useState<DailySummary[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [walletBalance, setWalletBalance] = useState(0);
 
   useEffect(() => {
-    Promise.all([api.expenses.list(), api.dailySummaries.list()]).then(([e, s]) => {
-      setExpenses(e);
-      setDailySummaries(s);
-    });
+    Promise.all([api.expenses.list(), api.dailySummaries.list(), api.bills.list(), api.wallet.getBalance()]).then(
+      ([e, s, b, balance]) => {
+        setExpenses(e);
+        setDailySummaries(s);
+        setBills(b);
+        setWalletBalance(balance);
+      }
+    );
   }, []);
 
   const today = new Date();
   const weekComparison = useMemo(() => compareWeek(dailySummaries, today), [dailySummaries]);
   const monthComparison = useMemo(() => compareMonth(dailySummaries, today), [dailySummaries]);
+  const forecast = useMemo(() => forecastMonthEndBalance(walletBalance, bills, today), [walletBalance, bills]);
 
   const monthStart = useMemo(() => {
     const d = new Date(today);
@@ -67,6 +81,21 @@ export default function FinanceAnalysis() {
         <ComparisonCard title="Esta semana" comparison={weekComparison} />
         <ComparisonCard title="Este mês" comparison={monthComparison} />
       </div>
+
+      <section className="mission-section">
+        <h2>Previsão de saldo</h2>
+        <div className={`analysis-savings-card${forecast.projectedBalance < 0 ? " warning" : ""}`}>
+          <strong className="summary-value">{formatBRL(forecast.projectedBalance)}</strong>
+          <p className="hint">
+            Saldo atual {formatBRL(forecast.currentBalance)}
+            {forecast.pendingOut > 0 && <> − {formatBRL(forecast.pendingOut)} em contas a pagar este mês</>}
+            {forecast.pendingIn > 0 && <> + {formatBRL(forecast.pendingIn)} a receber este mês</>}.
+          </p>
+          {forecast.projectedBalance < 0 && (
+            <p className="error">Atenção: suas contas pendentes ultrapassam o saldo disponível.</p>
+          )}
+        </div>
+      </section>
 
       <section className="mission-section">
         <h2>Potencial de economia</h2>
