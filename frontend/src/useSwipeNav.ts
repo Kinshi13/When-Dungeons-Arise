@@ -9,8 +9,10 @@ const TAB_ROUTES = [
   "/tesouraria/financas",
   "/tesouraria/contas",
   "/tesouraria/calculadora",
+  "/tesouraria/porcentagem",
   "/",
-  "/sala-do-tempo",
+  "/sala-do-tempo/calendario",
+  "/sala-do-tempo/agenda",
   "/regras",
 ];
 

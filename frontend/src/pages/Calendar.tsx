@@ -3,8 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { api, type Bill, type Reminder, type ReminderType } from "../api";
 import { buildCalendarEntries, toDateKey, type CalendarEntry } from "../game/calendarEntries";
+import { getBrazilianHolidays } from "../game/holidays";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon } from "../icons";
 import { playSfx } from "../sound";
+
+interface CalendarProps {
+  variant?: "financas" | "agenda";
+}
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const MONTHS = [
@@ -40,7 +45,7 @@ function buildMonthGrid(year: number, month: number) {
   return cells;
 }
 
-export default function Calendar() {
+export default function Calendar({ variant = "financas" }: CalendarProps) {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -53,16 +58,24 @@ export default function Calendar() {
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
-    const [remindersData, billsData] = await Promise.all([api.reminders.list(), api.bills.list()]);
+    const [remindersData, billsData] = await Promise.all([
+      api.reminders.list(),
+      variant === "financas" ? api.bills.list() : Promise.resolve([]),
+    ]);
     setReminders(remindersData);
     setBills(billsData);
   }
 
   useEffect(() => {
     load();
-  }, []);
+  }, [variant]);
 
-  const entriesByDay = useMemo(() => buildCalendarEntries(reminders, bills), [reminders, bills]);
+  const holidays = useMemo(() => (variant === "agenda" ? getBrazilianHolidays(year) : []), [variant, year]);
+
+  const entriesByDay = useMemo(
+    () => buildCalendarEntries(reminders, bills, holidays),
+    [reminders, bills, holidays]
+  );
 
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month]);
   const todayKey = toDateKey(today);
@@ -159,16 +172,20 @@ export default function Calendar() {
                 <span className="day-number">{date.getDate()}</span>
                 {dayItems.length > 0 && (
                   <span className="day-dots">
-                    {dayItems.slice(0, 3).map((entry) =>
-                      entry.kind === "reminder" ? (
-                        <span key={entry.id} className={`dot dot-${entry.reminder.type.toLowerCase()}`} />
-                      ) : (
+                    {dayItems.slice(0, 3).map((entry) => {
+                      if (entry.kind === "reminder") {
+                        return <span key={entry.id} className={`dot dot-${entry.reminder.type.toLowerCase()}`} />;
+                      }
+                      if (entry.kind === "holiday") {
+                        return <span key={entry.id} className="dot dot-feriado" />;
+                      }
+                      return (
                         <span
                           key={entry.id}
                           className={`dot dot-conta${entry.marker !== "vence" ? " dot-conta-paga" : ""}`}
                         />
-                      )
-                    )}
+                      );
+                    })}
                   </span>
                 )}
               </motion.button>
@@ -195,25 +212,39 @@ export default function Calendar() {
         </h2>
 
         <ul className="list">
-          {dayEntries.map((entry) =>
-            entry.kind === "reminder" ? (
-              <li key={entry.id} className="reminder-item">
-                <div>
-                  <span className={`dot dot-${entry.reminder.type.toLowerCase()}`} />
-                  <strong>{entry.reminder.title}</strong>
-                  <div className="meta">
-                    {new Date(entry.reminder.dateTime).toLocaleTimeString("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}{" "}
-                    · {typeLabel[entry.reminder.type]}
+          {dayEntries.map((entry) => {
+            if (entry.kind === "reminder") {
+              return (
+                <li key={entry.id} className="reminder-item">
+                  <div>
+                    <span className={`dot dot-${entry.reminder.type.toLowerCase()}`} />
+                    <strong>{entry.reminder.title}</strong>
+                    <div className="meta">
+                      {new Date(entry.reminder.dateTime).toLocaleTimeString("pt-BR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}{" "}
+                      · {typeLabel[entry.reminder.type]}
+                    </div>
                   </div>
-                </div>
-                <button className="icon-btn" onClick={() => handleDelete(entry.id)} aria-label="Excluir lembrete">
-                  <TrashIcon width={18} height={18} />
-                </button>
-              </li>
-            ) : (
+                  <button className="icon-btn" onClick={() => handleDelete(entry.id)} aria-label="Excluir lembrete">
+                    <TrashIcon width={18} height={18} />
+                  </button>
+                </li>
+              );
+            }
+            if (entry.kind === "holiday") {
+              return (
+                <li key={entry.id} className="reminder-item">
+                  <div>
+                    <span className="dot dot-feriado" />
+                    <strong>{entry.holiday.name}</strong>
+                    <div className="meta">Feriado nacional</div>
+                  </div>
+                </li>
+              );
+            }
+            return (
               <li key={entry.id} className="reminder-item calendar-bill-note">
                 <Link to="/tesouraria/contas">
                   <span className={`dot dot-conta${entry.marker !== "vence" ? " dot-conta-paga" : ""}`} />
@@ -223,8 +254,8 @@ export default function Calendar() {
                   </div>
                 </Link>
               </li>
-            )
-          )}
+            );
+          })}
           {dayEntries.length === 0 && <p className="hint">Nada marcado neste dia.</p>}
         </ul>
 

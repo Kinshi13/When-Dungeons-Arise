@@ -2,13 +2,15 @@ import { Link, useLocation } from "react-router-dom";
 import Finance from "./Finance";
 import Bills from "./Bills";
 import Calculator from "../components/Calculator";
+import PercentageCalculator from "../components/PercentageCalculator";
 import PixelDialogBox from "../components/game/PixelDialogBox";
 
-type Tab = "financas" | "contas" | "calculadora";
+type Tab = "financas" | "contas" | "calculadora" | "porcentagem";
 
 function tabFromPath(pathname: string): Tab {
   if (pathname.endsWith("/contas")) return "contas";
   if (pathname.endsWith("/calculadora")) return "calculadora";
+  if (pathname.endsWith("/porcentagem")) return "porcentagem";
   return "financas";
 }
 
@@ -36,6 +38,12 @@ export default function Treasury() {
           >
             Calculadora
           </Link>
+          <Link
+            to="/tesouraria/porcentagem"
+            className={tab === "porcentagem" ? "drawer-tab active" : "drawer-tab"}
+          >
+            Porcentagem
+          </Link>
         </div>
       </div>
 
@@ -44,6 +52,11 @@ export default function Treasury() {
       {tab === "calculadora" && (
         <div className="page">
           <Calculator />
+        </div>
+      )}
+      {tab === "porcentagem" && (
+        <div className="page">
+          <PercentageCalculator />
         </div>
       )}
     </div>

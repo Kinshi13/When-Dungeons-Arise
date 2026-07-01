@@ -327,6 +327,10 @@
   background: var(--success);
 }
 
+.dot-feriado {
+  background: var(--accent-2);
+}
+
 .calendar-bill-note a {
   display: flex;
   flex-direction: column;
@@ -918,6 +922,24 @@
 
 .calc-key-wide {
   grid-column: span 2;
+}
+
+/* Calculadora de porcentagem */
+
+.percentage-calc {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.percentage-mode {
+  width: 100%;
+  padding: 8px 10px;
+  border: var(--pixel-border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  margin-bottom: 8px;
 }
 
 /* Notas */
