@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import ThemesScreen from "../components/ThemesScreen";
 import { playSfx } from "../sound";
 
 export default function GuildReception() {
+  const [themesOpen, setThemesOpen] = useState(false);
+
   return (
     <div className="page reception-page">
       <h1 className="sr-only">Recepção da Guilda</h1>
@@ -22,6 +26,22 @@ export default function GuildReception() {
       >
         <img className="reception-edge-icon" src="/icons-nav/icon-biblioteca.png" alt="" />
       </Link>
+
+      {/* Balão de fala em branco já desenhado na arte de fundo — o link mora
+          dentro dele. */}
+      <div className="reception-dialog-bubble">
+        <button
+          className="reception-dialog-bubble-link"
+          onClick={() => {
+            playSfx("coin");
+            setThemesOpen(true);
+          }}
+        >
+          Temas
+        </button>
+      </div>
+
+      <ThemesScreen open={themesOpen} onClose={() => setThemesOpen(false)} />
     </div>
   );
 }

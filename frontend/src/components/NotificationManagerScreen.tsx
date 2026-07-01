@@ -14,7 +14,7 @@ import { groupNotifications, hasScheduleHint } from "../notificationGrouping";
 import { ensureAppsKnown, listMonitoredApps } from "../notificationAppPrefs";
 import { runAutoExpenseDetection, isNotificationProcessed } from "../autoExpenseEngine";
 import { findDateMention, resolveDateToISO } from "../game/dateDetector";
-import { ChevronLeftIcon, BellIcon, PlusIcon, CoinIcon, SettingsIcon } from "../icons";
+import { ChevronLeftIcon, BellIcon, PlusIcon, CoinIcon, SettingsIcon, InboxIcon } from "../icons";
 import { playSfx } from "../sound";
 
 interface NotificationManagerScreenProps {
@@ -120,7 +120,9 @@ export default function NotificationManagerScreen({ open, onClose }: Notificatio
               <button className="icon-btn" onClick={onClose} aria-label="Voltar">
                 <ChevronLeftIcon width={20} height={20} /> Voltar
               </button>
-              <strong>Notificações</strong>
+              <strong className="notif-header-title">
+                <InboxIcon width={16} height={16} /> Central de Notificações
+              </strong>
               <button className="icon-btn" onClick={handleOpenSettings} aria-label="Configurar apps monitorados">
                 <SettingsIcon width={16} height={16} />
               </button>
@@ -164,12 +166,12 @@ export default function NotificationManagerScreen({ open, onClose }: Notificatio
               {loading && <p className="hint">Carregando...</p>}
               {!loading && !hasMonitoredApp && (
                 <p className="hint">
-                  Nenhum app monitorado ainda — o conteúdo das notificações só é lido dos apps que
-                  você ativar em Ajustes › Notificações monitoradas.
+                  Não há notificações recentes — ative pelo menos um app em Ajustes ›
+                  Notificações monitoradas pra começar.
                 </p>
               )}
               {!loading && hasMonitoredApp && groups.length === 0 && (
-                <p className="hint">Nenhuma notificação recente dos apps monitorados.</p>
+                <p className="hint">Não há notificações recentes dos apps monitorados.</p>
               )}
               {groups.map((group) => (
                 <section key={group.packageName} className="notif-group">

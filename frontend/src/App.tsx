@@ -13,7 +13,6 @@ import CharacterDetail from "./pages/CharacterDetail";
 import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
 import Splash from "./components/Splash";
-import GameTopBar from "./components/game/GameTopBar";
 import { useSettings, UI_ZOOM_BY_SCALE } from "./contexts/SettingsContext";
 import { useSwipeNav, sectionOf, groupKeyOf, MAIN_ORDER } from "./useSwipeNav";
 import { isNativePlatform } from "./notifications";
@@ -164,10 +163,6 @@ function App() {
         </motion.div>
       </motion.div>
       <div className="app" style={{ zoom: UI_ZOOM_BY_SCALE[uiScale] } as React.CSSProperties}>
-        <div className="top-bar">
-          <GameTopBar />
-        </div>
-
         <main className="main" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
           <motion.div className="slide-drag-layer" style={{ x }}>
             <motion.div

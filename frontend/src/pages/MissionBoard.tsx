@@ -5,7 +5,7 @@ import { useGame, type RewardPopupData } from "../game/GameContext";
 import PixelMissionCard from "../components/game/PixelMissionCard";
 import RewardPopup from "../components/game/RewardPopup";
 import NotificationManagerScreen from "../components/NotificationManagerScreen";
-import { PlusIcon, BellIcon } from "../icons";
+import { PlusIcon, InboxIcon, ChevronRightIcon } from "../icons";
 import { playSfx } from "../sound";
 
 export default function MissionBoard() {
@@ -60,14 +60,13 @@ export default function MissionBoard() {
     <div className="page">
       <div className="mission-board-header">
         <h1>Mural de Missões</h1>
-        <button
-          className="icon-btn"
-          onClick={() => setNotifOpen(true)}
-          aria-label="Gerenciar notificações"
-        >
-          <BellIcon width={18} height={18} />
-        </button>
       </div>
+
+      <button className="notif-center-entry" onClick={() => setNotifOpen(true)}>
+        <InboxIcon width={20} height={20} />
+        <span>Central de Notificações</span>
+        <ChevronRightIcon width={16} height={16} />
+      </button>
 
       <form onSubmit={handleSubmit} className="form">
         <input

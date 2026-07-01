@@ -147,6 +147,19 @@ export function MinusIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+// Central de notificações (leitura de notificações de outros apps) — de
+// propósito diferente do BellIcon, que já significa "lembretes" no resto do
+// app (formulário do Mural, Ajustes de notificação local).
+export function InboxIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3" y="6" width="18" height="13" rx="2" />
+      <path d="M3 9.5 12 15l9-5.5" />
+      <circle cx="18" cy="5.5" r="3" fill="var(--danger)" stroke="none" />
+    </svg>
+  );
+}
+
 export function MoonIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>

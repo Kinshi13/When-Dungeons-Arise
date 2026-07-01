@@ -1118,6 +1118,13 @@
   gap: 6px;
 }
 
+.notif-header-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
 .note-editor-title {
   padding: 9px 10px;
   border: var(--pixel-border);
@@ -1934,6 +1941,30 @@
   margin: 0;
 }
 
+/* Botão bem visível — nada de ícone sozinho aqui, que já se confundia com o
+   sino de lembretes do próprio formulário do Mural. */
+.notif-center-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--surface-raised);
+  border: var(--pixel-border);
+  border-radius: 4px;
+  box-shadow: var(--pixel-shadow-sm);
+  padding: 12px 14px;
+  color: var(--text-h);
+  margin-bottom: 14px;
+  cursor: pointer;
+}
+
+.notif-center-entry span {
+  flex: 1;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+}
+
 /* Gerenciador de notificações (tela cheia, aberta a partir do Mural) */
 
 .notif-access-card {
@@ -2050,6 +2081,11 @@
 
 .reception-page {
   padding: 0;
+  position: relative;
+  /* Todo o conteúdo daqui é posicionado em absoluto (os toques de borda e o
+     balão de fala) — sem altura explícita a página colapsa pra 0 (a cadeia de
+     wrappers do slide/flex acima não resolve min-height:100% em porcentagem). */
+  height: 100svh;
 }
 
 .reception-edge-tap {
@@ -2077,5 +2113,44 @@
   height: 30px;
   margin: 0 8px;
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+}
+
+/* Posição do balão de fala em branco já desenhado na arte de fundo da
+   recepção — calibrada visualmente sobre a imagem (guild-reception-bg.png). */
+.reception-dialog-bubble {
+  position: absolute;
+  left: 59%;
+  top: 23%;
+  width: 37%;
+  height: 7%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reception-dialog-bubble-link {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #4a3418;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.themes-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.themes-placeholder p {
+  font-size: 1.2rem;
+  color: var(--text-h);
 }
 
