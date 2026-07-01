@@ -10,8 +10,8 @@ const OUT = path.join(__dirname, "..", "frontend", "public");
 const SCREENS = [
   { src: "Calendario-temp.jpg", out: "calendar-bg.png" },
   { src: "Financas.png", out: "finance-bg.png" },
-  { src: "Financas-temp.jpg", out: "diario-notas-bg.png" },
-  { src: "Calendario-temp.jpg", out: "diario-listas-bg.png" },
+  { src: "Diario.png", out: "diario-notas-bg.png" },
+  { src: "Diario.png", out: "diario-listas-bg.png" },
 ];
 
 async function main() {

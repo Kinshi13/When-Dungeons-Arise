@@ -88,19 +88,24 @@ async function buildIcon(name) {
   console.log(`${name}.png gerado (conteúdo original ${box.width}x${box.height})`);
 }
 
+// Recorte fixo (coordenadas descobertas inspecionando o banner original): o
+// estandarte tem scrollwork/fitas/brasão perto do topo e franjas soltas embaixo —
+// só a faixa central é madeira lisa sem padrão, exatamente onde os ícones vão
+// ficar. Região escolhida já fica bem perto do aspect ratio final (evita esticar).
+const TABBAR_PLANK_REGION = { left: 460, top: 376, width: 1260, height: 184 };
+
 async function buildTabbarBackground() {
   const raw = await removeNeutralBackground(path.join(REF, "tabbar-bg-source.png"));
-  const box = await contentBoundingBox(raw);
   const extractedBuf = await sharp(raw.data, { raw: raw.info })
-    .extract(box)
+    .extract(TABBAR_PLANK_REGION)
     .flatten({ background: { r: 28, g: 20, b: 48 } })
     .png()
     .toBuffer();
   await sharp(extractedBuf)
-    .resize(960, 140, { fit: "cover", position: "top" })
+    .resize(960, 140, { fit: "cover" })
     .png({ compressionLevel: 9, quality: 85 })
     .toFile(path.join(OUT, "tabbar-bg.png"));
-  console.log(`tabbar-bg.png gerado (conteúdo original ${box.width}x${box.height})`);
+  console.log("tabbar-bg.png gerado (faixa de madeira lisa, sem scrollwork/fitas)");
 }
 
 async function main() {
@@ -109,6 +114,7 @@ async function main() {
   await buildIcon("icon-financas");
   await buildIcon("icon-lembrete");
   await buildIcon("icon-config");
+  await buildIcon("icon-guilda");
   await buildTabbarBackground();
 }
 

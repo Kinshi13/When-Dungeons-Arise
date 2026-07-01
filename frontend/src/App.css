@@ -119,13 +119,15 @@
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
+  height: 64px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
   overflow-x: auto;
   gap: 2px;
-  background: var(--surface) url("/icons-nav/tabbar-bg.png") center top / cover no-repeat;
+  background: var(--surface) url("/icons-nav/tabbar-bg.png") center center / cover no-repeat;
   border-top: var(--pixel-border);
-  padding: 8px 6px 10px;
+  padding: 0 10px;
 }
 
 .tab-icon {
@@ -135,13 +137,11 @@
 .tab {
   flex: 1 1 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
   text-decoration: none;
   color: var(--text-muted);
-  font-size: 0.65rem;
-  padding: 5px 4px;
+  padding: 8px 6px;
   border-radius: 4px;
   white-space: nowrap;
   transition: transform 0.1s ease;
@@ -162,17 +162,17 @@
   margin-top: -14px;
 }
 
-.tab-home svg {
-  width: 26px;
-  height: 26px;
+.tab-home img {
+  width: 46px;
+  height: 46px;
   background: var(--surface);
   border: var(--pixel-border);
   border-radius: 50%;
-  padding: 6px;
+  padding: 4px;
   box-shadow: var(--pixel-shadow-sm);
 }
 
-.tab-home.active svg {
+.tab-home.active img {
   background: var(--accent);
 }
 
