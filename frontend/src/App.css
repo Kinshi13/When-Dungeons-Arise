@@ -1881,6 +1881,86 @@
   margin-bottom: 18px;
 }
 
+.mission-board-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mission-board-header h1 {
+  margin: 0;
+}
+
+/* Gerenciador de notificações (tela cheia, aberta a partir do Mural) */
+
+.notif-access-card {
+  background: var(--surface-raised);
+  border: var(--pixel-border);
+  border-radius: 4px;
+  box-shadow: var(--pixel-shadow-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notif-example-hint {
+  text-align: center;
+}
+
+.notif-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  flex: 1;
+  padding-bottom: 12px;
+}
+
+.notif-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.notif-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notif-card {
+  background: var(--surface-raised);
+  border: var(--pixel-border);
+  border-radius: 4px;
+  box-shadow: var(--pixel-shadow-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.notif-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.notif-card-title {
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notif-card-text {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

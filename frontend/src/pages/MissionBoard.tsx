@@ -4,7 +4,8 @@ import { generateMissions, type Mission } from "../game/missionGenerator";
 import { useGame, type RewardPopupData } from "../game/GameContext";
 import PixelMissionCard from "../components/game/PixelMissionCard";
 import RewardPopup from "../components/game/RewardPopup";
-import { PlusIcon } from "../icons";
+import NotificationManagerScreen from "../components/NotificationManagerScreen";
+import { PlusIcon, BellIcon } from "../icons";
 import { playSfx } from "../sound";
 
 export default function MissionBoard() {
@@ -15,6 +16,7 @@ export default function MissionBoard() {
   const [type, setType] = useState<ReminderType>("OUTRO");
   const [priority, setPriority] = useState<Priority>("MEDIA");
   const [reward, setReward] = useState<RewardPopupData | null>(null);
+  const [notifOpen, setNotifOpen] = useState(false);
   const { grantReward } = useGame();
 
   async function load() {
@@ -56,7 +58,16 @@ export default function MissionBoard() {
 
   return (
     <div className="page">
-      <h1>Mural de Missões</h1>
+      <div className="mission-board-header">
+        <h1>Mural de Missões</h1>
+        <button
+          className="icon-btn"
+          onClick={() => setNotifOpen(true)}
+          aria-label="Gerenciar notificações"
+        >
+          <BellIcon width={18} height={18} />
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="form">
         <input
@@ -160,6 +171,13 @@ export default function MissionBoard() {
       )}
 
       <RewardPopup reward={reward} onClose={() => setReward(null)} />
+      <NotificationManagerScreen
+        open={notifOpen}
+        onClose={() => {
+          setNotifOpen(false);
+          load();
+        }}
+      />
     </div>
   );
 }
