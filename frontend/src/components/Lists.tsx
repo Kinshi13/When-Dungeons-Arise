@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type Note } from "../api";
-import ListEditorSheet from "./ListEditorSheet";
+import ListEditorScreen from "./ListEditorScreen";
 
 function previewItems(list: Note) {
   const items = list.items ?? [];
@@ -93,7 +93,7 @@ export default function Lists() {
         <img src="/icons-nav/icon-add.png" alt="" />
       </button>
 
-      <ListEditorSheet
+      <ListEditorScreen
         list={editingList}
         onClose={handleCloseEditor}
         onRename={handleRename}

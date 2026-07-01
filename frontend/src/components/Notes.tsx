@@ -4,7 +4,7 @@ import { playSfx } from "../sound";
 import { useGame, type RewardPopupData } from "../game/GameContext";
 import { findDateMention } from "../game/dateDetector";
 import RewardPopup from "./game/RewardPopup";
-import NoteEditorSheet from "./NoteEditorSheet";
+import NoteEditorScreen from "./NoteEditorScreen";
 
 function previewText(content: string) {
   const firstLines = content.trim().split("\n").slice(0, 3).join(" ");
@@ -85,7 +85,7 @@ export default function Notes() {
         <img src="/icons-nav/icon-add.png" alt="" />
       </button>
 
-      <NoteEditorSheet
+      <NoteEditorScreen
         note={editingNote}
         onClose={() => setEditingNote(null)}
         onSave={handleSave}

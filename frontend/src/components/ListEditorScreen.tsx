@@ -2,10 +2,10 @@ import { useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Note } from "../api";
-import { TrashIcon, PlusIcon } from "../icons";
+import { TrashIcon, PlusIcon, ChevronLeftIcon } from "../icons";
 import { playSfx } from "../sound";
 
-interface ListEditorSheetProps {
+interface ListEditorScreenProps {
   list: Note | null;
   onClose: () => void;
   onRename: (id: string, title: string) => void;
@@ -15,7 +15,7 @@ interface ListEditorSheetProps {
   onRemoveItem: (id: string, itemId: string) => void;
 }
 
-export default function ListEditorSheet({
+export default function ListEditorScreen({
   list,
   onClose,
   onRename,
@@ -23,7 +23,7 @@ export default function ListEditorSheet({
   onAddItem,
   onToggleItem,
   onRemoveItem,
-}: ListEditorSheetProps) {
+}: ListEditorScreenProps) {
   const [draft, setDraft] = useState("");
 
   function handleAddItem(e: FormEvent) {
@@ -38,28 +38,21 @@ export default function ListEditorSheet({
     <AnimatePresence>
       {list && (
         <motion.div
-          className="book-sheet-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
+          className="note-fullscreen"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 24 }}
+          transition={{ duration: 0.2 }}
         >
-          <motion.div
-            className="book-sheet list-editor-sheet"
-            onClick={(e) => e.stopPropagation()}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 360, damping: 34 }}
-          >
-            <div className="book-sheet-handle" />
-            <div className="list-editor-header">
-              <input
-                className="note-editor-title"
-                value={list.title}
-                onChange={(e) => onRename(list.id, e.target.value)}
-                onFocus={() => playSfx("drop")}
-              />
+          <div className="page-bg page-bg-blurred-strong" aria-hidden="true">
+            <img src="/diario-listas-bg.png" alt="" />
+          </div>
+
+          <div className="note-fullscreen-content">
+            <div className="note-fullscreen-header">
+              <button className="icon-btn" onClick={onClose} aria-label="Voltar">
+                <ChevronLeftIcon width={20} height={20} /> Voltar
+              </button>
               <button
                 className="icon-btn"
                 onClick={() => {
@@ -72,7 +65,14 @@ export default function ListEditorSheet({
               </button>
             </div>
 
-            <ul className="checklist-items list-editor-items">
+            <input
+              className="note-editor-title"
+              value={list.title}
+              onChange={(e) => onRename(list.id, e.target.value)}
+              onFocus={() => playSfx("drop")}
+            />
+
+            <ul className="checklist-items list-editor-items-full">
               {(list.items ?? []).map((item) => (
                 <li key={item.id} className={`checklist-item${item.done ? " done" : ""}`}>
                   <label>
@@ -98,7 +98,7 @@ export default function ListEditorSheet({
                 <PlusIcon width={16} height={16} />
               </button>
             </form>
-          </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>,

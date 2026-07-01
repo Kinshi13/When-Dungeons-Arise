@@ -105,12 +105,16 @@ async function buildIcon(name, rimStyle = "hard") {
 
 // Recorte fixo (coordenadas descobertas inspecionando a arte): a barra nova já
 // vem com os 5 ícones desenhados direto nela, cada um no seu quadro decorado.
-// A região abaixo isola só a fileira dos 5 quadros (sem o topo com brasão/fitas
-// nem as franjas penduradas embaixo), bem centralizada e uniformemente espaçada
-// — por isso dá pra dividir em 5 colunas iguais no CSS e cair certinho em cada
-// ícone (bell=Mural, balança=Tesouraria, bússola=Guilda, calendário=Tempo,
-// engrenagem=Ajustes), na mesma ordem de sempre.
-const TABBAR_ICON_ROW_REGION = { left: 260, top: 228, width: 1660, height: 360 };
+// A largura usa o conteúdo inteiro (sem cortar as fitas/franjas das laterais —
+// a arte foi feita pra ser usada inteira como barra); só a altura é recortada,
+// pra pegar a fileira dos ícones sem o topo com brasão/scrollwork nem a ponta
+// solta das franjas embaixo.
+const TABBAR_ICON_ROW_REGION = { left: 72, top: 228, width: 2028, height: 360 };
+
+// Frações (0-1) do centro de cada ícone em relação à largura total do recorte
+// acima — usadas em App.css pra dividir a barra em 5 zonas clicáveis do
+// tamanho certo (não são iguais: as pontas incluem as fitas decorativas).
+const TABBAR_ICON_CENTERS = [0.186, 0.3475, 0.5086, 0.67, 0.8313];
 
 async function buildTabbarIntegratedArt() {
   const raw = await removeNeutralBackground(path.join(REF, "tabbar-integrated-source.png"));
@@ -120,10 +124,15 @@ async function buildTabbarIntegratedArt() {
     .png()
     .toBuffer();
   await sharp(extractedBuf)
-    .resize(1400, 303)
+    .resize(1600, 284)
     .png({ compressionLevel: 9, quality: 90 })
     .toFile(path.join(OUT, "tabbar-bg.png"));
-  console.log("tabbar-bg.png gerado (fileira dos 5 ícones integrados)");
+  console.log("tabbar-bg.png gerado (arte inteira, sem corte lateral)");
+  console.log("Zonas de clique (flex-basis %):", TABBAR_ICON_CENTERS.map((_, i, arr) => {
+    const prevMid = i === 0 ? 0 : (arr[i - 1] + arr[i]) / 2;
+    const nextMid = i === arr.length - 1 ? 1 : (arr[i] + arr[i + 1]) / 2;
+    return ((nextMid - prevMid) * 100).toFixed(1);
+  }));
 }
 
 async function main() {

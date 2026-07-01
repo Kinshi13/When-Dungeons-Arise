@@ -46,6 +46,11 @@
   transform: scale(1.06);
 }
 
+.page-bg-blurred-strong img {
+  filter: blur(14px) brightness(0.5);
+  transform: scale(1.12);
+}
+
 .pixel-icon {
   image-rendering: pixelated;
   object-fit: contain;
@@ -117,26 +122,46 @@
   z-index: 2;
   bottom: 0;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(0);
   width: 100%;
   max-width: 480px;
-  height: 96px;
+  aspect-ratio: 1600 / 284;
   display: flex;
   align-items: stretch;
-  justify-content: space-between;
-  overflow-x: auto;
-  gap: 2px;
-  background: var(--surface) url("/icons-nav/tabbar-bg.png") center center / cover no-repeat;
+  justify-content: flex-start;
+  background: var(--surface) url("/icons-nav/tabbar-bg.png") center center / contain no-repeat;
   border-top: var(--pixel-border);
   padding: 0;
+  transition: transform 0.35s ease;
+}
+
+/* Nas telas do Diário/Biblioteca a barra desce quase toda, sobrando só a
+   linha de cima (o resto da altura menos essa tira fica fora da tela). */
+.tabbar-tucked {
+  transform: translateX(-50%) translateY(calc(100% - 10px));
 }
 
 .tab {
-  flex: 1 1 0;
   display: flex;
   text-decoration: none;
   white-space: nowrap;
   transition: transform 0.1s ease;
+}
+
+/* Larguras batendo com o centro de cada ícone na arte integrada (não são
+   iguais — as pontas incluem as fitas decoradas nas bordas da imagem). */
+.tab-mural {
+  flex: 0 0 26.7%;
+}
+
+.tab-tesouraria,
+.tab-guilda,
+.tab-tempo {
+  flex: 0 0 16.1%;
+}
+
+.tab-ajustes {
+  flex: 0 0 25%;
 }
 
 .tab.active {
@@ -996,10 +1021,34 @@
   transform: scale(0.92);
 }
 
-.note-editor-sheet,
-.list-editor-sheet {
-  max-height: 70vh;
-  align-items: stretch;
+.note-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  flex-direction: column;
+}
+
+.note-fullscreen-content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  overflow-y: auto;
+}
+
+.note-fullscreen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.note-fullscreen-header .icon-btn {
+  gap: 6px;
 }
 
 .note-editor-title {
@@ -1022,6 +1071,14 @@
   font-size: 1rem;
   resize: vertical;
   width: 100%;
+}
+
+.note-editor-content-full {
+  flex: 1;
+  min-height: 160px;
+  resize: none;
+  font-size: 1.1rem;
+  line-height: 1.5;
 }
 
 .note-editor-actions {
@@ -1048,21 +1105,16 @@
   gap: 8px;
 }
 
-.list-editor-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-}
-
-.list-editor-header .note-editor-title {
-  flex: 1;
-}
-
 .list-editor-items {
   width: 100%;
   overflow-y: auto;
   max-height: 30vh;
+}
+
+.list-editor-items-full {
+  width: 100%;
+  flex: 1;
+  overflow-y: auto;
 }
 
 /* Listas (Diário) */

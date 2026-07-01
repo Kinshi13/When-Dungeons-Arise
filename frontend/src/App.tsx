@@ -69,6 +69,7 @@ function App() {
 
   const isReader = location.pathname.startsWith("/leitor");
   const pageBackground = PAGE_BACKGROUNDS[location.pathname];
+  const isSpecialScreen = location.pathname.startsWith("/diario") || location.pathname === "/biblioteca";
 
   if (isReader) {
     return (
@@ -118,12 +119,12 @@ function App() {
           </Routes>
         </main>
         <DueBillsPopup />
-        <nav className="tabbar">
-          <MotionNavLink to="/missoes" className="tab" aria-label="Mural" onClick={() => playSfx("coin")} {...tabMotion} />
-          <MotionNavLink to="/tesouraria" className="tab" aria-label="Tesouraria" onClick={() => playSfx("coin")} {...tabMotion} />
-          <MotionNavLink to="/" end className="tab" aria-label="Guilda" onClick={() => playSfx("coin")} {...tabMotion} />
-          <MotionNavLink to="/sala-do-tempo" className="tab" aria-label="Tempo" onClick={() => playSfx("coin")} {...tabMotion} />
-          <MotionNavLink to="/regras" className="tab" aria-label="Ajustes" onClick={() => playSfx("coin")} {...tabMotion} />
+        <nav className={`tabbar${isSpecialScreen ? " tabbar-tucked" : ""}`}>
+          <MotionNavLink to="/missoes" className="tab tab-mural" aria-label="Mural" onClick={() => playSfx("coin")} {...tabMotion} />
+          <MotionNavLink to="/tesouraria" className="tab tab-tesouraria" aria-label="Tesouraria" onClick={() => playSfx("coin")} {...tabMotion} />
+          <MotionNavLink to="/" end className="tab tab-guilda" aria-label="Guilda" onClick={() => playSfx("coin")} {...tabMotion} />
+          <MotionNavLink to="/sala-do-tempo" className="tab tab-tempo" aria-label="Tempo" onClick={() => playSfx("coin")} {...tabMotion} />
+          <MotionNavLink to="/regras" className="tab tab-ajustes" aria-label="Ajustes" onClick={() => playSfx("coin")} {...tabMotion} />
         </nav>
       </div>
     </MotionConfig>

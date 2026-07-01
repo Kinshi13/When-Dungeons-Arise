@@ -1,19 +1,24 @@
 import { useRef, type TouchEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-// Sequência única de navegação por swipe. Sub-telas de uma área (como as abas
-// da Tesouraria) entram como mais passos aqui — ao chegar na borda de um grupo,
-// o swipe continua naturalmente para a área principal vizinha na barra inferior.
-const TAB_ROUTES = [
-  "/missoes",
-  "/tesouraria/financas",
-  "/tesouraria/contas",
-  "/tesouraria/calculadora",
-  "/tesouraria/porcentagem",
-  "/",
-  "/sala-do-tempo/calendario",
-  "/sala-do-tempo/agenda",
-  "/regras",
+// Sequências de navegação por swipe. Sub-telas de uma área (como as abas da
+// Tesouraria) entram como mais passos na mesma sequência — ao chegar na borda
+// de um grupo, o swipe continua naturalmente pra área principal vizinha na
+// barra inferior. O Diário fica numa sequência própria, separada da barra
+// inferior (é acessado pelo atalho da Recepção, não pelas abas de baixo).
+const SEQUENCES: string[][] = [
+  [
+    "/missoes",
+    "/tesouraria/financas",
+    "/tesouraria/contas",
+    "/tesouraria/calculadora",
+    "/tesouraria/porcentagem",
+    "/",
+    "/sala-do-tempo/calendario",
+    "/sala-do-tempo/agenda",
+    "/regras",
+  ],
+  ["/diario/notas", "/diario/listas"],
 ];
 
 const SWIPE_THRESHOLD = 60;
@@ -38,13 +43,14 @@ export function useSwipeNav() {
 
     if (Math.abs(dx) < SWIPE_THRESHOLD || Math.abs(dx) < Math.abs(dy) * 1.5) return;
 
-    const currentIndex = TAB_ROUTES.indexOf(location.pathname);
-    if (currentIndex === -1) return;
+    const sequence = SEQUENCES.find((seq) => seq.includes(location.pathname));
+    if (!sequence) return;
 
+    const currentIndex = sequence.indexOf(location.pathname);
     const nextIndex = dx < 0 ? currentIndex + 1 : currentIndex - 1;
-    if (nextIndex < 0 || nextIndex >= TAB_ROUTES.length) return;
+    if (nextIndex < 0 || nextIndex >= sequence.length) return;
 
-    navigate(TAB_ROUTES[nextIndex]);
+    navigate(sequence[nextIndex]);
   }
 
   return { onTouchStart, onTouchEnd };

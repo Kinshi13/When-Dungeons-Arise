@@ -3,11 +3,11 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { api, type Note } from "../api";
-import { TrashIcon, PlusIcon } from "../icons";
+import { TrashIcon, PlusIcon, ChevronLeftIcon } from "../icons";
 import { playSfx } from "../sound";
 import { findDateMention, resolveDateToISO } from "../game/dateDetector";
 
-interface NoteEditorSheetProps {
+interface NoteEditorScreenProps {
   note: Note | null;
   onClose: () => void;
   onSave: (data: { title: string; content: string }) => void;
@@ -15,7 +15,7 @@ interface NoteEditorSheetProps {
   onTurnIntoTask: (note: Note) => void;
 }
 
-export default function NoteEditorSheet({ note, onClose, onSave, onDelete, onTurnIntoTask }: NoteEditorSheetProps) {
+export default function NoteEditorScreen({ note, onClose, onSave, onDelete, onTurnIntoTask }: NoteEditorScreenProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [dismissedMatch, setDismissedMatch] = useState<string | null>(null);
@@ -57,21 +57,33 @@ export default function NoteEditorSheet({ note, onClose, onSave, onDelete, onTur
     <AnimatePresence>
       {note && (
         <motion.div
-          className="book-sheet-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={handleSave}
+          className="note-fullscreen"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 24 }}
+          transition={{ duration: 0.2 }}
         >
-          <motion.div
-            className="book-sheet note-editor-sheet"
-            onClick={(e) => e.stopPropagation()}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 360, damping: 34 }}
-          >
-            <div className="book-sheet-handle" />
+          <div className="page-bg page-bg-blurred-strong" aria-hidden="true">
+            <img src="/diario-notas-bg.png" alt="" />
+          </div>
+
+          <div className="note-fullscreen-content">
+            <div className="note-fullscreen-header">
+              <button className="icon-btn" onClick={handleSave} aria-label="Voltar">
+                <ChevronLeftIcon width={20} height={20} /> Voltar
+              </button>
+              <button
+                className="icon-btn"
+                onClick={() => {
+                  onDelete(note.id);
+                  onClose();
+                }}
+                aria-label="Excluir nota"
+              >
+                <TrashIcon width={18} height={18} />
+              </button>
+            </div>
+
             <input
               className="note-editor-title"
               placeholder="Título"
@@ -81,12 +93,11 @@ export default function NoteEditorSheet({ note, onClose, onSave, onDelete, onTur
               autoFocus
             />
             <textarea
-              className="note-editor-content"
+              className="note-editor-content note-editor-content-full"
               placeholder="Escreva sua nota..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onFocus={() => playSfx("drop")}
-              rows={6}
             />
 
             {showDatePrompt && (
@@ -111,21 +122,11 @@ export default function NoteEditorSheet({ note, onClose, onSave, onDelete, onTur
               <button className="small" onClick={() => onTurnIntoTask(note)}>
                 Virar missão
               </button>
-              <button
-                className="icon-btn"
-                onClick={() => {
-                  onDelete(note.id);
-                  onClose();
-                }}
-                aria-label="Excluir nota"
-              >
-                <TrashIcon width={18} height={18} />
-              </button>
               <button className="icon-btn primary" onClick={handleSave}>
                 Salvar
               </button>
             </div>
-          </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>,
