@@ -6,6 +6,10 @@ import '@fontsource/press-start-2p/latin-400.css'
 import '@fontsource/press-start-2p/latin-ext-400.css'
 import '@fontsource/vt323/latin-400.css'
 import '@fontsource/vt323/latin-ext-400.css'
+import '@fontsource/alegreya/latin-400.css'
+import '@fontsource/alegreya/latin-ext-400.css'
+import '@fontsource/alegreya/latin-700.css'
+import '@fontsource/alegreya/latin-ext-700.css'
 import { api } from './api'
 import {
   isNativePlatform,

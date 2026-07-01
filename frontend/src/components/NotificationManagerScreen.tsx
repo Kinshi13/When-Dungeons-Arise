@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import {
   fetchRecentNotifications,
@@ -9,8 +10,10 @@ import {
   type RawSystemNotification,
 } from "../notificationBridge";
 import { groupNotifications, hasScheduleHint } from "../notificationGrouping";
+import { ensureAppsKnown } from "../notificationAppPrefs";
+import { runAutoExpenseDetection, isNotificationProcessed } from "../autoExpenseEngine";
 import { findDateMention, resolveDateToISO } from "../game/dateDetector";
-import { ChevronLeftIcon, BellIcon, PlusIcon } from "../icons";
+import { ChevronLeftIcon, BellIcon, PlusIcon, CoinIcon, SettingsIcon } from "../icons";
 import { playSfx } from "../sound";
 
 interface NotificationManagerScreenProps {
@@ -28,11 +31,13 @@ function relativeTime(postTime: number): string {
 }
 
 export default function NotificationManagerScreen({ open, onClose }: NotificationManagerScreenProps) {
+  const navigate = useNavigate();
   const [granted, setGranted] = useState(false);
   const [items, setItems] = useState<RawSystemNotification[]>([]);
   const [isExample, setIsExample] = useState(true);
   const [loading, setLoading] = useState(false);
   const [convertedIds, setConvertedIds] = useState<string[]>([]);
+  const [autoExpenseCount, setAutoExpenseCount] = useState(0);
 
   async function load() {
     setLoading(true);
@@ -40,11 +45,20 @@ export default function NotificationManagerScreen({ open, onClose }: Notificatio
     setGranted(grantedResult);
     setItems(notifResult.items);
     setIsExample(notifResult.isExample);
+
+    ensureAppsKnown(notifResult.items.map((i) => ({ packageName: i.packageName, appName: i.appName })));
+    const autoExpenses = await runAutoExpenseDetection(notifResult.items);
+    if (autoExpenses.length > 0) {
+      playSfx("coin");
+      setAutoExpenseCount((prev) => prev + autoExpenses.length);
+    }
+
     setLoading(false);
   }
 
   useEffect(() => {
     if (open) load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   async function handleTurnIntoMission(notification: RawSystemNotification) {
@@ -66,6 +80,11 @@ export default function NotificationManagerScreen({ open, onClose }: Notificatio
     });
     playSfx("coin");
     setConvertedIds((prev) => [...prev, notification.id]);
+  }
+
+  function handleOpenSettings() {
+    onClose();
+    navigate("/regras");
   }
 
   const groups = groupNotifications(items);
@@ -90,6 +109,9 @@ export default function NotificationManagerScreen({ open, onClose }: Notificatio
                 <ChevronLeftIcon width={20} height={20} /> Voltar
               </button>
               <strong>Notificações</strong>
+              <button className="icon-btn" onClick={handleOpenSettings} aria-label="Configurar apps monitorados">
+                <SettingsIcon width={16} height={16} />
+              </button>
             </div>
 
             {!granted && (
@@ -110,6 +132,22 @@ export default function NotificationManagerScreen({ open, onClose }: Notificatio
               </p>
             )}
 
+            {autoExpenseCount > 0 && (
+              <p className="hint notif-auto-expense-hint">
+                <CoinIcon width={14} height={14} /> {autoExpenseCount} gasto
+                {autoExpenseCount === 1 ? "" : "s"} detectado{autoExpenseCount === 1 ? "" : "s"} e lançado
+                {autoExpenseCount === 1 ? "" : "s"} nas finanças automaticamente.
+              </p>
+            )}
+
+            <p className="hint notif-settings-hint">
+              Escolha quais apps monitorar (e priorize os bancos) em{" "}
+              <button className="link-btn" onClick={handleOpenSettings}>
+                Ajustes › Notificações monitoradas
+              </button>
+              .
+            </p>
+
             <div className="notif-groups">
               {loading && <p className="hint">Carregando...</p>}
               {!loading && groups.length === 0 && <p className="hint">Nenhuma notificação por aqui.</p>}
@@ -122,13 +160,23 @@ export default function NotificationManagerScreen({ open, onClose }: Notificatio
                   <div className="notif-group-items">
                     {group.items.map((item) => {
                       const converted = convertedIds.includes(item.id);
+                      const autoExpensed = isNotificationProcessed(item.id);
                       return (
-                        <div key={item.id} className="notif-card" style={hasScheduleHint(item) ? { opacity: 0.9 } : undefined}>
+                        <div
+                          key={item.id}
+                          className="notif-card"
+                          style={hasScheduleHint(item) ? { opacity: 0.9 } : undefined}
+                        >
                           <div className="notif-card-top">
                             <strong className="notif-card-title">{item.title || group.appName}</strong>
                             <span className="meta">{relativeTime(item.postTime)}</span>
                           </div>
                           <p className="notif-card-text">{item.text}</p>
+                          {autoExpensed && (
+                            <span className="notif-card-expense-badge">
+                              <CoinIcon width={12} height={12} /> Gasto lançado automaticamente
+                            </span>
+                          )}
                           <button
                             className="icon-btn small-btn"
                             onClick={() => handleTurnIntoMission(item)}

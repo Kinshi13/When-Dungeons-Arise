@@ -69,6 +69,14 @@ const MOCK_NOTIFICATIONS: RawSystemNotification[] = [
     text: "Seu pedido saiu pra entrega, chega até 20/07",
     postTime: now - HOUR * 30,
   },
+  {
+    id: "mock-6",
+    packageName: "com.nu.production",
+    appName: "Nubank",
+    title: "Compra aprovada",
+    text: "Compra de R$ 89,90 aprovada no cartão em Mercado Bom Preço",
+    postTime: now - HOUR * 2,
+  },
 ];
 
 export async function isNotificationAccessGranted(): Promise<boolean> {

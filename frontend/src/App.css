@@ -515,6 +515,35 @@
   accent-color: var(--accent);
 }
 
+.monitored-app-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.monitored-app-row {
+  background: var(--surface-raised);
+  border: var(--pixel-border);
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+
+.monitored-app-row.priority {
+  border-color: var(--accent);
+}
+
+.monitored-app-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.monitored-app-add-form {
+  margin-bottom: 0;
+}
+
 .error {
   color: var(--danger);
   font-size: 1rem;
@@ -1959,6 +1988,39 @@
 .notif-card-text {
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+.notif-card-expense-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  background: rgba(46, 204, 113, 0.18);
+  color: var(--success);
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.notif-auto-expense-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--success);
+}
+
+.notif-settings-hint {
+  text-align: center;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent-2);
+  text-decoration: underline;
+  font: inherit;
+  cursor: pointer;
 }
 
 .sr-only {
