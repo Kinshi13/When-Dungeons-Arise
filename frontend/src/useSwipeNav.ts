@@ -1,4 +1,4 @@
-import { useRef, type TouchEvent } from "react";
+import { useRef, useState, type TouchEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMotionValue, animate } from "framer-motion";
 
@@ -25,6 +25,14 @@ const DIARIO_SEQUENCE = ["/diario/notas", "/diario/listas"];
 const SWIPE_THRESHOLD = 60;
 const ACTIVATION_THRESHOLD = 10;
 
+// Duração fixa e curta, mas com uma curva que acelera suave em vez de soltar
+// o freio de vez (easeIn) — evita tanto a sensação rígida/mecânica quanto o
+// risco de uma mola "solta" demorar demais pra assentar num arrasto rápido.
+const COMMIT_TRANSITION = { duration: 0.22, ease: [0.32, 0.72, 0, 1] as const };
+// No cancelamento a distância até 0 é sempre curta, então uma mola aqui
+// assenta rápido e ainda aproveita a velocidade do gesto pra continuar fluida.
+const CANCEL_TRANSITION = { type: "spring" as const, stiffness: 420, damping: 34, mass: 0.6 };
+
 // A qual das 5 telas principais da barra inferior uma rota pertence — usado
 // pra decidir quando a troca merece a animação de slide (entre telas) e quando
 // deve continuar instantânea (entre sub-abas da mesma tela). Rotas fora da
@@ -38,44 +46,91 @@ export function sectionOf(pathname: string): string | null {
   return null;
 }
 
+// Chave de agrupamento pra decidir se a troca de tela remonta (e quando) o
+// conteúdo — igual sectionOf, mas trata o Diário como um grupo só (Notas e
+// Listas não devem remontar entre si, mesmo não fazendo parte da barra).
+export function groupKeyOf(pathname: string): string {
+  if (pathname.startsWith("/diario")) return "diario";
+  return sectionOf(pathname) ?? pathname;
+}
+
 // Ordem visual das 5 telas na barra inferior — usada só pra saber de que lado
 // a próxima tela deve entrar (direção do slide), não pra navegação em si.
 export const MAIN_ORDER = ["mural", "tesouraria", "guilda", "tempo", "ajustes"];
 
-function resolveTarget(pathname: string, dx: number) {
-  const sequence = FLAT_SEQUENCE.includes(pathname)
-    ? FLAT_SEQUENCE
-    : DIARIO_SEQUENCE.includes(pathname)
-      ? DIARIO_SEQUENCE
-      : null;
-  if (!sequence) return { targetPath: null, crossesSection: false };
+interface ResolvedGesture {
+  targetPath: string | null;
+  // true = troca acompanha o dedo em tempo real e ganha a animação de slide
+  // completa (entre telas principais, ou saindo do Diário/Biblioteca de volta
+  // pra Recepção); false = troca instantânea de sempre (sub-abas).
+  animated: boolean;
+  direction: number; // -1 ou 1 — de que lado a tela nova entra
+}
 
-  const currentIndex = sequence.indexOf(pathname);
-  const nextIndex = dx < 0 ? currentIndex + 1 : currentIndex - 1;
-  const targetPath = nextIndex >= 0 && nextIndex < sequence.length ? sequence[nextIndex] : null;
-  const crossesSection = sequence === FLAT_SEQUENCE && !!targetPath && sectionOf(targetPath) !== sectionOf(pathname);
-  return { targetPath, crossesSection };
+function resolveGesture(pathname: string, dx: number): ResolvedGesture {
+  const direction = dx < 0 ? 1 : -1;
+
+  // Biblioteca não tem sub-abas — arrastar pra esquerda sempre volta pra
+  // Recepção (reverso do toque na lateral direita usado pra entrar).
+  if (pathname === "/biblioteca") {
+    return dx < 0 ? { targetPath: "/", animated: true, direction } : { targetPath: null, animated: false, direction };
+  }
+
+  // Diário tem duas sub-abas que continuam navegando normalmente entre si; só
+  // na borda inicial (Notas, arrastando pra direita) o gesto vira "sair" de
+  // volta pra Recepção (reverso do toque na lateral esquerda usado pra entrar).
+  if (DIARIO_SEQUENCE.includes(pathname)) {
+    const currentIndex = DIARIO_SEQUENCE.indexOf(pathname);
+    const nextIndex = dx < 0 ? currentIndex + 1 : currentIndex - 1;
+    if (nextIndex >= 0 && nextIndex < DIARIO_SEQUENCE.length) {
+      return { targetPath: DIARIO_SEQUENCE[nextIndex], animated: false, direction };
+    }
+    if (dx > 0) {
+      return { targetPath: "/", animated: true, direction };
+    }
+    return { targetPath: null, animated: false, direction };
+  }
+
+  if (FLAT_SEQUENCE.includes(pathname)) {
+    const currentIndex = FLAT_SEQUENCE.indexOf(pathname);
+    const nextIndex = dx < 0 ? currentIndex + 1 : currentIndex - 1;
+    const targetPath = nextIndex >= 0 && nextIndex < FLAT_SEQUENCE.length ? FLAT_SEQUENCE[nextIndex] : null;
+    const animated = !!targetPath && sectionOf(targetPath) !== sectionOf(pathname);
+    return { targetPath, animated, direction };
+  }
+
+  return { targetPath: null, animated: false, direction };
+}
+
+export interface SlidePreview {
+  section: string;
+  direction: number;
 }
 
 export function useSwipeNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const x = useMotionValue(0);
+  const [preview, setPreview] = useState<SlidePreview | null>(null);
 
   const startX = useRef<number | null>(null);
   const startY = useRef<number | null>(null);
   const decided = useRef(false);
-  const crossesSection = useRef(false);
+  const animated = useRef(false);
   const targetPath = useRef<string | null>(null);
-  const dragDirection = useRef(0);
+  const direction = useRef(0);
+  // Consumido pelo App logo após o commit — dá a direção certa pro slide de
+  // entrada mesmo quando a troca não é uma comparação simples de índice na
+  // barra (como sair do Diário/Biblioteca de volta pra Recepção).
+  const swipeDirectionRef = useRef(0);
 
   function reset() {
     startX.current = null;
     startY.current = null;
     decided.current = false;
-    crossesSection.current = false;
+    animated.current = false;
     targetPath.current = null;
-    dragDirection.current = 0;
+    direction.current = 0;
   }
 
   function onTouchStart(e: TouchEvent) {
@@ -91,15 +146,21 @@ export function useSwipeNav() {
     if (!decided.current) {
       if (Math.abs(dx) < ACTIVATION_THRESHOLD || Math.abs(dx) < Math.abs(dy) * 1.5) return;
       decided.current = true;
-      dragDirection.current = dx < 0 ? 1 : -1;
-      const resolved = resolveTarget(location.pathname, dx);
+      const resolved = resolveGesture(location.pathname, dx);
       targetPath.current = resolved.targetPath;
-      crossesSection.current = resolved.crossesSection;
+      animated.current = resolved.animated;
+      direction.current = resolved.direction;
+
+      if (resolved.animated && resolved.targetPath) {
+        const section = sectionOf(resolved.targetPath);
+        setPreview(section ? { section, direction: resolved.direction } : null);
+      }
     }
 
-    // Só a troca ENTRE telas principais acompanha o dedo em tempo real — entre
-    // sub-abas da mesma tela o comportamento continua o instantâneo de sempre.
-    if (crossesSection.current) {
+    // Só a troca ENTRE telas (principais, ou saindo do Diário/Biblioteca)
+    // acompanha o dedo em tempo real — entre sub-abas da mesma tela o
+    // comportamento continua o instantâneo de sempre.
+    if (animated.current) {
       x.set(targetPath.current ? dx : dx * 0.3);
     }
   }
@@ -111,17 +172,20 @@ export function useSwipeNav() {
     }
     const dx = e.changedTouches[0].clientX - startX.current;
 
-    if (crossesSection.current) {
+    if (animated.current) {
       if (Math.abs(dx) > SWIPE_THRESHOLD && targetPath.current) {
-        const dir = dragDirection.current;
+        const dir = direction.current;
         const screenWidth = window.innerWidth;
         const path = targetPath.current;
-        animate(x, dir * -screenWidth, { duration: 0.16, ease: "easeIn" }).then(() => {
+        animate(x, dir * -screenWidth, COMMIT_TRANSITION).then(() => {
           x.set(0);
+          setPreview(null);
+          swipeDirectionRef.current = dir;
           navigate(path);
         });
       } else {
-        animate(x, 0, { type: "spring", stiffness: 420, damping: 40 });
+        animate(x, 0, { ...CANCEL_TRANSITION, velocity: x.getVelocity() });
+        setPreview(null);
       }
     } else if (Math.abs(dx) > SWIPE_THRESHOLD && targetPath.current) {
       navigate(targetPath.current);
@@ -130,5 +194,5 @@ export function useSwipeNav() {
     reset();
   }
 
-  return { onTouchStart, onTouchMove, onTouchEnd, x };
+  return { onTouchStart, onTouchMove, onTouchEnd, x, preview, swipeDirectionRef };
 }

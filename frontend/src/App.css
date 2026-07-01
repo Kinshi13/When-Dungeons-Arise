@@ -19,11 +19,22 @@
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
+  will-change: transform;
 }
 
 .page-bg-slide-inner {
   position: absolute;
   inset: 0;
+  will-change: transform;
+}
+
+/* Prévia do fundo real da tela de destino, revelada durante o arraste (some
+   assim que o gesto termina — a troca definitiva assume a partir da mesma
+   posição, então não há salto visual). */
+.page-bg-slide-preview {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
 }
 
 .ambient-bg {
@@ -126,6 +137,7 @@
    (some após o gesto — some para 0 assim que a navegação é confirmada). */
 .slide-drag-layer {
   min-height: 100%;
+  will-change: transform;
 }
 
 /* Camada que anima a entrada da tela nova, vinda do lado certo (esquerda ou
@@ -134,6 +146,7 @@
    então não remontam nem animam — só a troca de tela mesmo entra deslizando. */
 .slide-enter-layer {
   min-height: 100%;
+  will-change: transform;
 }
 
 .page {
