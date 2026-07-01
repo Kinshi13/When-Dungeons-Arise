@@ -71,9 +71,15 @@ function App() {
   return (
     <MotionConfig reducedMotion={animationsEnabled ? "never" : "always"}>
       <Splash />
-      <div className={`ambient-bg${isHome ? " ambient-bg-hidden" : ""}`} aria-hidden="true">
-        <img src="/ambient-bg.gif" alt="" />
-      </div>
+      {isHome ? (
+        <div className="reception-bg" aria-hidden="true">
+          <img src="/guild-reception-bg.png" alt="" />
+        </div>
+      ) : (
+        <div className="ambient-bg" aria-hidden="true">
+          <img src="/ambient-bg.gif" alt="" />
+        </div>
+      )}
       <div className="app" style={{ zoom: UI_ZOOM_BY_SCALE[uiScale] } as React.CSSProperties}>
         <div className="top-bar">
           <GameTopBar />
