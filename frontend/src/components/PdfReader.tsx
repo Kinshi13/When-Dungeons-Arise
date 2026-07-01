@@ -1,15 +1,25 @@
-import { useEffect, useRef, useState } from "react";
-import * as pdfjsLib from "pdfjs-dist";
-import workerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+// Build "legacy" (não o padrão): inclui os polyfills que o pdfjs-dist precisa
+// (ex.: Map.prototype.getOrInsertComputed), API ainda não disponível nativamente
+// no Chromium/WebView do Android — sem isso o render() falha silenciosamente.
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+import workerSrc from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?url";
 import { useReaderGestures } from "../useReaderGestures";
 import { playPageFlip } from "../sound";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
 
+export interface ReaderHandle {
+  next: () => void;
+  prev: () => void;
+}
+
 interface PdfReaderProps {
   blob: Blob;
   initialPage?: number;
-  onPageChange?: (page: number) => void;
+  zoomStep: number;
+  onPageChange?: (page: number, numPages: number) => void;
+  onToggleZoom?: () => void;
 }
 
 function useOrientation() {
@@ -22,14 +32,16 @@ function useOrientation() {
   return landscape;
 }
 
-export default function PdfReader({ blob, initialPage = 1, onPageChange }: PdfReaderProps) {
+const PdfReader = forwardRef<ReaderHandle, PdfReaderProps>(function PdfReader(
+  { blob, initialPage = 1, zoomStep, onPageChange, onToggleZoom },
+  ref
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const docRef = useRef<pdfjsLib.PDFDocumentProxy | null>(null);
   const [page, setPage] = useState(initialPage);
   const [numPages, setNumPages] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [zoomed, setZoomed] = useState(false);
   const landscape = useOrientation();
 
   useEffect(() => {
@@ -62,7 +74,7 @@ export default function PdfReader({ blob, initialPage = 1, onPageChange }: PdfRe
       const fitWidthScale = (container.clientWidth - 16) / baseViewport.width;
       const fitHeightScale = (container.clientHeight - 16) / baseViewport.height;
       const baseScale = landscape ? fitHeightScale : fitWidthScale;
-      const finalScale = zoomed ? baseScale * 1.5 : baseScale;
+      const finalScale = baseScale * (1 + zoomStep * 0.25);
 
       const viewport = pdfPage.getViewport({ scale: finalScale });
       const canvas = canvasRef.current!;
@@ -74,19 +86,29 @@ export default function PdfReader({ blob, initialPage = 1, onPageChange }: PdfRe
     return () => {
       cancelled = true;
     };
-  }, [page, numPages, landscape, zoomed]);
+  }, [page, numPages, landscape, zoomStep]);
 
   function goTo(next: number) {
     if (next < 1 || next > numPages) return;
     setPage(next);
-    onPageChange?.(next);
+    onPageChange?.(next, numPages);
     playPageFlip();
   }
+
+  useEffect(() => {
+    if (numPages) onPageChange?.(page, numPages);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numPages]);
+
+  useImperativeHandle(ref, () => ({
+    next: () => goTo(page + 1),
+    prev: () => goTo(page - 1),
+  }));
 
   const { handleTap } = useReaderGestures({
     onPrev: () => goTo(page - 1),
     onNext: () => goTo(page + 1),
-    onDoubleTap: () => setZoomed((z) => !z),
+    onDoubleTap: () => onToggleZoom?.(),
   });
 
   if (error) return <p className="error">{error}</p>;
@@ -106,4 +128,6 @@ export default function PdfReader({ blob, initialPage = 1, onPageChange }: PdfRe
       </div>
     </div>
   );
-}
+});
+
+export default PdfReader;

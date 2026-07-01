@@ -1,27 +1,37 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import ePub, { type Book, type Rendition } from "epubjs";
 import { useReaderGestures } from "../useReaderGestures";
 import { playPageFlip } from "../sound";
+import type { ReaderHandle } from "./PdfReader";
 
 interface EpubReaderProps {
   blob: Blob;
   initialLocation?: string;
+  zoomStep: number;
   onLocationChange?: (cfi: string) => void;
+  onToggleZoom?: () => void;
 }
 
-export default function EpubReader({ blob, initialLocation, onLocationChange }: EpubReaderProps) {
+const EpubReader = forwardRef<ReaderHandle, EpubReaderProps>(function EpubReader(
+  { blob, initialLocation, zoomStep, onLocationChange, onToggleZoom },
+  ref
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const renditionRef = useRef<Rendition | null>(null);
   const bookRef = useRef<Book | null>(null);
   const isFirstRelocation = useRef(true);
   const [error, setError] = useState<string | null>(null);
-  const [zoomed, setZoomed] = useState(false);
 
   const { handleTap } = useReaderGestures({
     onPrev: () => renditionRef.current?.prev(),
     onNext: () => renditionRef.current?.next(),
-    onDoubleTap: () => setZoomed((z) => !z),
+    onDoubleTap: () => onToggleZoom?.(),
   });
+
+  useImperativeHandle(ref, () => ({
+    next: () => renditionRef.current?.next(),
+    prev: () => renditionRef.current?.prev(),
+  }));
 
   useEffect(() => {
     let cancelled = false;
@@ -66,8 +76,8 @@ export default function EpubReader({ blob, initialLocation, onLocationChange }: 
   }, [blob]);
 
   useEffect(() => {
-    renditionRef.current?.themes.fontSize(zoomed ? "150%" : "100%");
-  }, [zoomed]);
+    renditionRef.current?.themes.fontSize(`${100 + zoomStep * 25}%`);
+  }, [zoomStep]);
 
   return (
     <div className="reader-canvas-wrap epub-wrap-outer">
@@ -75,4 +85,6 @@ export default function EpubReader({ blob, initialLocation, onLocationChange }: 
       <div className="epub-wrap" ref={containerRef} />
     </div>
   );
-}
+});
+
+export default EpubReader;

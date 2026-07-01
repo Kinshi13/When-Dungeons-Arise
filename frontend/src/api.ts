@@ -1,5 +1,6 @@
 import { createId, table } from "./storage";
 import { saveFile, loadFile, deleteFile } from "./blobStore";
+import { generateCoverThumbnail } from "./bookCovers";
 import { buildRecurringOccurrences } from "./game/recurrence";
 import { buildInstallmentExpenses } from "./game/installments";
 import {
@@ -59,6 +60,7 @@ export interface DocumentMeta {
   type: DocumentType;
   addedAt: string;
   sizeBytes: number;
+  coverDataUrl?: string | null;
 }
 
 export interface ReadingProgress {
@@ -292,12 +294,14 @@ export const api = {
         (a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
       ),
     add: async (file: File, type: DocumentType) => {
+      const coverDataUrl = await generateCoverThumbnail(file, type);
       const doc: DocumentMeta = {
         id: createId(),
         title: file.name.replace(/\.(pdf|epub)$/i, ""),
         type,
         addedAt: new Date().toISOString(),
         sizeBytes: file.size,
+        coverDataUrl,
       };
       await saveFile(doc.id, file);
       documentTable.insert(doc);

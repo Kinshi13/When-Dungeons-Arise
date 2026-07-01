@@ -1183,78 +1183,187 @@
   margin-bottom: 0;
 }
 
-/* Estante de documentos */
+/* Estante de documentos — tela cheia, sem barra de navegação (recolhida via
+   isSpecialScreen), a própria arte da estante é a tela inteira. */
 
-.shelf-header {
+.library-fullscreen {
+  position: relative;
+  min-height: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 14px;
-  border-bottom: var(--pixel-border);
-  background: rgba(15, 10, 30, 0.55);
+  justify-content: center;
 }
 
-.shelf-header h2 {
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9);
-}
-
-.shelf-content {
-  background: rgba(15, 10, 30, 0.35);
-  min-height: 100%;
-}
-
-.shelf-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: flex-end;
-}
-
-.book-spine {
+/* Largura sempre 100% do contêiner e altura seguindo a proporção nativa da arte
+   (540x960) — garante que a estante nunca seja cortada (nem o topo com o brasão,
+   nem a base com a gaveta), mesmo se sobrar espaço vertical na tela. */
+.library-shelf-frame {
   position: relative;
-  width: 50px;
-  height: 148px;
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 540 / 960;
+}
+
+.library-shelf-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.library-import-zone {
+  position: absolute;
+  left: 0;
+  right: 0;
   border: none;
   background: transparent;
   padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.library-import-top {
+  top: 0;
+  height: 7%;
+}
+
+.library-import-base {
+  bottom: 0;
+  height: 11%;
+}
+
+.library-import-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 210, 63, 0.85);
+  color: #1a1330;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Uma faixa por prateleira (a primeira, decorativa, fica de fora) — rolagem
+   horizontal própria, então cada prateleira comporta quantos livros for preciso
+   sem nunca ultrapassar a altura/largura do vão de madeira. */
+.library-shelf-row {
+  position: absolute;
+  left: 9%;
+  right: 9%;
   display: flex;
   align-items: flex-end;
-  cursor: pointer;
-  filter: drop-shadow(2px 4px 2px rgba(0, 0, 0, 0.5));
-  transition: transform 0.12s ease;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 2px 4px;
+  scrollbar-width: none;
 }
 
-.book-spine:active {
-  transform: translateY(3px);
-}
-
-.book-spine-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: bottom;
-  image-rendering: pixelated;
-}
-
-.book-spine-title {
+.library-shelf-row::-webkit-scrollbar {
   display: none;
 }
 
-.book-spine-delete {
+.library-book-cover {
+  flex: 0 0 auto;
+  height: 100%;
+  aspect-ratio: 8 / 11;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  filter: drop-shadow(2px 3px 3px rgba(0, 0, 0, 0.55));
+  transition: transform 0.12s ease;
+}
+
+.library-book-cover:active {
+  transform: translateY(2px);
+}
+
+.library-book-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 3px;
+}
+
+.library-drawer-handle {
+  position: fixed;
+  bottom: 94px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 14px;
+  border: var(--pixel-border);
+  background: rgba(15, 10, 30, 0.75);
+  color: var(--text-h);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.library-drawer-handle:active {
+  transform: translateX(-50%) translateY(2px);
+}
+
+/* Gaveta com todos os arquivos — mesma tela cheia usada pelas notas/listas,
+   só que com o fundo da estante desfocado por trás da grade. */
+.library-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  overflow-y: auto;
+  flex: 1;
+  padding-bottom: 12px;
+}
+
+.library-drawer-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: rgba(15, 10, 30, 0.4);
+  border-radius: 6px;
+  padding: 8px 6px;
+  cursor: pointer;
+}
+
+.library-drawer-item-cover {
+  width: 100%;
+  aspect-ratio: 8 / 11;
+  object-fit: contain;
+  filter: drop-shadow(2px 3px 3px rgba(0, 0, 0, 0.5));
+}
+
+.library-drawer-item-title {
+  font-size: 0.7rem;
+  color: var(--text-h);
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.library-drawer-item-delete {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: 2px;
+  right: 2px;
   background: var(--surface);
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 50%;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--danger);
-  z-index: 2;
 }
 
 /* Leitor de PDF/EPUB — tela cheia */
@@ -1302,7 +1411,7 @@
 
 .reader-page-indicator {
   position: absolute;
-  bottom: 10px;
+  bottom: 58px;
   left: 50%;
   transform: translateX(-50%);
   background: rgba(0, 0, 0, 0.6);
@@ -1322,6 +1431,62 @@
   width: 100%;
   height: 100%;
   background: #fff;
+}
+
+/* Controles discretos do leitor: página anterior/próxima, zoom e escurecer tela */
+
+.reader-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  background: rgba(15, 10, 30, 0.85);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.reader-ctrl-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-h);
+  cursor: pointer;
+}
+
+.reader-ctrl-btn:active {
+  transform: scale(0.92);
+}
+
+.reader-ctrl-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.reader-ctrl-btn.active {
+  background: rgba(255, 210, 63, 0.35);
+  border-color: rgba(255, 210, 63, 0.6);
+}
+
+.reader-zoom-pct {
+  min-width: 40px;
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+}
+
+.reader-dim-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  z-index: 5;
 }
 
 /* Pop-up de capa do livro — renderizado em portal (document.body), sempre por cima */
@@ -1358,6 +1523,21 @@
   border-radius: 2px;
 }
 
+.book-sheet-delete {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--danger);
+}
+
 .book-cover {
   background: var(--surface-raised);
   border: var(--pixel-border);
@@ -1390,14 +1570,6 @@
 .book-cover-hint {
   font-size: 0.85rem;
   color: var(--text-muted);
-}
-
-/* Estante com fundo de madeira (aplicado quando Estante.png estiver disponível) */
-
-.shelf-bg {
-  background-image: url("/shelf-bg.png");
-  background-size: cover;
-  background-position: center;
 }
 
 /* ===== Gamificação: Guilda de Aventureiros ===== */
@@ -1727,11 +1899,3 @@
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
 }
 
-.library-page {
-  min-height: 100%;
-}
-
-.library-shelf-content {
-  padding: 14px 16px 24px;
-  min-height: 300px;
-}

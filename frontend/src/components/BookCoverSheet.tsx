@@ -2,12 +2,14 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import type { DocumentMeta } from "../api";
+import { TrashIcon } from "../icons";
 import { playSfx } from "../sound";
 
 interface BookCoverSheetProps {
   doc: DocumentMeta | null;
   spriteUrl: string;
   onClose: () => void;
+  onDelete: (id: string) => void;
 }
 
 function condenseTitle(title: string, maxLen = 28) {
@@ -15,13 +17,19 @@ function condenseTitle(title: string, maxLen = 28) {
   return `${title.slice(0, maxLen - 1).trimEnd()}…`;
 }
 
-export default function BookCoverSheet({ doc, spriteUrl, onClose }: BookCoverSheetProps) {
+export default function BookCoverSheet({ doc, spriteUrl, onClose, onDelete }: BookCoverSheetProps) {
   const navigate = useNavigate();
 
   function handleOpen() {
     if (!doc) return;
     playSfx("coin");
     navigate(`/leitor/${doc.id}`);
+  }
+
+  function handleDelete() {
+    if (!doc) return;
+    onDelete(doc.id);
+    onClose();
   }
 
   // Renderizado via portal direto em document.body: garante que o pop-up fique
@@ -46,6 +54,9 @@ export default function BookCoverSheet({ doc, spriteUrl, onClose }: BookCoverShe
             transition={{ type: "spring", stiffness: 360, damping: 34 }}
           >
             <div className="book-sheet-handle" />
+            <button className="book-sheet-delete" onClick={handleDelete} aria-label="Excluir documento">
+              <TrashIcon width={16} height={16} />
+            </button>
             <button className="book-cover" onClick={handleOpen}>
               <img src={spriteUrl} alt="" className="book-cover-img" />
               <span className="book-cover-title">{condenseTitle(doc.title)}</span>

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, type DocumentMeta } from "../api";
-import PdfReader from "../components/PdfReader";
+import PdfReader, { type ReaderHandle } from "../components/PdfReader";
 import EpubReader from "../components/EpubReader";
-import { ChevronLeftIcon } from "../icons";
+import { ChevronLeftIcon, ChevronRightIcon, MinusIcon, PlusIcon, MoonIcon } from "../icons";
 import { useGame } from "../game/GameContext";
 
 const READING_GOAL_MINUTES = 20;
+const MAX_ZOOM_STEP = 3;
 
 export default function ReaderScreen() {
   const { id } = useParams<{ id: string }>();
@@ -15,6 +16,10 @@ export default function ReaderScreen() {
   const [blob, setBlob] = useState<Blob | null>(null);
   const [initialLocation, setInitialLocation] = useState<string | undefined>(undefined);
   const [notFound, setNotFound] = useState(false);
+  const [zoomStep, setZoomStep] = useState(0);
+  const [dim, setDim] = useState(false);
+  const [pageInfo, setPageInfo] = useState<{ page: number; numPages: number } | null>(null);
+  const readerRef = useRef<ReaderHandle>(null);
   const { grantReward } = useGame();
   const sessionStart = useRef(Date.now());
   const rewardGranted = useRef(false);
@@ -56,6 +61,13 @@ export default function ReaderScreen() {
     if (id) api.readingProgress.save(id, location);
   }
 
+  function handleToggleZoom() {
+    setZoomStep((z) => (z === 0 ? MAX_ZOOM_STEP : 0));
+  }
+
+  const atFirstPage = doc?.type === "pdf" && !!pageInfo && pageInfo.page <= 1;
+  const atLastPage = doc?.type === "pdf" && !!pageInfo && pageInfo.page >= pageInfo.numPages;
+
   return (
     <div className="reader-fullscreen">
       <div className="reader-fullscreen-header">
@@ -69,13 +81,73 @@ export default function ReaderScreen() {
       {!notFound && !blob && <p className="hint" style={{ padding: 16 }}>Carregando...</p>}
       {blob && doc?.type === "pdf" && (
         <PdfReader
+          ref={readerRef}
           blob={blob}
           initialPage={initialLocation ? Number(initialLocation) : 1}
-          onPageChange={(page) => saveProgress(String(page))}
+          zoomStep={zoomStep}
+          onPageChange={(page, numPages) => {
+            saveProgress(String(page));
+            setPageInfo({ page, numPages });
+          }}
+          onToggleZoom={handleToggleZoom}
         />
       )}
       {blob && doc?.type === "epub" && (
-        <EpubReader blob={blob} initialLocation={initialLocation} onLocationChange={saveProgress} />
+        <EpubReader
+          ref={readerRef}
+          blob={blob}
+          initialLocation={initialLocation}
+          zoomStep={zoomStep}
+          onLocationChange={saveProgress}
+          onToggleZoom={handleToggleZoom}
+        />
+      )}
+
+      {dim && <div className="reader-dim-overlay" aria-hidden="true" />}
+
+      {blob && !notFound && (
+        <div className="reader-controls">
+          <button
+            className="reader-ctrl-btn"
+            onClick={() => readerRef.current?.prev()}
+            aria-label="Página anterior"
+            disabled={atFirstPage}
+          >
+            <ChevronLeftIcon width={16} height={16} />
+          </button>
+          <button
+            className="reader-ctrl-btn"
+            onClick={() => setZoomStep((z) => Math.max(0, z - 1))}
+            aria-label="Diminuir zoom"
+            disabled={zoomStep === 0}
+          >
+            <MinusIcon width={14} height={14} />
+          </button>
+          <span className="reader-zoom-pct">{100 + zoomStep * 25}%</span>
+          <button
+            className="reader-ctrl-btn"
+            onClick={() => setZoomStep((z) => Math.min(MAX_ZOOM_STEP, z + 1))}
+            aria-label="Aumentar zoom"
+            disabled={zoomStep === MAX_ZOOM_STEP}
+          >
+            <PlusIcon width={14} height={14} />
+          </button>
+          <button
+            className={`reader-ctrl-btn${dim ? " active" : ""}`}
+            onClick={() => setDim((d) => !d)}
+            aria-label="Escurecer tela para leitura"
+          >
+            <MoonIcon width={14} height={14} />
+          </button>
+          <button
+            className="reader-ctrl-btn"
+            onClick={() => readerRef.current?.next()}
+            aria-label="Próxima página"
+            disabled={atLastPage}
+          >
+            <ChevronRightIcon width={16} height={16} />
+          </button>
+        </div>
       )}
     </div>
   );

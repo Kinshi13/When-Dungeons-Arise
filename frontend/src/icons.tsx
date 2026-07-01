@@ -139,6 +139,38 @@ export function DiaryIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function MinusIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+export function MoonIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.5 6.5 0 0 0 9.5 9.5Z" />
+    </svg>
+  );
+}
+
+export function ChevronUpIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M6 15l6-6 6 6" />
+    </svg>
+  );
+}
+
+export function ChevronDownIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
 export function ProfileIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>
