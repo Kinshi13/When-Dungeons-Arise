@@ -5,6 +5,7 @@ import LibraryDrawer from "../components/LibraryDrawer";
 import { bookSpriteFor } from "../bookSprites";
 import { PlusIcon, ChevronUpIcon } from "../icons";
 import { playSfx } from "../sound";
+import { useSettings } from "../contexts/SettingsContext";
 
 // Regiões das 4 prateleiras utilizáveis (a primeira, decorativa, fica de fora),
 // em % da altura/largura da arte da estante — descobertas inspecionando as
@@ -19,6 +20,8 @@ const SHELVES = [
 const SWIPE_THRESHOLD = 70;
 
 export default function Library() {
+  const { theme } = useSettings();
+  const isLofi = theme === "lofi";
   const [docs, setDocs] = useState<DocumentMeta[]>([]);
   const [selected, setSelected] = useState<DocumentMeta | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -74,7 +77,11 @@ export default function Library() {
   return (
     <div className="library-fullscreen" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       <div className="library-shelf-frame">
-        <img src="/biblioteca-bg.png" alt="Estante da biblioteca" className="library-shelf-img" />
+        {isLofi ? (
+          <div className="lofi-scene lofi-scene-biblioteca library-shelf-img" aria-hidden="true" />
+        ) : (
+          <img src="/biblioteca-bg.png" alt="Estante da biblioteca" className="library-shelf-img" />
+        )}
 
         <button
           className="library-import-zone library-import-top"
@@ -103,6 +110,7 @@ export default function Library() {
               className="library-shelf-row"
               style={{ top: `${shelf.top}%`, height: `${shelf.height}%` }}
             >
+              {isLofi && <div className="lofi-shelf-line" aria-hidden="true" />}
               {shelfDocs.map((doc) => (
                 <button
                   key={doc.id}

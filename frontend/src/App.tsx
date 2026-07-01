@@ -17,6 +17,7 @@ import { useSettings } from "./contexts/SettingsContext";
 import { useSwipeNav, sectionOf, MAIN_ORDER, pendingSwipeDirection } from "./useSwipeNav";
 import { isNativePlatform } from "./notifications";
 import { playSfx } from "./sound";
+import { TabBellIcon, TabCoinsIcon, TabGuildIcon, TabHomeCalendarIcon, TabGearIcon } from "./icons2";
 import "./App.css";
 
 const MotionNavLink = motion.create(NavLink);
@@ -62,7 +63,28 @@ function renderRoutePreview(path: string): React.ReactNode {
   return null;
 }
 
-function renderBackgroundContent(bg?: { src: string; blurred?: boolean }) {
+// Cor/gradiente flat por área no tema Lo-fi — substitui inteiramente a arte
+// pintada (ver .lofi-scene-* no index.css). Diário e Biblioteca não fazem
+// parte das 5 áreas da barra, então são resolvidos à parte pelo pathname.
+const LOFI_SECTION_CLASS: Record<string, string> = {
+  mural: "lofi-scene-mural",
+  tesouraria: "lofi-scene-tesouraria",
+  guilda: "lofi-scene-guilda",
+  tempo: "lofi-scene-tempo",
+  ajustes: "lofi-scene-ajustes",
+};
+
+function lofiSceneClass(pathname: string): string {
+  if (pathname.startsWith("/diario")) return "lofi-scene-diario";
+  if (pathname === "/biblioteca") return "lofi-scene-biblioteca";
+  const section = sectionOf(pathname);
+  return (section && LOFI_SECTION_CLASS[section]) || "lofi-scene-guilda";
+}
+
+function renderBackgroundContent(bg: { src: string; blurred?: boolean } | undefined, isLofi: boolean, pathname: string) {
+  if (isLofi) {
+    return <div className={`lofi-scene ${lofiSceneClass(pathname)}`} aria-hidden="true" />;
+  }
   return bg ? (
     <div className={`page-bg${bg.blurred ? " page-bg-blurred" : ""}`}>
       <img src={bg.src} alt="" />
@@ -142,7 +164,8 @@ function useAndroidBackButton() {
 }
 
 function App() {
-  const { animationsEnabled } = useSettings();
+  const { animationsEnabled, theme } = useSettings();
+  const isLofi = theme === "lofi";
   const { onTouchStart, onTouchMove, onTouchEnd, x, preview } = useSwipeNav();
   const location = useLocation();
   useAndroidBackButton();
@@ -225,7 +248,11 @@ function App() {
             className="page-bg-slide-preview"
             style={{ transform: `translateX(${preview.direction > 0 ? "100%" : "-100%"})` }}
           >
-            {renderBackgroundContent(SECTION_BACKGROUND[sectionOf(preview.path) ?? ""] ?? PAGE_BACKGROUNDS[preview.path])}
+            {renderBackgroundContent(
+              SECTION_BACKGROUND[sectionOf(preview.path) ?? ""] ?? PAGE_BACKGROUNDS[preview.path],
+              isLofi,
+              preview.path
+            )}
           </div>
         )}
         <motion.div
@@ -235,7 +262,7 @@ function App() {
           animate={{ x: 0 }}
           transition={SLIDE_ENTER_TRANSITION}
         >
-          {renderBackgroundContent(pageBackground)}
+          {renderBackgroundContent(pageBackground, isLofi, location.pathname)}
         </motion.div>
       </motion.div>
       <div className="app">
@@ -280,20 +307,56 @@ function App() {
           </motion.div>
         </main>
         <DueBillsPopup />
-        <nav className={`tabbar${isSpecialScreen ? " tabbar-tucked" : ""}`}>
-          <MotionNavLink to="/missoes" className="tab tab-mural" aria-label="Mural" onClick={() => handleTabTap("mural")} {...tabMotion}>
+        <nav className={`tabbar${isLofi ? " tabbar-lofi" : ""}${isSpecialScreen ? " tabbar-tucked" : ""}`}>
+          <MotionNavLink
+            to="/missoes"
+            className={isLofi ? "tab-lofi" : "tab tab-mural"}
+            aria-label="Mural"
+            onClick={() => handleTabTap("mural")}
+            {...tabMotion}
+          >
+            {isLofi && <TabBellIcon />}
             {tabBurst?.tab === "mural" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
           </MotionNavLink>
-          <MotionNavLink to="/tesouraria" className="tab tab-tesouraria" aria-label="Tesouraria" onClick={() => handleTabTap("tesouraria")} {...tabMotion}>
+          <MotionNavLink
+            to="/tesouraria"
+            className={isLofi ? "tab-lofi" : "tab tab-tesouraria"}
+            aria-label="Tesouraria"
+            onClick={() => handleTabTap("tesouraria")}
+            {...tabMotion}
+          >
+            {isLofi && <TabCoinsIcon />}
             {tabBurst?.tab === "tesouraria" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
           </MotionNavLink>
-          <MotionNavLink to="/" end className="tab tab-guilda" aria-label="Guilda" onClick={() => handleTabTap("guilda")} {...tabMotion}>
+          <MotionNavLink
+            to="/"
+            end
+            className={isLofi ? "tab-lofi" : "tab tab-guilda"}
+            aria-label="Guilda"
+            onClick={() => handleTabTap("guilda")}
+            {...tabMotion}
+          >
+            {isLofi && <TabGuildIcon />}
             {tabBurst?.tab === "guilda" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
           </MotionNavLink>
-          <MotionNavLink to="/sala-do-tempo" className="tab tab-tempo" aria-label="Tempo" onClick={() => handleTabTap("tempo")} {...tabMotion}>
+          <MotionNavLink
+            to="/sala-do-tempo"
+            className={isLofi ? "tab-lofi" : "tab tab-tempo"}
+            aria-label="Tempo"
+            onClick={() => handleTabTap("tempo")}
+            {...tabMotion}
+          >
+            {isLofi && <TabHomeCalendarIcon />}
             {tabBurst?.tab === "tempo" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
           </MotionNavLink>
-          <MotionNavLink to="/regras" className="tab tab-ajustes" aria-label="Ajustes" onClick={() => handleTabTap("ajustes")} {...tabMotion}>
+          <MotionNavLink
+            to="/regras"
+            className={isLofi ? "tab-lofi" : "tab tab-ajustes"}
+            aria-label="Ajustes"
+            onClick={() => handleTabTap("ajustes")}
+            {...tabMotion}
+          >
+            {isLofi && <TabGearIcon />}
             {tabBurst?.tab === "ajustes" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
           </MotionNavLink>
         </nav>

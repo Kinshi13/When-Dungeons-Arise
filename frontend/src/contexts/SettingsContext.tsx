@@ -12,11 +12,12 @@ export const UI_SCALE_MIN = 50;
 export const UI_SCALE_MAX = 125;
 export const UI_SCALE_STEP = 5;
 
-export type ThemeId = "escuro" | "claro";
+export type ThemeId = "escuro" | "claro" | "lofi";
 
 export const THEME_LABEL: Record<ThemeId, string> = {
   escuro: "Padrão (escuro)",
   claro: "Claro",
+  lofi: "Lo-fi",
 };
 
 interface SettingsState {

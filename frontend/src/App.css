@@ -250,6 +250,38 @@
   box-shadow: 0 0 4px 1px rgba(255, 224, 130, 0.8);
 }
 
+/* Barra de navegação do tema Lo-fi — botões reais e simples em vez da arte
+   pixel art integrada, com cantos arredondados e sombra leve. */
+.tabbar-lofi {
+  background: var(--surface);
+  background-image: none;
+  aspect-ratio: unset;
+  height: auto;
+  gap: 8px;
+  padding: 10px 12px max(10px, env(safe-area-inset-bottom));
+  border-top: none;
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -6px 16px rgba(74, 59, 50, 0.18);
+}
+
+.tab-lofi {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: var(--surface-raised);
+  box-shadow: 0 2px 5px rgba(74, 59, 50, 0.25);
+  text-decoration: none;
+}
+
+.tab-lofi svg {
+  width: 26px;
+  height: 26px;
+  filter: drop-shadow(0 1px 1.5px rgba(74, 59, 50, 0.3));
+}
+
 /* Botões e ícones */
 
 .icon-btn {
@@ -1507,6 +1539,19 @@
   scrollbar-width: none;
 }
 
+/* Substitui a tábua de madeira pintada por uma linha flat simples no tema
+   Lo-fi, só pra manter a leitura de "prateleira" sem a arte pintada. */
+.lofi-shelf-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2px;
+  height: 6px;
+  border-radius: 4px;
+  background: var(--surface-raised);
+  box-shadow: 0 2px 4px rgba(74, 59, 50, 0.2);
+}
+
 .library-shelf-row::-webkit-scrollbar {
   display: none;
 }
@@ -2378,6 +2423,45 @@
   color: #4a3418;
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* Tema Lo-fi: sem a arte/balão de fala, "Temas" vira um botão flat comum,
+   ancorado no topo da tela em vez de tentar acertar a posição do balão. */
+.reception-dialog-bubble-lofi {
+  position: absolute;
+  top: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.reception-dialog-bubble-link-lofi {
+  background: var(--surface);
+  border: none;
+  border-radius: 14px;
+  padding: 8px 18px;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  box-shadow: 0 2px 6px rgba(74, 59, 50, 0.25);
+  cursor: pointer;
+}
+
+.reception-edge-icon-lofi {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin: 0 10px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 2px 6px rgba(74, 59, 50, 0.25);
+  color: var(--text);
+}
+
+.reception-edge-icon-lofi svg {
+  filter: drop-shadow(0 1px 1.5px rgba(74, 59, 50, 0.3));
 }
 
 .theme-picker {

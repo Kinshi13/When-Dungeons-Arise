@@ -11,6 +11,7 @@ interface ThemesScreenProps {
 const THEME_SWATCH_COLORS: Record<ThemeId, [string, string, string]> = {
   escuro: ["#0f0a1e", "#1c1430", "#ffd23f"],
   claro: ["#33516c", "#7d6a4c", "#7dd3fc"],
+  lofi: ["#f3ead9", "#e7b6ad", "#a68fc9"],
 };
 
 export default function ThemesScreen({ open, onClose }: ThemesScreenProps) {

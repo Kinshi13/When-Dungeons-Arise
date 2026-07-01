@@ -60,6 +60,67 @@
   color-scheme: dark;
 }
 
+/* Tema "Lo-fi" — visual bem mais aconchegante e diferente do padrão: troca a
+   arte pintada de cada tela por um gradiente flat pastel (ver .lofi-scene-*
+   mais abaixo), a barra de navegação por botões simples e os ícones por
+   versões preenchidas/flat com sombra leve (ver icons.tsx). Como o fundo
+   deixa de ser arte escura em toda tela, o texto pode ficar escuro sempre
+   (sem o conflito que existe no tema Claro). */
+[data-theme="lofi"] {
+  --bg: #f3ead9;
+  --surface: #f6ede0;
+  --surface-raised: #ecdcc4;
+  --border: #4a3b32;
+  --text: #4a3b32;
+  --text-h: #3a2e26;
+  --text-muted: #8a7a68;
+
+  --accent: #d98e73;
+  --accent-ink: #fdf8f0;
+  --accent-2: #b3a0c9;
+  --reuniao: #a68fc9;
+  --tarefa: #8bbf9f;
+  --outro: #e0b878;
+  --danger: #d9707c;
+  --success: #8bbf9f;
+
+  color-scheme: light;
+
+  /* Cores/gradientes por área — usados nos fundos flat de cada tela. */
+  --lofi-mural: linear-gradient(165deg, #f6d9d1 0%, #e7b6ad 55%, #d99e91 100%);
+  --lofi-tesouraria: linear-gradient(165deg, #eef2df 0%, #d3e0c2 55%, #b7cca4 100%);
+  --lofi-guilda: linear-gradient(165deg, #efe1f2 0%, #d9c3e0 55%, #c3a6cf 100%);
+  --lofi-tempo: linear-gradient(165deg, #e3eef2 0%, #c2d9e3 55%, #a3c1d1 100%);
+  --lofi-ajustes: linear-gradient(165deg, #efe6d8 0%, #ddcbaf 55%, #c7ad8a 100%);
+  --lofi-diario: linear-gradient(165deg, #f6dde2 0%, #eec2ca 55%, #dda0ac 100%);
+  --lofi-biblioteca: linear-gradient(165deg, #f2e6cc 0%, #e3cd9e 55%, #cbab6e 100%);
+}
+
+[data-theme="lofi"] .lofi-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+[data-theme="lofi"] .lofi-scene::after {
+  content: "";
+  position: absolute;
+  top: 12%;
+  right: 16%;
+  width: 38%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 250, 240, 0.8), rgba(255, 250, 240, 0) 70%);
+}
+
+.lofi-scene-mural { background: var(--lofi-mural); }
+.lofi-scene-tesouraria { background: var(--lofi-tesouraria); }
+.lofi-scene-guilda { background: var(--lofi-guilda); }
+.lofi-scene-tempo { background: var(--lofi-tempo); }
+.lofi-scene-ajustes { background: var(--lofi-ajustes); }
+.lofi-scene-diario { background: var(--lofi-diario); }
+.lofi-scene-biblioteca { background: var(--lofi-biblioteca); }
+
 * {
   box-sizing: border-box;
 }

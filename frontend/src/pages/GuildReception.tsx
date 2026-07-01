@@ -3,9 +3,13 @@ import { Link } from "react-router-dom";
 import ThemesScreen from "../components/ThemesScreen";
 import { playSfx } from "../sound";
 import { pendingSwipeDirection } from "../useSwipeNav";
+import { useSettings } from "../contexts/SettingsContext";
+import { DiaryIcon, BookIcon } from "../icons";
 
 export default function GuildReception() {
   const [themesOpen, setThemesOpen] = useState(false);
+  const { theme } = useSettings();
+  const isLofi = theme === "lofi";
 
   return (
     <div className="page reception-page">
@@ -22,7 +26,13 @@ export default function GuildReception() {
           pendingSwipeDirection.current = -1;
         }}
       >
-        <img className="reception-edge-icon" src="/icons-nav/icon-diario.png" alt="" />
+        {isLofi ? (
+          <span className="reception-edge-icon-lofi">
+            <DiaryIcon width={26} height={26} />
+          </span>
+        ) : (
+          <img className="reception-edge-icon" src="/icons-nav/icon-diario.png" alt="" />
+        )}
       </Link>
       <Link
         to="/biblioteca"
@@ -33,14 +43,21 @@ export default function GuildReception() {
           pendingSwipeDirection.current = 1;
         }}
       >
-        <img className="reception-edge-icon" src="/icons-nav/icon-biblioteca.png" alt="" />
+        {isLofi ? (
+          <span className="reception-edge-icon-lofi">
+            <BookIcon width={26} height={26} />
+          </span>
+        ) : (
+          <img className="reception-edge-icon" src="/icons-nav/icon-biblioteca.png" alt="" />
+        )}
       </Link>
 
       {/* Balão de fala em branco já desenhado na arte de fundo — o link mora
-          dentro dele. */}
-      <div className="reception-dialog-bubble">
+          dentro dele. No tema Lo-fi (sem a arte/balão) vira um botão flat
+          normal, ancorado no topo. */}
+      <div className={isLofi ? "reception-dialog-bubble-lofi" : "reception-dialog-bubble"}>
         <button
-          className="reception-dialog-bubble-link"
+          className={isLofi ? "reception-dialog-bubble-link-lofi" : "reception-dialog-bubble-link"}
           onClick={() => {
             playSfx("coin");
             setThemesOpen(true);
