@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import ThemesScreen from "../components/ThemesScreen";
 import { playSfx } from "../sound";
+import { pendingSwipeDirection } from "../useSwipeNav";
 
 export default function GuildReception() {
   const [themesOpen, setThemesOpen] = useState(false);
@@ -11,10 +12,15 @@ export default function GuildReception() {
       <h1 className="sr-only">Recepção da Guilda</h1>
 
       <Link
-        to="/diario"
+        to="/diario/notas"
         className="reception-edge-tap reception-edge-left"
         aria-label="Diário"
-        onClick={() => playSfx("coin")}
+        onClick={() => {
+          playSfx("coin");
+          // Entra deslizando da esquerda — mesmo lado do ícone tocado, e o
+          // reverso de como se sai (arrastando pra esquerda) de volta aqui.
+          pendingSwipeDirection.current = -1;
+        }}
       >
         <img className="reception-edge-icon" src="/icons-nav/icon-diario.png" alt="" />
       </Link>
@@ -22,7 +28,10 @@ export default function GuildReception() {
         to="/biblioteca"
         className="reception-edge-tap reception-edge-right"
         aria-label="Biblioteca"
-        onClick={() => playSfx("coin")}
+        onClick={() => {
+          playSfx("coin");
+          pendingSwipeDirection.current = 1;
+        }}
       >
         <img className="reception-edge-icon" src="/icons-nav/icon-biblioteca.png" alt="" />
       </Link>

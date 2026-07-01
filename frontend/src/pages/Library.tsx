@@ -16,7 +16,7 @@ const SHELVES = [
   { top: 73.15, height: 15.37 },
 ];
 
-const SWIPE_UP_THRESHOLD = 70;
+const SWIPE_THRESHOLD = 70;
 
 export default function Library() {
   const [docs, setDocs] = useState<DocumentMeta[]>([]);
@@ -62,9 +62,12 @@ export default function Library() {
     if (touchStartY.current === null) return;
     const dy = e.changedTouches[0].clientY - touchStartY.current;
     touchStartY.current = null;
-    if (dy < -SWIPE_UP_THRESHOLD) {
+    if (dy < -SWIPE_THRESHOLD) {
       playSfx("drop");
       setDrawerOpen(true);
+    } else if (dy > SWIPE_THRESHOLD) {
+      playSfx("coin");
+      fileInputRef.current?.click();
     }
   }
 

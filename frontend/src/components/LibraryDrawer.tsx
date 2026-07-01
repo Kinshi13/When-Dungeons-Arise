@@ -1,9 +1,12 @@
+import { useRef, type TouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DocumentMeta } from "../api";
 import { bookSpriteFor } from "../bookSprites";
 import { ChevronDownIcon, TrashIcon } from "../icons";
 import { playSfx } from "../sound";
+
+const SWIPE_DOWN_CLOSE_THRESHOLD = 70;
 
 interface LibraryDrawerProps {
   open: boolean;
@@ -14,6 +17,22 @@ interface LibraryDrawerProps {
 }
 
 export default function LibraryDrawer({ open, docs, onClose, onSelect, onDelete }: LibraryDrawerProps) {
+  const touchStartY = useRef<number | null>(null);
+
+  function handleTouchStart(e: TouchEvent) {
+    touchStartY.current = e.touches[0].clientY;
+  }
+
+  function handleTouchEnd(e: TouchEvent) {
+    if (touchStartY.current === null) return;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    touchStartY.current = null;
+    if (dy > SWIPE_DOWN_CLOSE_THRESHOLD) {
+      playSfx("drop");
+      onClose();
+    }
+  }
+
   return createPortal(
     <AnimatePresence>
       {open && (
@@ -23,6 +42,8 @@ export default function LibraryDrawer({ open, docs, onClose, onSelect, onDelete 
           animate={{ y: 0 }}
           exit={{ y: "100%" }}
           transition={{ type: "spring", stiffness: 320, damping: 32 }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           <div className="page-bg page-bg-blurred-strong" aria-hidden="true">
             <img src="/biblioteca-bg.png" alt="" />

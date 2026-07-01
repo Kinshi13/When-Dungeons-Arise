@@ -21,6 +21,18 @@ const MODE_LABEL: Record<Mode, string> = {
   euro: "Cotação do euro",
 };
 
+// Rótulos curtos para os botões de modo (mesmo padrão dos filtros da aba
+// Contas) — o texto completo do modo aparece como legenda abaixo.
+const MODE_BUTTON_LABEL: Record<Mode, string> = {
+  de: "% de",
+  adicionar: "+ %",
+  remover: "− %",
+  "juros-simples": "Juros simples",
+  "juros-compostos": "Juros compostos",
+  dolar: "Dólar",
+  euro: "Euro",
+};
+
 function formatBRL(value: number) {
   if (!Number.isFinite(value)) return "—";
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -180,13 +192,19 @@ export default function PercentageCalculator() {
 
   return (
     <div className="percentage-calc">
-      <select value={mode} onChange={(e) => setMode(e.target.value as Mode)} className="percentage-mode">
-        {Object.entries(MODE_LABEL).map(([key, label]) => (
-          <option key={key} value={key}>
+      <div className="filters">
+        {(Object.entries(MODE_BUTTON_LABEL) as [Mode, string][]).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            className={mode === key ? "filter active" : "filter"}
+            onClick={() => setMode(key)}
+          >
             {label}
-          </option>
+          </button>
         ))}
-      </select>
+      </div>
+      <p className="hint percentage-mode-hint">{MODE_LABEL[mode]}</p>
 
       {isCurrencyMode && <CurrencyConverter currency={mode === "dolar" ? "USD" : "EUR"} />}
 

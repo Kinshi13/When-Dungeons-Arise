@@ -35,9 +35,8 @@ const COMMIT_TRANSITION = { duration: 0.22, ease: [0.32, 0.72, 0, 1] as const };
 const CANCEL_TRANSITION = { type: "spring" as const, stiffness: 420, damping: 34, mass: 0.6 };
 
 // A qual das 5 telas principais da barra inferior uma rota pertence — usado
-// pra decidir quando a troca merece a animação de slide (entre telas) e quando
-// deve continuar instantânea (entre sub-abas da mesma tela). Rotas fora da
-// barra (Diário, Biblioteca, Perfil, Leitor) retornam null.
+// pra escolher o fundo/conteúdo "representante" da área durante a prévia de
+// arraste. Rotas fora da barra (Diário, Biblioteca, Perfil, Leitor) retornam null.
 export function sectionOf(pathname: string): string | null {
   if (pathname === "/") return "guilda";
   if (pathname.startsWith("/missoes")) return "mural";
@@ -45,14 +44,6 @@ export function sectionOf(pathname: string): string | null {
   if (pathname.startsWith("/sala-do-tempo")) return "tempo";
   if (pathname.startsWith("/regras")) return "ajustes";
   return null;
-}
-
-// Chave de agrupamento pra decidir se a troca de tela remonta (e quando) o
-// conteúdo — igual sectionOf, mas trata o Diário como um grupo só (Notas e
-// Listas não devem remontar entre si, mesmo não fazendo parte da barra).
-export function groupKeyOf(pathname: string): string {
-  if (pathname.startsWith("/diario")) return "diario";
-  return sectionOf(pathname) ?? pathname;
 }
 
 // Ordem visual das 5 telas na barra inferior — usada só pra saber de que lado
@@ -77,14 +68,15 @@ function resolveGesture(pathname: string, dx: number): ResolvedGesture {
     return dx < 0 ? { targetPath: "/", animated: true, direction } : { targetPath: null, animated: false, direction };
   }
 
-  // Diário tem duas sub-abas que continuam navegando normalmente entre si; só
+  // Diário tem duas sub-abas que continuam navegando normalmente entre si —
+  // a troca entre elas também acompanha o dedo (efeito "gaveta de apps"); só
   // na borda inicial (Notas, arrastando pra direita) o gesto vira "sair" de
   // volta pra Recepção (reverso do toque na lateral esquerda usado pra entrar).
   if (DIARIO_SEQUENCE.includes(pathname)) {
     const currentIndex = DIARIO_SEQUENCE.indexOf(pathname);
     const nextIndex = dx < 0 ? currentIndex + 1 : currentIndex - 1;
     if (nextIndex >= 0 && nextIndex < DIARIO_SEQUENCE.length) {
-      return { targetPath: DIARIO_SEQUENCE[nextIndex], animated: false, direction };
+      return { targetPath: DIARIO_SEQUENCE[nextIndex], animated: true, direction };
     }
     if (dx > 0) {
       return { targetPath: "/", animated: true, direction };
@@ -92,21 +84,30 @@ function resolveGesture(pathname: string, dx: number): ResolvedGesture {
     return { targetPath: null, animated: false, direction };
   }
 
+  // Toda troca dentro da sequência (entre telas principais OU entre as
+  // sub-abas de uma mesma área, como Finanças/Contas/Análises) acompanha o
+  // dedo em tempo real, no mesmo estilo "gaveta de apps".
   if (FLAT_SEQUENCE.includes(pathname)) {
     const currentIndex = FLAT_SEQUENCE.indexOf(pathname);
     const nextIndex = dx < 0 ? currentIndex + 1 : currentIndex - 1;
     const targetPath = nextIndex >= 0 && nextIndex < FLAT_SEQUENCE.length ? FLAT_SEQUENCE[nextIndex] : null;
-    const animated = !!targetPath && sectionOf(targetPath) !== sectionOf(pathname);
-    return { targetPath, animated, direction };
+    return { targetPath, animated: !!targetPath, direction };
   }
 
   return { targetPath: null, animated: false, direction };
 }
 
 export interface SlidePreview {
-  section: string;
+  path: string;
   direction: number;
 }
+
+// Objeto simples em escopo de módulo (não um useRef) — como só existe uma
+// instância do hook (chamada uma vez em App.tsx), isso funciona como um
+// singleton e permite que OUTROS componentes (como os ícones de atalho da
+// Recepção, que navegam por tap e não por arraste) também "informem" de que
+// lado a próxima tela deve entrar, sem precisar de Context.
+export const pendingSwipeDirection = { current: 0 };
 
 export function useSwipeNav() {
   const navigate = useNavigate();
@@ -120,10 +121,6 @@ export function useSwipeNav() {
   const animated = useRef(false);
   const targetPath = useRef<string | null>(null);
   const direction = useRef(0);
-  // Consumido pelo App logo após o commit — dá a direção certa pro slide de
-  // entrada mesmo quando a troca não é uma comparação simples de índice na
-  // barra (como sair do Diário/Biblioteca de volta pra Recepção).
-  const swipeDirectionRef = useRef(0);
 
   function reset() {
     startX.current = null;
@@ -153,14 +150,10 @@ export function useSwipeNav() {
       direction.current = resolved.direction;
 
       if (resolved.animated && resolved.targetPath) {
-        const section = sectionOf(resolved.targetPath);
-        setPreview(section ? { section, direction: resolved.direction } : null);
+        setPreview({ path: resolved.targetPath, direction: resolved.direction });
       }
     }
 
-    // Só a troca ENTRE telas (principais, ou saindo do Diário/Biblioteca)
-    // acompanha o dedo em tempo real — entre sub-abas da mesma tela o
-    // comportamento continua o instantâneo de sempre.
     if (animated.current) {
       x.set(targetPath.current ? dx : dx * 0.3);
     }
@@ -181,7 +174,7 @@ export function useSwipeNav() {
         animate(x, dir * -screenWidth, COMMIT_TRANSITION).then(() => {
           x.set(0);
           setPreview(null);
-          swipeDirectionRef.current = dir;
+          pendingSwipeDirection.current = dir;
           navigate(path);
         });
       } else {
@@ -195,5 +188,5 @@ export function useSwipeNav() {
     reset();
   }
 
-  return { onTouchStart, onTouchMove, onTouchEnd, x, preview, swipeDirectionRef };
+  return { onTouchStart, onTouchMove, onTouchEnd, x, preview };
 }

@@ -5,6 +5,14 @@ import PdfReader, { type ReaderHandle } from "../components/PdfReader";
 import EpubReader from "../components/EpubReader";
 import { ChevronLeftIcon, ChevronRightIcon, MinusIcon, PlusIcon, MoonIcon } from "../icons";
 import { useGame } from "../game/GameContext";
+import {
+  EPUB_FONT_FAMILIES,
+  EPUB_THEMES,
+  loadEpubReaderSettings,
+  saveEpubReaderSettings,
+  type EpubFontFamily,
+  type EpubTheme,
+} from "../epubReaderSettings";
 
 const READING_GOAL_MINUTES = 20;
 const MAX_ZOOM_STEP = 3;
@@ -19,6 +27,8 @@ export default function ReaderScreen() {
   const [zoomStep, setZoomStep] = useState(0);
   const [dim, setDim] = useState(false);
   const [pageInfo, setPageInfo] = useState<{ page: number; numPages: number } | null>(null);
+  const [epubSettings, setEpubSettings] = useState(() => loadEpubReaderSettings());
+  const [epubSettingsOpen, setEpubSettingsOpen] = useState(false);
   const readerRef = useRef<ReaderHandle>(null);
   const { grantReward } = useGame();
   const sessionStart = useRef(Date.now());
@@ -65,8 +75,21 @@ export default function ReaderScreen() {
     setZoomStep((z) => (z === 0 ? MAX_ZOOM_STEP : 0));
   }
 
+  function handleSetFontFamily(fontFamily: EpubFontFamily) {
+    const updated = { ...epubSettings, fontFamily };
+    setEpubSettings(updated);
+    saveEpubReaderSettings(updated);
+  }
+
+  function handleSetTheme(theme: EpubTheme) {
+    const updated = { ...epubSettings, theme };
+    setEpubSettings(updated);
+    saveEpubReaderSettings(updated);
+  }
+
   const atFirstPage = doc?.type === "pdf" && !!pageInfo && pageInfo.page <= 1;
   const atLastPage = doc?.type === "pdf" && !!pageInfo && pageInfo.page >= pageInfo.numPages;
+  const isEpub = doc?.type === "epub";
 
   return (
     <div className="reader-fullscreen">
@@ -75,7 +98,53 @@ export default function ReaderScreen() {
           <ChevronLeftIcon width={18} height={18} />
         </button>
         <strong className="reader-fullscreen-title">{doc?.title ?? "Carregando..."}</strong>
+        {isEpub && (
+          <button
+            className={`icon-btn reader-aa-btn${epubSettingsOpen ? " active" : ""}`}
+            onClick={() => setEpubSettingsOpen((v) => !v)}
+            aria-label="Fonte e tema de leitura"
+          >
+            Aa
+          </button>
+        )}
       </div>
+
+      {isEpub && epubSettingsOpen && (
+        <div className="epub-settings-panel">
+          <div className="epub-settings-row">
+            <span className="epub-settings-label">Fonte</span>
+            <div className="filters">
+              {(Object.entries(EPUB_FONT_FAMILIES) as [EpubFontFamily, { label: string }][]).map(([key, f]) => (
+                <button
+                  key={key}
+                  className={epubSettings.fontFamily === key ? "filter active" : "filter"}
+                  onClick={() => handleSetFontFamily(key)}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="epub-settings-row">
+            <span className="epub-settings-label">Fundo</span>
+            <div className="epub-theme-swatches">
+              {(Object.entries(EPUB_THEMES) as [EpubTheme, { label: string; background: string; color: string }][]).map(
+                ([key, t]) => (
+                  <button
+                    key={key}
+                    className={`epub-theme-swatch${epubSettings.theme === key ? " active" : ""}`}
+                    style={{ background: t.background, color: t.color }}
+                    onClick={() => handleSetTheme(key)}
+                  >
+                    Aa
+                    <span className="epub-theme-swatch-label">{t.label}</span>
+                  </button>
+                )
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {notFound && <p className="hint" style={{ padding: 16 }}>Documento não encontrado.</p>}
       {!notFound && !blob && <p className="hint" style={{ padding: 16 }}>Carregando...</p>}
@@ -98,6 +167,8 @@ export default function ReaderScreen() {
           blob={blob}
           initialLocation={initialLocation}
           zoomStep={zoomStep}
+          fontFamily={epubSettings.fontFamily}
+          theme={epubSettings.theme}
           onLocationChange={saveProgress}
           onToggleZoom={handleToggleZoom}
         />

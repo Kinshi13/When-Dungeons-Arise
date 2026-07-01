@@ -138,6 +138,18 @@
 .slide-drag-layer {
   min-height: 100%;
   will-change: transform;
+  position: relative;
+}
+
+/* Prévia do conteúdo real da tela de destino, revelada durante o arraste —
+   mesma ideia do .page-bg-slide-preview, só que para o conteúdo em vez do
+   fundo. Não é interativa: é só o que o dedo "puxa" até soltar. */
+.content-slide-preview {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  will-change: transform;
+  overflow: hidden;
 }
 
 /* Camada que anima a entrada da tela nova, vinda do lado certo (esquerda ou
@@ -202,12 +214,40 @@
   flex: 0 0 25%;
 }
 
-.tab.active {
-  background: rgba(255, 210, 63, 0.28);
+.tab {
+  position: relative;
 }
 
 .tab:active {
   transform: translateY(2px);
+}
+
+/* Brilho + partículas discretas ao tocar um ícone da barra — substitui o
+   antigo quadrado amarelo de "selecionado". */
+.tab-burst {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.tab-burst-glow {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 224, 130, 0.85) 0%, rgba(255, 224, 130, 0) 70%);
+}
+
+.tab-spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #ffe082;
+  box-shadow: 0 0 4px 1px rgba(255, 224, 130, 0.8);
 }
 
 /* Botões e ícones */
@@ -1010,15 +1050,19 @@
 
 .drawer-tab {
   flex: 1;
-  padding: 12px;
+  min-width: 0;
+  padding: 12px 2px;
   background: var(--surface);
   border: none;
   color: var(--text-muted);
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   cursor: pointer;
   text-align: center;
   text-decoration: none;
   display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .drawer-tab.active {
@@ -1093,14 +1137,8 @@
   gap: 4px;
 }
 
-.percentage-mode {
-  width: 100%;
-  padding: 8px 10px;
-  border: var(--pixel-border);
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--text);
-  margin-bottom: 8px;
+.percentage-mode-hint {
+  margin: -4px 0 4px;
 }
 
 .currency-converter-actions {
@@ -1570,20 +1608,25 @@
 .reader-canvas-wrap {
   flex: 1;
   overflow: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   background: #2b2b2b;
   position: relative;
   user-select: none;
+  padding: 8px;
 }
 
 .reader-canvas-wrap canvas {
-  max-width: 100%;
+  display: block;
+  /* Sem max-width: acima de 100% de zoom o canvas precisa poder ultrapassar
+     a tela — o container rola (overflow: auto) para permitir navegar pela
+     página ampliada em vez de forçar tudo a caber encolhido. */
+  margin: 0 auto;
 }
 
 .reader-page-indicator {
-  position: absolute;
+  /* fixed (não absolute) pra continuar visível mesmo quando o zoom deixa o
+     conteúdo maior que a tela e o usuário rola pra navegar pela página. */
+  position: fixed;
   bottom: 58px;
   left: 50%;
   transform: translateX(-50%);
@@ -1652,6 +1695,69 @@
   font-size: 0.68rem;
   color: var(--text-muted);
   font-family: var(--font-display);
+}
+
+.reader-aa-btn {
+  margin-left: auto;
+  font-family: Georgia, serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.reader-aa-btn.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.epub-settings-panel {
+  background: var(--surface);
+  border-bottom: var(--pixel-border);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.epub-settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.epub-settings-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.epub-theme-swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.epub-theme-swatch {
+  flex: 1;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 4px;
+  font-family: Georgia, serif;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.epub-theme-swatch.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255, 210, 63, 0.4);
+}
+
+.epub-theme-swatch-label {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  font-weight: 400;
+  opacity: 0.8;
 }
 
 .reader-dim-overlay {

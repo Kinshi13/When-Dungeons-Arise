@@ -139,7 +139,9 @@ export default function Bills() {
   const filtered = useMemo(() => {
     switch (filter) {
       case "pagar":
-        return bills.filter((b) => b.kind === "PAGAR");
+        // Assinaturas também são dinheiro saindo da carteira, então contam
+        // como "a pagar" — a aba "Assinaturas" continua com a visão específica.
+        return bills.filter((b) => b.kind === "PAGAR" || b.kind === "ASSINATURA");
       case "pagas":
         return bills.filter((b) => b.status !== "PENDENTE");
       case "receber":

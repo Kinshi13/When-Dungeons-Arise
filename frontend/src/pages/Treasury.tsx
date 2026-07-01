@@ -4,7 +4,6 @@ import FinanceAnalysis from "./FinanceAnalysis";
 import Bills from "./Bills";
 import Calculator from "../components/Calculator";
 import PercentageCalculator from "../components/PercentageCalculator";
-import PixelDialogBox from "../components/game/PixelDialogBox";
 
 type Tab = "financas" | "contas" | "analises" | "calculadora" | "porcentagem";
 
@@ -16,17 +15,20 @@ function tabFromPath(pathname: string): Tab {
   return "financas";
 }
 
-export default function Treasury() {
+interface TreasuryProps {
+  // Usado só pela prévia de conteúdo durante o arraste (App.tsx): força qual
+  // sub-aba mostrar sem depender da rota real do navegador.
+  forcedPath?: string;
+}
+
+export default function Treasury({ forcedPath }: TreasuryProps = {}) {
   const location = useLocation();
-  const tab = tabFromPath(location.pathname);
+  const tab = tabFromPath(forcedPath ?? location.pathname);
 
   return (
     <div>
       <div className="page" style={{ paddingBottom: 0 }}>
         <h1>Tesouraria</h1>
-        <PixelDialogBox speaker="Tesoureira">
-          Registre seus gastos, mantenha as contas em dia e use a calculadora quando precisar.
-        </PixelDialogBox>
         <div className="drawer-tabs treasury-tabs">
           <Link to="/tesouraria/financas" className={tab === "financas" ? "drawer-tab active" : "drawer-tab"}>
             Finanças
@@ -46,8 +48,9 @@ export default function Treasury() {
           <Link
             to="/tesouraria/porcentagem"
             className={tab === "porcentagem" ? "drawer-tab active" : "drawer-tab"}
+            aria-label="Porcentagem"
           >
-            Porcentagem
+            %
           </Link>
         </div>
       </div>

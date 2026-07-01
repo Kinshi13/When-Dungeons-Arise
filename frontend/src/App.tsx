@@ -1,6 +1,6 @@
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { motion, MotionConfig } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { App as CapApp } from "@capacitor/app";
 import GuildReception from "./pages/GuildReception";
 import MissionBoard from "./pages/MissionBoard";
@@ -14,7 +14,7 @@ import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
 import Splash from "./components/Splash";
 import { useSettings, UI_ZOOM_BY_SCALE } from "./contexts/SettingsContext";
-import { useSwipeNav, sectionOf, groupKeyOf, MAIN_ORDER } from "./useSwipeNav";
+import { useSwipeNav, sectionOf, MAIN_ORDER, pendingSwipeDirection } from "./useSwipeNav";
 import { isNativePlatform } from "./notifications";
 import { playSfx } from "./sound";
 import "./App.css";
@@ -46,6 +46,22 @@ const SECTION_BACKGROUND: Record<string, { src: string; blurred?: boolean } | un
   ajustes: PAGE_BACKGROUNDS["/regras"],
 };
 
+// Conteúdo real da rota de destino — pré-renderizado durante o arraste (junto
+// com o fundo) pra já mostrar a tela entrando, em vez de deixar a área vazia
+// até soltar o dedo. Tesouraria/Diário recebem "forcedPath" pra escolher a
+// sub-aba certa (a mesma que a rota de destino mostraria), já que eles
+// decidem isso lendo a rota atual — que durante o arraste ainda não mudou.
+function renderRoutePreview(path: string): React.ReactNode {
+  if (path === "/missoes") return <MissionBoard />;
+  if (path === "/") return <GuildReception />;
+  if (path.startsWith("/sala-do-tempo")) return <TimeRoom />;
+  if (path === "/regras") return <RulesBook />;
+  if (path.startsWith("/tesouraria")) return <Treasury forcedPath={path} />;
+  if (path.startsWith("/diario")) return <AdventureDiary forcedPath={path} />;
+  if (path === "/biblioteca") return <Library />;
+  return null;
+}
+
 function renderBackgroundContent(bg?: { src: string; blurred?: boolean }) {
   return bg ? (
     <div className={`page-bg${bg.blurred ? " page-bg-blurred" : ""}`}>
@@ -62,6 +78,45 @@ const tabMotion = {
   whileTap: { scale: 0.85, y: 2 },
   transition: { type: "spring" as const, stiffness: 500, damping: 20 },
 };
+
+const SPARK_COUNT = 6;
+
+// Brilho + partículas discretas ao tocar um ícone da barra — some sozinho
+// depois de tocado (chama onDone), sem deixar nenhum estado "selecionado" fixo.
+function TabBurst({ onDone }: { onDone: () => void }) {
+  const sparks = useMemo(() => Array.from({ length: SPARK_COUNT }, (_, i) => i), []);
+  return (
+    <motion.div
+      className="tab-burst"
+      aria-hidden="true"
+      initial={{ opacity: 1 }}
+      animate={{ opacity: 0 }}
+      transition={{ duration: 0.65 }}
+      onAnimationComplete={onDone}
+    >
+      <motion.span
+        className="tab-burst-glow"
+        initial={{ scale: 0.4, opacity: 0.9 }}
+        animate={{ scale: 1.6, opacity: 0 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+      />
+      {sparks.map((i) => {
+        const angle = (i / sparks.length) * Math.PI * 2;
+        const dx = Math.cos(angle) * 18;
+        const dy = Math.sin(angle) * 18;
+        return (
+          <motion.span
+            key={i}
+            className="tab-spark"
+            initial={{ x: 0, y: 0, opacity: 1, scale: 0.6 }}
+            animate={{ x: dx, y: dy, opacity: 0, scale: 0.2 }}
+            transition={{ duration: 0.55, ease: "easeOut", delay: i * 0.02 }}
+          />
+        );
+      })}
+    </motion.div>
+  );
+}
 
 const SLIDE_ENTER_TRANSITION = { type: "spring" as const, stiffness: 280, damping: 32, mass: 0.8 };
 
@@ -88,44 +143,64 @@ function useAndroidBackButton() {
 
 function App() {
   const { uiScale, animationsEnabled } = useSettings();
-  const { onTouchStart, onTouchMove, onTouchEnd, x, preview, swipeDirectionRef } = useSwipeNav();
+  const { onTouchStart, onTouchMove, onTouchEnd, x, preview } = useSwipeNav();
   const location = useLocation();
   useAndroidBackButton();
+  const [tabBurst, setTabBurst] = useState<{ tab: string; id: number } | null>(null);
+  function handleTabTap(tab: string) {
+    playSfx("coin");
+    setTabBurst({ tab, id: Date.now() });
+  }
 
   const isReader = location.pathname.startsWith("/leitor");
   const pageBackground = PAGE_BACKGROUNDS[location.pathname];
   const isSpecialScreen = location.pathname.startsWith("/diario") || location.pathname === "/biblioteca";
 
-  // Direção do slide entre as 5 telas principais, calculada durante o render
-  // (não em efeito) pra já estar pronta a tempo do <motion.div> de entrada
-  // montar com o "initial" certo. Trocas dentro da mesma tela (sub-abas) ou
-  // envolvendo telas fora da barra (Diário, Biblioteca, Perfil, Leitor) não
-  // animam — direção fica 0 e a troca continua instantânea. "/tesouraria" e
-  // "/sala-do-tempo" (sem sub-rota) são só um pulo intermediário de redirect
-  // — ignorados aqui pra não "consumir" a direção antes da rota final assentar.
+  // Direção do slide, calculada durante o render (não em efeito) pra já estar
+  // pronta a tempo do <motion.div> de entrada montar com o "initial" certo.
+  // "/tesouraria", "/sala-do-tempo" e "/diario" (sem sub-rota) são só um pulo
+  // intermediário de redirect — ignorados aqui pra não "consumir" a direção
+  // antes da rota final assentar.
+  //
+  // Importante: o corpo do render só LÊ prevPathRef/prevSectionIndexRef/
+  // pendingSwipeDirection — nunca escreve neles aqui. Em StrictMode (dev) o
+  // React chama a função de render duas vezes por commit; se a gente
+  // consumisse (zerasse) esses valores durante o render, a 1ª chamada os
+  // apagaria e a 2ª (cujo resultado é o que de fato é montado) sempre veria
+  // tudo já zerado — a animação nunca aparecia de verdade. Por isso quem
+  // escreve é o useLayoutEffect abaixo, que roda uma vez só por commit real.
   const prevPathRef = useRef(location.pathname);
   const prevSectionIndexRef = useRef<number | null>(null);
   let slideDirection = 0;
-  const isRedirectStub = location.pathname === "/tesouraria" || location.pathname === "/sala-do-tempo";
-  if (!isRedirectStub && prevPathRef.current !== location.pathname) {
+  const isRedirectStub =
+    location.pathname === "/tesouraria" || location.pathname === "/sala-do-tempo" || location.pathname === "/diario";
+  const pathChanged = !isRedirectStub && prevPathRef.current !== location.pathname;
+  if (pathChanged) {
     const section = sectionOf(location.pathname);
     const sectionIndex = section ? MAIN_ORDER.indexOf(section) : null;
-    // Prioriza a direção que o próprio gesto de swipe já resolveu — cobre os
-    // casos que não são uma simples comparação de índice na barra (como sair
-    // do Diário/Biblioteca de volta pra Recepção).
-    if (swipeDirectionRef.current !== 0) {
-      slideDirection = swipeDirectionRef.current;
-      swipeDirectionRef.current = 0;
+    // Prioriza a direção que o próprio gesto (swipe, ou um tap "informado" de
+    // antemão, como os ícones de atalho da Recepção) já resolveu — cobre os
+    // casos que não são uma simples comparação de índice na barra, como sub-
+    // abas ou sair/entrar no Diário/Biblioteca.
+    if (pendingSwipeDirection.current !== 0) {
+      slideDirection = pendingSwipeDirection.current;
     } else {
       const prevIndex = prevSectionIndexRef.current;
       if (section !== null && prevIndex !== null && sectionIndex !== prevIndex) {
         slideDirection = sectionIndex! > prevIndex ? 1 : -1;
       }
     }
+  }
+  useLayoutEffect(() => {
+    if (!pathChanged) return;
+    const section = sectionOf(location.pathname);
+    const sectionIndex = section ? MAIN_ORDER.indexOf(section) : null;
+    pendingSwipeDirection.current = 0;
     if (sectionIndex !== null) prevSectionIndexRef.current = sectionIndex;
     prevPathRef.current = location.pathname;
-  }
-  const slideKey = groupKeyOf(location.pathname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+  const slideKey = location.pathname;
 
   if (isReader) {
     return (
@@ -150,7 +225,7 @@ function App() {
             className="page-bg-slide-preview"
             style={{ transform: `translateX(${preview.direction > 0 ? "100%" : "-100%"})` }}
           >
-            {renderBackgroundContent(SECTION_BACKGROUND[preview.section])}
+            {renderBackgroundContent(SECTION_BACKGROUND[sectionOf(preview.path) ?? ""] ?? PAGE_BACKGROUNDS[preview.path])}
           </div>
         )}
         <motion.div
@@ -166,6 +241,15 @@ function App() {
       <div className="app" style={{ zoom: UI_ZOOM_BY_SCALE[uiScale] } as React.CSSProperties}>
         <main className="main" onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}>
           <motion.div className="slide-drag-layer" style={{ x }}>
+            {preview && (
+              <div
+                className="content-slide-preview"
+                aria-hidden="true"
+                style={{ transform: `translateX(${preview.direction > 0 ? "100%" : "-100%"})` }}
+              >
+                {renderRoutePreview(preview.path)}
+              </div>
+            )}
             <motion.div
               key={slideKey}
               className="slide-enter-layer"
@@ -197,11 +281,21 @@ function App() {
         </main>
         <DueBillsPopup />
         <nav className={`tabbar${isSpecialScreen ? " tabbar-tucked" : ""}`}>
-          <MotionNavLink to="/missoes" className="tab tab-mural" aria-label="Mural" onClick={() => playSfx("coin")} {...tabMotion} />
-          <MotionNavLink to="/tesouraria" className="tab tab-tesouraria" aria-label="Tesouraria" onClick={() => playSfx("coin")} {...tabMotion} />
-          <MotionNavLink to="/" end className="tab tab-guilda" aria-label="Guilda" onClick={() => playSfx("coin")} {...tabMotion} />
-          <MotionNavLink to="/sala-do-tempo" className="tab tab-tempo" aria-label="Tempo" onClick={() => playSfx("coin")} {...tabMotion} />
-          <MotionNavLink to="/regras" className="tab tab-ajustes" aria-label="Ajustes" onClick={() => playSfx("coin")} {...tabMotion} />
+          <MotionNavLink to="/missoes" className="tab tab-mural" aria-label="Mural" onClick={() => handleTabTap("mural")} {...tabMotion}>
+            {tabBurst?.tab === "mural" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
+          </MotionNavLink>
+          <MotionNavLink to="/tesouraria" className="tab tab-tesouraria" aria-label="Tesouraria" onClick={() => handleTabTap("tesouraria")} {...tabMotion}>
+            {tabBurst?.tab === "tesouraria" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
+          </MotionNavLink>
+          <MotionNavLink to="/" end className="tab tab-guilda" aria-label="Guilda" onClick={() => handleTabTap("guilda")} {...tabMotion}>
+            {tabBurst?.tab === "guilda" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
+          </MotionNavLink>
+          <MotionNavLink to="/sala-do-tempo" className="tab tab-tempo" aria-label="Tempo" onClick={() => handleTabTap("tempo")} {...tabMotion}>
+            {tabBurst?.tab === "tempo" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
+          </MotionNavLink>
+          <MotionNavLink to="/regras" className="tab tab-ajustes" aria-label="Ajustes" onClick={() => handleTabTap("ajustes")} {...tabMotion}>
+            {tabBurst?.tab === "ajustes" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
+          </MotionNavLink>
         </nav>
       </div>
     </MotionConfig>
