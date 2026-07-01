@@ -1103,6 +1103,12 @@
   margin-bottom: 8px;
 }
 
+.currency-converter-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 /* Notas */
 
 .notes-panel {
