@@ -14,9 +14,12 @@ import { api } from './api'
 import {
   isNativePlatform,
   hasNotificationPermission,
+  setupNotificationChannels,
   syncAllReminderNotifications,
   syncAllBillNotifications,
+  syncAllHolidayNotifications,
 } from './notifications'
+import { getBrazilianHolidays } from './game/holidays'
 import { SettingsProvider } from './contexts/SettingsContext'
 import { GameProvider } from './game/GameContext'
 import './index.css'
@@ -25,9 +28,13 @@ import App from './App.tsx'
 if (isNativePlatform()) {
   hasNotificationPermission().then(async (granted) => {
     if (granted) {
+      await setupNotificationChannels()
       const [reminders, bills] = await Promise.all([api.reminders.list(), api.bills.list()])
+      const year = new Date().getFullYear()
+      const holidays = [...getBrazilianHolidays(year), ...getBrazilianHolidays(year + 1)]
       await syncAllReminderNotifications(reminders)
       await syncAllBillNotifications(bills)
+      await syncAllHolidayNotifications(holidays)
     }
   })
 } else {

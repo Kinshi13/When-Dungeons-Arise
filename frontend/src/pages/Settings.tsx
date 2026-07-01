@@ -4,13 +4,34 @@ import {
   isNativePlatform,
   hasNotificationPermission,
   requestNotificationPermission,
+  setupNotificationChannels,
   syncAllReminderNotifications,
   syncAllBillNotifications,
+  syncAllHolidayNotifications,
+  cancelReminderNotification,
+  cancelBillNotifications,
+  cancelHolidayNotification,
 } from "../notifications";
+import { getBrazilianHolidays } from "../game/holidays";
+import {
+  loadNotificationPrefs,
+  saveNotificationPrefs,
+  NOTIFICATION_SCREEN_LABEL,
+  NOTIFICATION_SCREEN_HINT,
+  type NotificationPrefs,
+  type NotificationScreen,
+} from "../notificationPrefs";
 import { useSettings, type UiScale } from "../contexts/SettingsContext";
 import { listMonitoredApps, upsertMonitoredApp, removeMonitoredApp, type MonitoredApp } from "../notificationAppPrefs";
 import { syncMonitoredPackages } from "../notificationBridge";
 import { TrashIcon, PlusIcon } from "../icons";
+
+const NOTIFICATION_SCREENS: NotificationScreen[] = ["agenda", "calendario", "contas", "financas"];
+
+function upcomingHolidays() {
+  const year = new Date().getFullYear();
+  return [...getBrazilianHolidays(year), ...getBrazilianHolidays(year + 1)];
+}
 
 const UI_SCALE_LABEL: Record<UiScale, string> = {
   "100": "Original (100%)",
@@ -21,6 +42,7 @@ const UI_SCALE_LABEL: Record<UiScale, string> = {
 export default function Settings() {
   const [granted, setGranted] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => loadNotificationPrefs());
   const [monitoredApps, setMonitoredApps] = useState<MonitoredApp[]>([]);
   const [newAppName, setNewAppName] = useState("");
   const [newPackageName, setNewPackageName] = useState("");
@@ -87,10 +109,35 @@ export default function Settings() {
       setMessage("Permissão de notificação negada.");
       return;
     }
+    await setupNotificationChannels();
     const [reminders, bills] = await Promise.all([api.reminders.list(), api.bills.list()]);
     await syncAllReminderNotifications(reminders);
     await syncAllBillNotifications(bills);
+    await syncAllHolidayNotifications(upcomingHolidays());
     setMessage("Notificações ativadas! Lembretes e contas futuras serão avisados no horário.");
+  }
+
+  async function handleToggleScreenNotif(screen: NotificationScreen, enabled: boolean) {
+    const updated = { ...notifPrefs, [screen]: enabled };
+    setNotifPrefs(updated);
+    saveNotificationPrefs(updated);
+    if (!isNativePlatform() || !granted) return;
+
+    if (screen === "agenda") {
+      const reminders = await api.reminders.list();
+      if (enabled) await syncAllReminderNotifications(reminders);
+      else for (const r of reminders) await cancelReminderNotification(r.id);
+    } else if (screen === "contas") {
+      const bills = await api.bills.list();
+      if (enabled) await syncAllBillNotifications(bills);
+      else for (const b of bills) await cancelBillNotifications(b.id);
+    } else if (screen === "calendario") {
+      const holidays = upcomingHolidays();
+      if (enabled) await syncAllHolidayNotifications(holidays);
+      else for (const h of holidays) await cancelHolidayNotification(h);
+    }
+    // "financas" é reativo (dispara na hora ao lançar um gasto) — não há nada
+    // agendado pra cancelar/sincronizar, só o próximo alerta deixa de ocorrer.
   }
 
   return (
@@ -118,6 +165,27 @@ export default function Settings() {
           </button>
         )}
         {message && <p className="hint">{message}</p>}
+      </section>
+
+      <section className="settings-section">
+        <h2>Notificações por tela</h2>
+        <p className="hint">
+          Escolha de quais telas você quer receber avisos. Se deixar só a Agenda marcada, por
+          exemplo, só vai receber notificações de eventos e tarefas — nada de contas ou finanças.
+        </p>
+        {NOTIFICATION_SCREENS.map((screen) => (
+          <label key={screen} className="slider-row notif-screen-row">
+            <span>
+              {NOTIFICATION_SCREEN_LABEL[screen]}
+              <span className="notif-screen-hint">{NOTIFICATION_SCREEN_HINT[screen]}</span>
+            </span>
+            <input
+              type="checkbox"
+              checked={notifPrefs[screen]}
+              onChange={(e) => handleToggleScreenNotif(screen, e.target.checked)}
+            />
+          </label>
+        ))}
       </section>
 
       <section className="settings-section">

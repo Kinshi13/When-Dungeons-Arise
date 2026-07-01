@@ -568,6 +568,18 @@
   accent-color: var(--accent);
 }
 
+.notif-screen-row {
+  align-items: flex-start;
+}
+
+.notif-screen-hint {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
 .monitored-app-list {
   display: flex;
   flex-direction: column;

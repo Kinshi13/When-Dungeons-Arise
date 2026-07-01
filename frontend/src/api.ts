@@ -8,7 +8,9 @@ import {
   cancelReminderNotification,
   scheduleBillNotifications,
   cancelBillNotifications,
+  checkOverspendingAndNotify,
 } from "./notifications";
+import { compareWeek, compareMonth } from "./game/financeAnalysis";
 
 export type ReminderType = "REUNIAO" | "TAREFA" | "OUTRO";
 export type Priority = "BAIXA" | "MEDIA" | "ALTA";
@@ -298,6 +300,11 @@ export const api = {
       }
 
       for (const key of new Set(created.map((e) => dateKeyOf(e.date)))) recomputeDailySummary(key);
+
+      const summaries = dailySummaryTable.list();
+      const today = new Date();
+      await checkOverspendingAndNotify(compareWeek(summaries, today), compareMonth(summaries, today));
+
       return created[0];
     },
     remove: async (id: string) => {
