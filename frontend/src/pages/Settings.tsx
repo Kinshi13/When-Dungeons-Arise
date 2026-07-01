@@ -9,6 +9,7 @@ import {
 } from "../notifications";
 import { useSettings, type UiScale } from "../contexts/SettingsContext";
 import { listMonitoredApps, upsertMonitoredApp, removeMonitoredApp, type MonitoredApp } from "../notificationAppPrefs";
+import { syncMonitoredPackages } from "../notificationBridge";
 import { TrashIcon, PlusIcon } from "../icons";
 
 const UI_SCALE_LABEL: Record<UiScale, string> = {
@@ -36,22 +37,31 @@ export default function Settings() {
     setAnimationsEnabled,
   } = useSettings();
 
+  // Sempre que a lista muda, avisa o serviço nativo quais pacotes ficam liberados
+  // pra guardar conteúdo de notificação — todo o resto continua só com nome/pacote.
+  function refreshMonitoredApps() {
+    const apps = listMonitoredApps();
+    setMonitoredApps(apps);
+    syncMonitoredPackages(apps.filter((a) => a.enabled).map((a) => a.packageName));
+  }
+
   useEffect(() => {
     if (isNativePlatform()) {
       hasNotificationPermission().then(setGranted);
     }
-    setMonitoredApps(listMonitoredApps());
+    refreshMonitoredApps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function updateApp(app: MonitoredApp, patch: Partial<MonitoredApp>) {
     const updated = { ...app, ...patch };
     upsertMonitoredApp(updated);
-    setMonitoredApps(listMonitoredApps());
+    refreshMonitoredApps();
   }
 
   function handleRemoveApp(packageName: string) {
     removeMonitoredApp(packageName);
-    setMonitoredApps(listMonitoredApps());
+    refreshMonitoredApps();
   }
 
   function handleAddApp(e: FormEvent) {
@@ -64,7 +74,7 @@ export default function Settings() {
       priority: false,
       autoExpense: false,
     });
-    setMonitoredApps(listMonitoredApps());
+    refreshMonitoredApps();
     setNewAppName("");
     setNewPackageName("");
   }

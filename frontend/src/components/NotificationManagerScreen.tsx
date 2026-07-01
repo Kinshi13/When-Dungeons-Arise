@@ -7,10 +7,11 @@ import {
   fetchRecentNotifications,
   isNotificationAccessGranted,
   openNotificationAccessSettings,
+  syncMonitoredPackages,
   type RawSystemNotification,
 } from "../notificationBridge";
 import { groupNotifications, hasScheduleHint } from "../notificationGrouping";
-import { ensureAppsKnown } from "../notificationAppPrefs";
+import { ensureAppsKnown, listMonitoredApps } from "../notificationAppPrefs";
 import { runAutoExpenseDetection, isNotificationProcessed } from "../autoExpenseEngine";
 import { findDateMention, resolveDateToISO } from "../game/dateDetector";
 import { ChevronLeftIcon, BellIcon, PlusIcon, CoinIcon, SettingsIcon } from "../icons";
@@ -38,16 +39,27 @@ export default function NotificationManagerScreen({ open, onClose }: Notificatio
   const [loading, setLoading] = useState(false);
   const [convertedIds, setConvertedIds] = useState<string[]>([]);
   const [autoExpenseCount, setAutoExpenseCount] = useState(0);
+  const [hasMonitoredApp, setHasMonitoredApp] = useState(false);
 
   async function load() {
     setLoading(true);
+    // Garante que o serviço nativo já tenha a lista de apps liberados antes de
+    // ler o cache — cobre o caso de o app abrir aqui sem ter passado por Ajustes.
+    await syncMonitoredPackages(listMonitoredApps().filter((a) => a.enabled).map((a) => a.packageName));
     const [grantedResult, notifResult] = await Promise.all([isNotificationAccessGranted(), fetchRecentNotifications()]);
     setGranted(grantedResult);
-    setItems(notifResult.items);
     setIsExample(notifResult.isExample);
 
+    // Descobre apps novos (só nome/pacote, pra aparecerem em Ajustes), mas só
+    // exibe/processa aqui o conteúdo dos que o usuário já marcou "Monitorar" —
+    // o mesmo filtro que o serviço nativo aplica antes de guardar texto algum.
     ensureAppsKnown(notifResult.items.map((i) => ({ packageName: i.packageName, appName: i.appName })));
-    const autoExpenses = await runAutoExpenseDetection(notifResult.items);
+    const enabledPackages = new Set(listMonitoredApps().filter((a) => a.enabled).map((a) => a.packageName));
+    setHasMonitoredApp(enabledPackages.size > 0);
+    const visibleItems = notifResult.items.filter((i) => enabledPackages.has(i.packageName));
+    setItems(visibleItems);
+
+    const autoExpenses = await runAutoExpenseDetection(visibleItems);
     if (autoExpenses.length > 0) {
       playSfx("coin");
       setAutoExpenseCount((prev) => prev + autoExpenses.length);
@@ -150,7 +162,15 @@ export default function NotificationManagerScreen({ open, onClose }: Notificatio
 
             <div className="notif-groups">
               {loading && <p className="hint">Carregando...</p>}
-              {!loading && groups.length === 0 && <p className="hint">Nenhuma notificação por aqui.</p>}
+              {!loading && !hasMonitoredApp && (
+                <p className="hint">
+                  Nenhum app monitorado ainda — o conteúdo das notificações só é lido dos apps que
+                  você ativar em Ajustes › Notificações monitoradas.
+                </p>
+              )}
+              {!loading && hasMonitoredApp && groups.length === 0 && (
+                <p className="hint">Nenhuma notificação recente dos apps monitorados.</p>
+              )}
               {groups.map((group) => (
                 <section key={group.packageName} className="notif-group">
                   <div className="notif-group-header">

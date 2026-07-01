@@ -14,6 +14,7 @@ interface NotificationBridgePluginApi {
   isAccessGranted(): Promise<{ granted: boolean }>;
   openAccessSettings(): Promise<void>;
   getRecentNotifications(): Promise<{ items: RawSystemNotification[] }>;
+  setMonitoredPackages(options: { packages: string[] }): Promise<void>;
 }
 
 // Ponte pro plugin nativo Android (AppNotificationListenerService +
@@ -111,4 +112,17 @@ export async function fetchRecentNotifications(): Promise<{
     }
   }
   return { items: MOCK_NOTIFICATIONS, isExample: true };
+}
+
+// Avisa o serviço nativo quais apps o usuário liberou pra guardar o conteúdo
+// (título/texto) das notificações — todo o resto continua só com nome/pacote,
+// sem nenhum texto guardado. Chamado sempre que a lista de apps monitorados
+// muda em Ajustes, e ao abrir a tela de gerenciamento.
+export async function syncMonitoredPackages(packageNames: string[]): Promise<void> {
+  if (!isNativePlatform()) return;
+  try {
+    await NotificationBridge.setMonitoredPackages({ packages: packageNames });
+  } catch {
+    // Plugin nativo ainda não testado num aparelho real nesta build — ignora.
+  }
 }
