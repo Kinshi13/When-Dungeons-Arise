@@ -2892,15 +2892,12 @@
   pointer-events: none;
 }
 
-/* Fundo com papel de parede personalizado — mesma ideia do preview de
-   ajuste: object-fit:cover garante que a imagem sempre preenche a tela,
+/* Papel de parede personalizado — entra por cima do gradiente flat da área
+   (não substitui), com um fade suave em vez de aparecer de um instante pro
+   outro. object-fit:cover garante que a imagem sempre preenche a tela,
    qualquer que seja a proporção original, e o zoom/posição do usuário
    entram por cima via transform. */
-.wallpaper-custom-bg {
-  overflow: hidden;
-}
-
-.wallpaper-custom-bg::after {
+.lofi-scene-has-wallpaper::after {
   content: none;
 }
 
@@ -2911,6 +2908,16 @@
   height: 100%;
   object-fit: cover;
   transform-origin: center;
+  animation: wallpaper-fade-in 0.35s ease-out both;
+}
+
+@keyframes wallpaper-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .wallpaper-adjust-hint {

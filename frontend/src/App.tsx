@@ -111,39 +111,54 @@ interface CustomWallpaperInfo {
   adjust: { zoom: number; offsetX: number; offsetY: number; blur: number };
 }
 
+// Papel de parede do usuário SEMPRE por cima do gradiente flat da área (em
+// vez de substituí-lo por inteiro) — o gradiente já tem a paleta certa da
+// seção, então serve de base consistente enquanto a foto entra com um fade
+// suave (ver .wallpaper-custom-bg-img), sem nenhum instante "vazio"/preto no
+// meio da troca. A key pela própria URL faz o fade reiniciar só quando a
+// imagem muda de verdade (duas telas usando a mesma foto não re-animam).
+function renderWallpaperOverlay(customWallpaper: CustomWallpaperInfo | null | undefined) {
+  if (!customWallpaper) return null;
+  const { zoom, offsetX, offsetY, blur } = customWallpaper.adjust;
+  return (
+    <img
+      key={customWallpaper.url}
+      src={customWallpaper.url}
+      alt=""
+      className="wallpaper-custom-bg-img"
+      style={{
+        transform: `scale(${zoom}) translate(${offsetX}%, ${offsetY}%)`,
+        filter: blur > 0 ? `blur(${blur}px)` : undefined,
+      }}
+    />
+  );
+}
+
 function renderBackgroundContent(
   bg: { src: string; blurred?: boolean } | undefined,
   isLofi: boolean,
   pathname: string,
   customWallpaper?: CustomWallpaperInfo | null
 ) {
-  if (customWallpaper) {
-    const { zoom, offsetX, offsetY, blur } = customWallpaper.adjust;
-    return (
-      <div className="lofi-scene wallpaper-custom-bg" aria-hidden="true">
-        <img
-          src={customWallpaper.url}
-          alt=""
-          className="wallpaper-custom-bg-img"
-          style={{
-            transform: `scale(${zoom}) translate(${offsetX}%, ${offsetY}%)`,
-            filter: blur > 0 ? `blur(${blur}px)` : undefined,
-          }}
-        />
-      </div>
-    );
-  }
   if (isLofi) {
     const sceneClass = lofiSceneClass(pathname);
     const image = LOFI_SECTION_IMAGE[sceneClass];
+    // Suprime o brilho ::after quando tem papel de parede por cima — ele é
+    // pensado pra iluminar o gradiente flat, não faz sentido sobre uma foto.
+    const hasWallpaperClass = customWallpaper ? " lofi-scene-has-wallpaper" : "";
     if (image) {
       return (
-        <div className={`lofi-scene ${sceneClass} lofi-scene-photo`} aria-hidden="true">
+        <div className={`lofi-scene ${sceneClass} lofi-scene-photo${hasWallpaperClass}`} aria-hidden="true">
           <img src={image} alt="" className="lofi-scene-photo-img" />
+          {renderWallpaperOverlay(customWallpaper)}
         </div>
       );
     }
-    return <div className={`lofi-scene ${sceneClass}`} aria-hidden="true" />;
+    return (
+      <div className={`lofi-scene ${sceneClass}${hasWallpaperClass}`} aria-hidden="true">
+        {renderWallpaperOverlay(customWallpaper)}
+      </div>
+    );
   }
   return bg ? (
     <div className={`page-bg${bg.blurred ? " page-bg-blurred" : ""}`}>
@@ -394,11 +409,17 @@ function App() {
             className="page-bg-slide-preview"
             style={{ transform: `translateX(${preview.direction > 0 ? "100%" : "-100%"})` }}
           >
+            {/* A prévia do arraste NUNCA mostra papel de parede personalizado —
+                só o gradiente flat da área. Trocar de foto no meio do gesto
+                (às vezes pra uma foto ainda não decodificada) é exatamente o
+                que dava a sensação de "recarregando"; o gradiente é instantâneo
+                e sempre igual, então a prévia fica sempre suave. A foto de
+                verdade só aparece (com fade) quando a tela assenta. */}
             {renderBackgroundContent(
               SECTION_BACKGROUND[sectionOf(preview.path) ?? ""] ?? PAGE_BACKGROUNDS[preview.path],
               isLofi,
               preview.path,
-              theme === "personalizado" ? resolveCustomWallpaper(preview.path) : null
+              null
             )}
           </div>
         )}
