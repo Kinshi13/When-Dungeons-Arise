@@ -1968,77 +1968,6 @@
   color: var(--text-muted);
 }
 
-/* ===== Gamificação: Guilda de Aventureiros ===== */
-
-.game-top-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface);
-  border: var(--pixel-border);
-  border-radius: 20px;
-  padding: 6px 12px;
-  box-shadow: var(--pixel-shadow-sm);
-  cursor: pointer;
-}
-
-.game-top-bar-level {
-  font-family: var(--font-display);
-  font-size: 0.6rem;
-  color: var(--accent);
-  white-space: nowrap;
-}
-
-.game-top-bar-xp {
-  flex: 1;
-  min-width: 50px;
-}
-
-.game-top-bar-coins {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  color: var(--outro);
-  font-size: 0.9rem;
-  white-space: nowrap;
-}
-
-.game-top-bar-streak {
-  font-size: 0.75rem;
-  color: var(--danger);
-  white-space: nowrap;
-}
-
-.pixel-progress {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.pixel-progress-label {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-}
-
-.pixel-progress-track {
-  height: 10px;
-  background: var(--surface-raised);
-  border: 2px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.pixel-progress-track.small {
-  height: 7px;
-  border-width: 1px;
-}
-
-.pixel-progress-fill {
-  height: 100%;
-  background: var(--accent);
-  transition: width 0.3s ease;
-}
-
 .pixel-dialog {
   position: relative;
   background: var(--surface);
@@ -2076,38 +2005,6 @@
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
   border-top: 10px solid var(--border);
-}
-
-.pixel-character-sprite {
-  image-rendering: pixelated;
-  background-repeat: no-repeat;
-  animation-name: pixel-sprite-step;
-  animation-timing-function: steps(var(--frame-count));
-  animation-iteration-count: infinite;
-}
-
-@keyframes pixel-sprite-step {
-  from {
-    background-position-x: 0%;
-  }
-  to {
-    background-position-x: 100%;
-  }
-}
-
-.pixel-character-placeholder {
-  image-rendering: pixelated;
-  animation: pixel-idle-bob 1.6s ease-in-out infinite;
-}
-
-@keyframes pixel-idle-bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
 }
 
 .room-button {
@@ -2176,18 +2073,6 @@
   flex-wrap: wrap;
 }
 
-.reward-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--accent-soft, var(--surface-raised));
-  border: 2px solid var(--border);
-  border-radius: 16px;
-  padding: 3px 10px;
-  font-size: 0.9rem;
-  color: var(--outro);
-}
-
 .mission-card {
   background: var(--surface);
   border: var(--pixel-border);
@@ -2228,13 +2113,8 @@
 
 .mission-card-bottom {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-}
-
-.mission-card-reward {
-  display: flex;
-  gap: 6px;
 }
 
 .mission-done-label {

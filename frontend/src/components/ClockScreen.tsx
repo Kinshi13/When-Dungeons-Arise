@@ -385,10 +385,11 @@ export default function ClockScreen({ open, onClose, initialTab = "despertador" 
     if (open) setTab(initialTab);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
-  // Reverso do gesto que abre esta tela (deslizar pra cima na Recepção):
-  // deslizar pra baixo aqui fecha de volta. Só no cabeçalho, pra não brigar
-  // com a rolagem da lista de alarmes.
-  const closeSwipe = useVerticalSwipe(undefined, onClose);
+  // Mesmo gesto que abre esta tela (deslizar pra cima na Recepção): deslizar
+  // pra cima de novo aqui fecha de volta (não o reverso — "puxa pra cima pra
+  // ver o Relógio, puxa pra cima de novo pra voltar"). Só no cabeçalho, pra
+  // não brigar com a rolagem da lista de alarmes.
+  const closeSwipe = useVerticalSwipe(onClose, undefined);
 
   return createPortal(
     <AnimatePresence>

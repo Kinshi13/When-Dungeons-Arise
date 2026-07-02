@@ -95,10 +95,10 @@ export default function WeatherScreen({ open, onClose, onPlacesChanged }: Weathe
   const primaryInfo = primary ? infoByPlace[primary.id] : null;
   const others = places.slice(1);
 
-  // Reverso do gesto que abre esta tela (deslizar pra baixo na Recepção):
-  // deslizar pra cima aqui fecha de volta. Só no cabeçalho, pra não brigar
-  // com a rolagem dos cards de outros locais.
-  const closeSwipe = useVerticalSwipe(onClose, undefined);
+  // Mesmo gesto que abre esta tela (deslizar pra baixo na Recepção): deslizar
+  // pra baixo de novo aqui fecha de volta (não o reverso). Só no cabeçalho,
+  // pra não brigar com a rolagem dos cards de outros locais.
+  const closeSwipe = useVerticalSwipe(undefined, onClose);
 
   return createPortal(
     <AnimatePresence>

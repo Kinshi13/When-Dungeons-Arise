@@ -1,6 +1,5 @@
-import type { Priority, Reminder, ReminderType } from "../api";
+import type { Priority, Reminder } from "../api";
 import type { MissionCategory } from "../components/game/PixelMissionCard";
-import { REWARDS, type RewardKey } from "./rewardService";
 
 export interface Mission {
   id: string;
@@ -9,18 +8,9 @@ export interface Mission {
   dueLabel: string;
   category: MissionCategory;
   priority: Priority;
-  rewardKey: RewardKey;
-  rewardXp: number;
-  rewardCoins: number;
   done: boolean;
   fromNote: boolean;
 }
-
-const TYPE_TO_REWARD_KEY: Record<ReminderType, RewardKey> = {
-  OUTRO: "taskSimples",
-  TAREFA: "taskMedia",
-  REUNIAO: "taskImportante",
-};
 
 function daysUntil(dateStr: string): number {
   const due = new Date(dateStr);
@@ -51,8 +41,6 @@ export function generateMissions(reminders: Reminder[]): {
 } {
   const missions: Mission[] = reminders.map((r) => {
     const days = daysUntil(r.dateTime);
-    const rewardKey = TYPE_TO_REWARD_KEY[r.type];
-    const reward = REWARDS[rewardKey];
     return {
       id: r.id,
       reminderId: r.id,
@@ -60,9 +48,6 @@ export function generateMissions(reminders: Reminder[]): {
       dueLabel: dueLabelFor(days),
       category: categoryFor(r, days),
       priority: r.priority ?? "MEDIA",
-      rewardKey,
-      rewardXp: reward.xp,
-      rewardCoins: reward.coins,
       done: !!r.done,
       fromNote: !!r.fromNote,
     };

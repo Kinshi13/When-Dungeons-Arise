@@ -4,7 +4,6 @@ import { api, type DocumentMeta } from "../api";
 import PdfReader, { type ReaderHandle } from "../components/PdfReader";
 import EpubReader from "../components/EpubReader";
 import { ChevronLeftIcon, ChevronRightIcon, MinusIcon, PlusIcon, MoonIcon } from "../icons";
-import { useGame } from "../game/GameContext";
 import {
   EPUB_FONT_FAMILIES,
   EPUB_THEMES,
@@ -14,7 +13,6 @@ import {
   type EpubTheme,
 } from "../epubReaderSettings";
 
-const READING_GOAL_MINUTES = 20;
 const MAX_ZOOM_STEP = 3;
 
 export default function ReaderScreen() {
@@ -30,9 +28,6 @@ export default function ReaderScreen() {
   const [epubSettings, setEpubSettings] = useState(() => loadEpubReaderSettings());
   const [epubSettingsOpen, setEpubSettingsOpen] = useState(false);
   const readerRef = useRef<ReaderHandle>(null);
-  const { grantReward } = useGame();
-  const sessionStart = useRef(Date.now());
-  const rewardGranted = useRef(false);
 
   useEffect(() => {
     if (!id) return;
@@ -51,17 +46,6 @@ export default function ReaderScreen() {
       setInitialLocation(progress?.location);
     })();
   }, [id]);
-
-  useEffect(() => {
-    return () => {
-      const minutesRead = (Date.now() - sessionStart.current) / 60000;
-      if (minutesRead >= READING_GOAL_MINUTES && !rewardGranted.current) {
-        rewardGranted.current = true;
-        grantReward("leitura20min");
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   function handleBack() {
     navigate(-1);

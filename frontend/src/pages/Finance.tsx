@@ -2,9 +2,6 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { api, type DailySummary, type Expense } from "../api";
 import { compareWeek, compareMonth, type PeriodComparison } from "../game/financeAnalysis";
 import { TrashIcon, PlusIcon } from "../icons";
-import { useGame } from "../game/GameContext";
-import RewardPopup from "../components/game/RewardPopup";
-import type { RewardPopupData } from "../game/GameContext";
 
 function toDateKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -37,8 +34,6 @@ export default function Finance() {
   const [installments, setInstallments] = useState("1");
   const [superficial, setSuperficial] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [reward, setReward] = useState<RewardPopupData | null>(null);
-  const { grantReward } = useGame();
 
   async function load() {
     const [expenseItems, summaryItems, balance] = await Promise.all([
@@ -85,7 +80,6 @@ export default function Finance() {
       setDescription("");
       setInstallments("1");
       setSuperficial(false);
-      setReward(grantReward("despesaRegistrada"));
       await load();
     } catch (err: any) {
       setError(err.message);
@@ -238,7 +232,6 @@ export default function Finance() {
         );
       })}
       {groups.length === 0 && <p className="hint">Nenhum gasto registrado ainda.</p>}
-      <RewardPopup reward={reward} onClose={() => setReward(null)} />
     </div>
   );
 }

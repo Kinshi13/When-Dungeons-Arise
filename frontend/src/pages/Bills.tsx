@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { api, type Bill, type BillKind, type BillType, type Expense } from "../api";
 import { TrashIcon, PlusIcon } from "../icons";
-import { useGame, type RewardPopupData } from "../game/GameContext";
-import RewardPopup from "../components/game/RewardPopup";
 
 const typeLabel: Record<BillType, string> = {
   CARTAO: "Cartão",
@@ -58,8 +56,6 @@ export default function Bills() {
   const [kind, setKind] = useState<BillKind>("PAGAR");
   const [recurring, setRecurring] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [reward, setReward] = useState<RewardPopupData | null>(null);
-  const { grantReward } = useGame();
 
   async function load() {
     const [billsData, expensesData] = await Promise.all([api.bills.list(), api.expenses.list()]);
@@ -114,7 +110,6 @@ export default function Bills() {
     const wasPending = bill.status === "PENDENTE";
     if (wasPending) {
       await api.bills.update(bill.id, { status: bill.kind === "RECEBER" ? "RECEBIDA" : "PAGA" });
-      setReward(grantReward("contaPaga"));
     } else {
       await api.bills.update(bill.id, { status: "PENDENTE" });
     }
@@ -285,7 +280,6 @@ export default function Bills() {
           </ul>
         </>
       )}
-      <RewardPopup reward={reward} onClose={() => setReward(null)} />
     </div>
   );
 }

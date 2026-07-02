@@ -32,7 +32,6 @@ import { getBrazilianHolidays } from './game/holidays'
 import { syncReminderWidget, syncCalendarWidget, syncCurrencyWidgetPair } from './widgetBridge'
 import { getCurrencyWidgetPair } from './currencyWidgetStore'
 import { SettingsProvider } from './contexts/SettingsContext'
-import { GameProvider } from './game/GameContext'
 import './index.css'
 import App from './App.tsx'
 
@@ -65,11 +64,9 @@ if (isNativePlatform()) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <SettingsProvider>
-      <GameProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </GameProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </SettingsProvider>
   </StrictMode>,
 )

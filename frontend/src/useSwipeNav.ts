@@ -2,11 +2,15 @@ import { useRef, useState, type TouchEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMotionValue, animate } from "framer-motion";
 
-// Sequência "achatada" das telas principais + suas sub-abas, na ordem em que o
-// swipe percorre a barra inferior. Sub-telas de uma área (como as abas da
-// Tesouraria) entram como mais passos na mesma sequência — ao chegar na borda
-// de um grupo, o swipe continua naturalmente pra área principal vizinha.
+// Sequência "achatada" de TODAS as 7 telas da barra inferior + suas
+// sub-abas, na ordem em que o swipe as percorre (Diário e Biblioteca nas
+// pontas, batendo com a posição deles na barra). Sub-telas de uma área
+// (como as abas da Tesouraria, ou Notas/Listas do Diário) entram como mais
+// passos na mesma sequência — ao chegar na borda de um grupo, o swipe
+// continua naturalmente pra área vizinha.
 const FLAT_SEQUENCE = [
+  "/diario/notas",
+  "/diario/listas",
   "/missoes",
   "/tesouraria/financas",
   "/tesouraria/contas",
@@ -17,11 +21,8 @@ const FLAT_SEQUENCE = [
   "/sala-do-tempo/calendario",
   "/sala-do-tempo/agenda",
   "/regras",
+  "/biblioteca",
 ];
-
-// O Diário fica numa sequência própria, separada da barra inferior (é acessado
-// pelo atalho da Recepção, não pelas abas de baixo).
-const DIARIO_SEQUENCE = ["/diario/notas", "/diario/listas"];
 
 const SWIPE_THRESHOLD = 60;
 const ACTIVATION_THRESHOLD = 10;
@@ -46,60 +47,53 @@ export function sectionOf(pathname: string): string | null {
   return null;
 }
 
-// Ordem visual das 5 telas na barra inferior — usada só pra saber de que lado
+// Igual sectionOf, mas cobrindo também Diário/Biblioteca — usado só aqui pra
+// saber se uma troca na FLAT_SEQUENCE fica "dentro" da mesma área (Finanças
+// -> Contas, Notas -> Listas: mesma seção) ou "atravessa" pra uma área
+// vizinha (Diário -> Mural, Ajustes -> Biblioteca: seções diferentes). Só
+// trocas entre seções diferentes ganham a animação de gaveta.
+function flatSequenceSection(pathname: string): string {
+  if (pathname.startsWith("/diario")) return "diario";
+  if (pathname === "/biblioteca") return "biblioteca";
+  return sectionOf(pathname) ?? pathname;
+}
+
+// Ordem visual das 7 telas na barra inferior — usada só pra saber de que lado
 // a próxima tela deve entrar (direção do slide), não pra navegação em si.
-export const MAIN_ORDER = ["mural", "tesouraria", "guilda", "tempo", "ajustes"];
+export const MAIN_ORDER = ["diario", "mural", "tesouraria", "guilda", "tempo", "ajustes", "biblioteca"];
 
 interface ResolvedGesture {
   targetPath: string | null;
-  // true = troca acompanha o dedo em tempo real e ganha a animação de slide
-  // completa (entre telas principais, ou saindo do Diário/Biblioteca de volta
-  // pra Recepção); false = troca instantânea de sempre (sub-abas).
+  // true = troca acompanha o dedo em tempo real (efeito "gaveta de apps").
   animated: boolean;
   direction: number; // -1 ou 1 — de que lado a tela nova entra
+  // true = troca fica dentro da mesma área (sub-abas, ex: Finanças/Contas) —
+  // só ganha o slide, sem a animação de "subir" da prévia (ver drawer-rise em
+  // App.tsx), que só faz sentido pra trocas entre áreas diferentes.
+  sameSection: boolean;
 }
 
 function resolveGesture(pathname: string, dx: number): ResolvedGesture {
   const direction = dx < 0 ? 1 : -1;
 
-  // Biblioteca não tem sub-abas — arrastar pra esquerda sempre volta pra
-  // Recepção (reverso do toque na lateral direita usado pra entrar).
-  if (pathname === "/biblioteca") {
-    return dx < 0 ? { targetPath: "/", animated: true, direction } : { targetPath: null, animated: false, direction };
-  }
-
-  // Diário tem duas sub-abas que continuam navegando normalmente entre si —
-  // a troca entre elas também acompanha o dedo (efeito "gaveta de apps"); só
-  // na borda inicial (Notas, arrastando pra direita) o gesto vira "sair" de
-  // volta pra Recepção (reverso do toque na lateral esquerda usado pra entrar).
-  if (DIARIO_SEQUENCE.includes(pathname)) {
-    const currentIndex = DIARIO_SEQUENCE.indexOf(pathname);
-    const nextIndex = dx < 0 ? currentIndex + 1 : currentIndex - 1;
-    if (nextIndex >= 0 && nextIndex < DIARIO_SEQUENCE.length) {
-      return { targetPath: DIARIO_SEQUENCE[nextIndex], animated: true, direction };
-    }
-    if (dx > 0) {
-      return { targetPath: "/", animated: true, direction };
-    }
-    return { targetPath: null, animated: false, direction };
-  }
-
-  // Toda troca dentro da sequência (entre telas principais OU entre as
-  // sub-abas de uma mesma área, como Finanças/Contas/Análises) acompanha o
-  // dedo em tempo real, no mesmo estilo "gaveta de apps".
+  // Toda troca dentro da sequência (entre as 7 telas da barra OU entre as
+  // sub-abas de uma mesma área, como Finanças/Contas/Análises ou Notas/
+  // Listas) acompanha o dedo em tempo real, no mesmo estilo "gaveta de apps".
   if (FLAT_SEQUENCE.includes(pathname)) {
     const currentIndex = FLAT_SEQUENCE.indexOf(pathname);
     const nextIndex = dx < 0 ? currentIndex + 1 : currentIndex - 1;
     const targetPath = nextIndex >= 0 && nextIndex < FLAT_SEQUENCE.length ? FLAT_SEQUENCE[nextIndex] : null;
-    return { targetPath, animated: !!targetPath, direction };
+    const sameSection = targetPath !== null && flatSequenceSection(pathname) === flatSequenceSection(targetPath);
+    return { targetPath, animated: !!targetPath, direction, sameSection };
   }
 
-  return { targetPath: null, animated: false, direction };
+  return { targetPath: null, animated: false, direction, sameSection: false };
 }
 
 export interface SlidePreview {
   path: string;
   direction: number;
+  sameSection: boolean;
 }
 
 // Objeto simples em escopo de módulo (não um useRef) — como só existe uma
@@ -156,7 +150,7 @@ export function useSwipeNav() {
       direction.current = resolved.direction;
 
       if (resolved.animated && resolved.targetPath) {
-        setPreview({ path: resolved.targetPath, direction: resolved.direction });
+        setPreview({ path: resolved.targetPath, direction: resolved.direction, sameSection: resolved.sameSection });
       }
     }
 

@@ -9,7 +9,6 @@ import Treasury from "./pages/Treasury";
 import AdventureDiary from "./pages/AdventureDiary";
 import Library from "./pages/Library";
 import RulesBook from "./pages/RulesBook";
-import CharacterDetail from "./pages/CharacterDetail";
 import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
 import AlarmRinger from "./components/AlarmRinger";
@@ -353,8 +352,13 @@ function App() {
                 {/* Efeito "gaveta": enquanto o arraste lateral acontece, o
                     conteúdo da tela de destino sobe de baixo pra cima. Quando
                     a rota assenta, o conteúdo real monta já na posição final
-                    (a animação de entrada pós-navegação é pulada). */}
-                <div className="drawer-rise">{renderRoutePreview(preview.path)}</div>
+                    (a animação de entrada pós-navegação é pulada). Só entre
+                    áreas diferentes — trocar de sub-aba dentro da mesma área
+                    (Finanças/Contas, Notas/Listas) já remonta o componente
+                    sozinho, e a gaveta por cima disso só criava um flicker. */}
+                <div className={preview.sameSection ? undefined : "drawer-rise"}>
+                  {renderRoutePreview(preview.path)}
+                </div>
               </div>
             )}
             <motion.div
@@ -381,7 +385,6 @@ function App() {
                 <Route path="/diario/listas" element={<AdventureDiary />} />
                 <Route path="/biblioteca" element={<Library />} />
                 <Route path="/regras" element={<RulesBook />} />
-                <Route path="/perfil" element={<CharacterDetail />} />
               </Routes>
             </motion.div>
           </motion.div>

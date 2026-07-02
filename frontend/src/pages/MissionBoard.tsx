@@ -1,9 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { api, type Priority, type Reminder, type ReminderType } from "../api";
 import { generateMissions, type Mission } from "../game/missionGenerator";
-import { useGame, type RewardPopupData } from "../game/GameContext";
 import PixelMissionCard from "../components/game/PixelMissionCard";
-import RewardPopup from "../components/game/RewardPopup";
 import NotificationManagerScreen from "../components/NotificationManagerScreen";
 import { PlusIcon, InboxIcon, ChevronRightIcon } from "../icons";
 import { playSfx } from "../sound";
@@ -15,9 +13,7 @@ export default function MissionBoard() {
   const [dateTime, setDateTime] = useState("");
   const [type, setType] = useState<ReminderType>("OUTRO");
   const [priority, setPriority] = useState<Priority>("MEDIA");
-  const [reward, setReward] = useState<RewardPopupData | null>(null);
   const [notifOpen, setNotifOpen] = useState(false);
-  const { grantReward } = useGame();
 
   async function load() {
     setReminders(await api.reminders.list());
@@ -48,8 +44,6 @@ export default function MissionBoard() {
   async function handleComplete(mission: Mission) {
     await api.reminders.complete(mission.reminderId);
     playSfx("coin");
-    const result = grantReward(mission.rewardKey);
-    setReward(result);
     await load();
   }
 
@@ -114,8 +108,6 @@ export default function MissionBoard() {
                 category={m.category}
                 priority={m.priority}
                 fromNote={m.fromNote}
-                rewardXp={m.rewardXp}
-                rewardCoins={m.rewardCoins}
                 onComplete={() => handleComplete(m)}
               />
             ))}
@@ -135,8 +127,6 @@ export default function MissionBoard() {
                 category={m.category}
                 priority={m.priority}
                 fromNote={m.fromNote}
-                rewardXp={m.rewardXp}
-                rewardCoins={m.rewardCoins}
                 onComplete={() => handleComplete(m)}
               />
             ))}
@@ -156,8 +146,6 @@ export default function MissionBoard() {
                 category={m.category}
                 priority={m.priority}
                 fromNote={m.fromNote}
-                rewardXp={m.rewardXp}
-                rewardCoins={m.rewardCoins}
                 onComplete={() => handleComplete(m)}
               />
             ))}
@@ -169,7 +157,6 @@ export default function MissionBoard() {
         <p className="hint">Nenhuma missão pendente. Adicione uma acima!</p>
       )}
 
-      <RewardPopup reward={reward} onClose={() => setReward(null)} />
       <NotificationManagerScreen
         open={notifOpen}
         onClose={() => {

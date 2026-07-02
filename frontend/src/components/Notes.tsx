@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, type Note } from "../api";
 import { playSfx } from "../sound";
-import { useGame, type RewardPopupData } from "../game/GameContext";
 import { findDateMention } from "../game/dateDetector";
-import RewardPopup from "./game/RewardPopup";
 import NoteEditorScreen from "./NoteEditorScreen";
 
 function previewText(content: string) {
@@ -14,8 +12,6 @@ function previewText(content: string) {
 export default function Notes() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
-  const [reward, setReward] = useState<RewardPopupData | null>(null);
-  const { grantReward } = useGame();
 
   async function load() {
     setNotes(await api.notes.list("NOTA"));
@@ -41,9 +37,6 @@ export default function Notes() {
       await api.notes.remove(editingNote.id);
     } else {
       await api.notes.update(editingNote.id, { title: data.title || "Sem título", content: data.content });
-      if (wasNew && data.content.trim()) {
-        setReward(grantReward("notaCriada"));
-      }
     }
     await load();
   }
@@ -92,7 +85,6 @@ export default function Notes() {
         onDelete={handleDelete}
         onTurnIntoTask={handleTurnIntoTask}
       />
-      <RewardPopup reward={reward} onClose={() => setReward(null)} />
     </div>
   );
 }

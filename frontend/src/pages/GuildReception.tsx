@@ -32,7 +32,15 @@ function useClockCardSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
   }
 
   function onTouchMove(e: TouchEvent) {
-    if (startX.current === null || startY.current === null || decided.current) return;
+    if (startX.current === null || startY.current === null) return;
+    // Precisa parar em TODO touchmove daqui em diante (não só no que decide)
+    // — mesmo raciocínio do useVerticalSwipe: a Recepção também escuta um
+    // gesto vertical no mesmo elemento, e um touchmove que escapasse sem
+    // stopPropagation deixaria ela decidir por conta própria mais tarde.
+    if (decided.current) {
+      e.stopPropagation();
+      return;
+    }
     const dx = e.touches[0].clientX - startX.current;
     const dy = e.touches[0].clientY - startY.current;
     if (Math.abs(dx) < CARD_SWIPE_ACTIVATION || Math.abs(dx) < Math.abs(dy) * 1.5) return;
