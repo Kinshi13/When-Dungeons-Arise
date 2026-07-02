@@ -152,6 +152,25 @@
   overflow: hidden;
 }
 
+/* Conteúdo da tela de destino subindo em "gaveta" enquanto o arraste lateral
+   acontece — roda uma vez, na montagem da prévia, e termina antes do commit
+   na maioria dos gestos (a rota assenta com o conteúdo já parado no lugar). */
+.drawer-rise {
+  min-height: 100%;
+  animation: drawer-rise 0.32s cubic-bezier(0.22, 0.9, 0.36, 1) both;
+}
+
+@keyframes drawer-rise {
+  from {
+    transform: translateY(64px);
+    opacity: 0.4;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* Camada que anima a entrada da tela nova, vinda do lado certo (esquerda ou
    direita conforme a ordem das telas na barra), tanto por swipe quanto por
    toque direto na aba. Sub-abas da mesma tela reaproveitam a mesma chave,
@@ -2375,8 +2394,11 @@
   position: relative;
   /* Todo o conteúdo daqui é posicionado em absoluto (os toques de borda e o
      balão de fala) — sem altura explícita a página colapsa pra 0 (a cadeia de
-     wrappers do slide/flex acima não resolve min-height:100% em porcentagem). */
-  height: 100svh;
+     wrappers do slide/flex acima não resolve min-height:100% em porcentagem).
+     Desconta o padding-bottom do .main (88px): com 100svh cheios a página
+     ficava 88px mais alta que a janela e rolava na vertical, arrastando os
+     ícones e o link "Temas" (absolutos) junto com a rolagem. */
+  height: calc(100svh - 88px);
 }
 
 .reception-edge-tap {
@@ -2493,6 +2515,24 @@
 .theme-swatch-card.active {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(255, 210, 63, 0.4);
+}
+
+.theme-swatch-card.locked {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Especificidade de propósito: vence a regra genérica
+   ".theme-swatch-card span:not(.theme-swatch-preview)" (que estica com flex:1). */
+.theme-swatch-card span.theme-locked-badge {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  border: 1px solid var(--text-muted);
+  text-align: center;
 }
 
 .theme-swatch-preview {

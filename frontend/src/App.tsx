@@ -14,7 +14,7 @@ import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
 import Splash from "./components/Splash";
 import { useSettings } from "./contexts/SettingsContext";
-import { useSwipeNav, sectionOf, MAIN_ORDER, pendingSwipeDirection } from "./useSwipeNav";
+import { useSwipeNav, sectionOf, MAIN_ORDER, pendingSwipeDirection, skipNextEnterAnimation } from "./useSwipeNav";
 import { isNativePlatform } from "./notifications";
 import { playSfx } from "./sound";
 import { TabBellIcon, TabCoinsIcon, TabGuildIcon, TabHomeCalendarIcon, TabGearIcon } from "./icons2";
@@ -216,11 +216,14 @@ function App() {
   if (pathChanged) {
     const section = sectionOf(location.pathname);
     const sectionIndex = section ? MAIN_ORDER.indexOf(section) : null;
-    // Prioriza a direção que o próprio gesto (swipe, ou um tap "informado" de
-    // antemão, como os ícones de atalho da Recepção) já resolveu — cobre os
-    // casos que não são uma simples comparação de índice na barra, como sub-
-    // abas ou sair/entrar no Diário/Biblioteca.
-    if (pendingSwipeDirection.current !== 0) {
+    // Navegação vinda do commit de um arraste: a tela já entrou acompanhando
+    // o dedo (a prévia parou exatamente na posição final), então NÃO roda a
+    // animação de entrada de novo — direção fica 0 e a rota assenta parada.
+    if (skipNextEnterAnimation.current) {
+      slideDirection = 0;
+    } else if (pendingSwipeDirection.current !== 0) {
+      // Direção "informada" por um tap (ícones de atalho da Recepção) — cobre
+      // os casos que não são uma simples comparação de índice na barra.
       slideDirection = pendingSwipeDirection.current;
     } else {
       const prevIndex = prevSectionIndexRef.current;
@@ -234,6 +237,7 @@ function App() {
     const section = sectionOf(location.pathname);
     const sectionIndex = section ? MAIN_ORDER.indexOf(section) : null;
     pendingSwipeDirection.current = 0;
+    skipNextEnterAnimation.current = false;
     if (sectionIndex !== null) prevSectionIndexRef.current = sectionIndex;
     prevPathRef.current = location.pathname;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -289,7 +293,11 @@ function App() {
                 aria-hidden="true"
                 style={{ transform: `translateX(${preview.direction > 0 ? "100%" : "-100%"})` }}
               >
-                {renderRoutePreview(preview.path)}
+                {/* Efeito "gaveta": enquanto o arraste lateral acontece, o
+                    conteúdo da tela de destino sobe de baixo pra cima. Quando
+                    a rota assenta, o conteúdo real monta já na posição final
+                    (a animação de entrada pós-navegação é pulada). */}
+                <div className="drawer-rise">{renderRoutePreview(preview.path)}</div>
               </div>
             )}
             <motion.div

@@ -109,6 +109,12 @@ export interface SlidePreview {
 // lado a próxima tela deve entrar, sem precisar de Context.
 export const pendingSwipeDirection = { current: 0 };
 
+// Marcado no commit de um arraste: a tela nova já entrou "puxada pelo dedo"
+// (a prévia terminou exatamente na posição final), então a animação de
+// entrada pós-navegação deve ser pulada — sem isso a tela deslizava DUAS
+// vezes em sequência (uma no arraste, outra ao assentar a rota).
+export const skipNextEnterAnimation = { current: false };
+
 export function useSwipeNav() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -174,7 +180,7 @@ export function useSwipeNav() {
         animate(x, dir * -screenWidth, COMMIT_TRANSITION).then(() => {
           x.set(0);
           setPreview(null);
-          pendingSwipeDirection.current = dir;
+          skipNextEnterAnimation.current = true;
           navigate(path);
         });
       } else {

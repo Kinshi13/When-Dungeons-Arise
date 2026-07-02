@@ -1,7 +1,8 @@
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeftIcon, CheckIcon } from "../icons";
-import { useSettings, THEME_LABEL, type ThemeId } from "../contexts/SettingsContext";
+import { useSettings, THEME_LABEL, LOCKED_THEMES, type ThemeId } from "../contexts/SettingsContext";
+import { playSfx } from "../sound";
 
 interface ThemesScreenProps {
   open: boolean;
@@ -28,7 +29,7 @@ export default function ThemesScreen({ open, onClose }: ThemesScreenProps) {
           transition={{ duration: 0.2 }}
         >
           <div className="page-bg page-bg-blurred-strong" aria-hidden="true">
-            <img src="/guild-reception-bg.png" alt="" />
+            <img src={theme === "lofi" ? "/lofi-guilda-bg.jpg" : "/guild-reception-bg.png"} alt="" />
           </div>
 
           <div className="note-fullscreen-content">
@@ -40,21 +41,29 @@ export default function ThemesScreen({ open, onClose }: ThemesScreenProps) {
             </div>
 
             <div className="theme-picker">
-              {(Object.keys(THEME_LABEL) as ThemeId[]).map((id) => (
-                <button
-                  key={id}
-                  className={`theme-swatch-card${theme === id ? " active" : ""}`}
-                  onClick={() => setTheme(id)}
-                >
-                  <span className="theme-swatch-preview">
-                    {THEME_SWATCH_COLORS[id].map((color, i) => (
-                      <span key={i} className="theme-swatch-dot" style={{ background: color }} />
-                    ))}
-                  </span>
-                  <span>{THEME_LABEL[id]}</span>
-                  {theme === id && <CheckIcon width={16} height={16} />}
-                </button>
-              ))}
+              {(Object.keys(THEME_LABEL) as ThemeId[]).map((id) => {
+                const locked = LOCKED_THEMES.includes(id);
+                return (
+                  <button
+                    key={id}
+                    className={`theme-swatch-card${theme === id ? " active" : ""}${locked ? " locked" : ""}`}
+                    disabled={locked}
+                    onClick={() => {
+                      playSfx("coin");
+                      setTheme(id);
+                    }}
+                  >
+                    <span className="theme-swatch-preview">
+                      {THEME_SWATCH_COLORS[id].map((color, i) => (
+                        <span key={i} className="theme-swatch-dot" style={{ background: color }} />
+                      ))}
+                    </span>
+                    <span>{THEME_LABEL[id]}</span>
+                    {theme === id && <CheckIcon width={16} height={16} />}
+                    {locked && <span className="theme-locked-badge">Bloqueado</span>}
+                  </button>
+                );
+              })}
             </div>
 
             <div className="themes-placeholder">

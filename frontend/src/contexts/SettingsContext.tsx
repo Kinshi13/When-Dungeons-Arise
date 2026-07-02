@@ -14,11 +14,18 @@ export const UI_SCALE_STEP = 5;
 
 export type ThemeId = "escuro" | "claro" | "lofi";
 
+// Ordem daqui é a ordem de exibição na tela de Temas.
 export const THEME_LABEL: Record<ThemeId, string> = {
-  escuro: "Padrão (escuro)",
+  lofi: "Lo-fi (padrão)",
   claro: "Claro",
-  lofi: "Lo-fi",
+  escuro: "Guilda",
 };
+
+// Temas ainda não liberados pro usuário final — aparecem na tela de Temas
+// como bloqueados (futuramente desbloqueáveis com o ouro do Avatar). O tema
+// "Guilda" (o antigo padrão pixel art) fica guardado aqui até essa economia
+// existir.
+export const LOCKED_THEMES: ThemeId[] = ["escuro"];
 
 interface SettingsState {
   sfxVolume: number;
@@ -35,7 +42,7 @@ const DEFAULTS: SettingsState = {
   musicVolume: 0.35,
   uiScale: 100,
   animationsEnabled: true,
-  theme: "escuro",
+  theme: "lofi",
 };
 
 const STORAGE_KEY = "lembretes-app:settings";
@@ -48,7 +55,15 @@ function loadSettings(): SettingsState {
     // uiScale era antes um dos textos "100"/"75"/"50" — converte pro número
     // equivalente se alguém ainda tiver isso salvo de uma versão anterior.
     const uiScale = Number(parsed.uiScale);
-    return { ...DEFAULTS, ...parsed, uiScale: Number.isFinite(uiScale) && uiScale > 0 ? uiScale : DEFAULTS.uiScale };
+    // Quem tinha um tema hoje bloqueado salvo (ex.: o antigo padrão "Guilda")
+    // volta pro padrão atual — o tema bloqueado não é acessível por enquanto.
+    const theme: ThemeId = LOCKED_THEMES.includes(parsed.theme) ? DEFAULTS.theme : parsed.theme ?? DEFAULTS.theme;
+    return {
+      ...DEFAULTS,
+      ...parsed,
+      uiScale: Number.isFinite(uiScale) && uiScale > 0 ? uiScale : DEFAULTS.uiScale,
+      theme,
+    };
   } catch {
     return DEFAULTS;
   }
@@ -109,7 +124,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setMusicVolume: (v) => setState((s) => ({ ...s, musicVolume: v })),
     setUiScale: (v) => setState((s) => ({ ...s, uiScale: v })),
     setAnimationsEnabled: (v) => setState((s) => ({ ...s, animationsEnabled: v })),
-    setTheme: (v) => setState((s) => ({ ...s, theme: v })),
+    // Temas bloqueados não são aplicáveis nem por chamada direta.
+    setTheme: (v) => setState((s) => (LOCKED_THEMES.includes(v) ? s : { ...s, theme: v })),
   };
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
