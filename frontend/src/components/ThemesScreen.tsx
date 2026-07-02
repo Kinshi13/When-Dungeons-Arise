@@ -1,7 +1,7 @@
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeftIcon, CheckIcon } from "../icons";
-import { useSettings, THEME_LABEL, LOCKED_THEMES, type ThemeId } from "../contexts/SettingsContext";
+import { useSettings, THEME_LABEL, LOCKED_THEMES, isLofiTheme, type ThemeId } from "../contexts/SettingsContext";
 import { playSfx } from "../sound";
 
 interface ThemesScreenProps {
@@ -11,7 +11,7 @@ interface ThemesScreenProps {
 
 const THEME_SWATCH_COLORS: Record<ThemeId, [string, string, string]> = {
   escuro: ["#0f0a1e", "#1c1430", "#ffd23f"],
-  claro: ["#33516c", "#7d6a4c", "#7dd3fc"],
+  claro: ["#23242a", "#2e3037", "#cf8a70"],
   lofi: ["#f3ead9", "#e7b6ad", "#a68fc9"],
 };
 
@@ -29,7 +29,7 @@ export default function ThemesScreen({ open, onClose }: ThemesScreenProps) {
           transition={{ duration: 0.2 }}
         >
           <div className="page-bg page-bg-blurred-strong" aria-hidden="true">
-            <img src={theme === "lofi" ? "/lofi-guilda-bg.jpg" : "/guild-reception-bg.png"} alt="" />
+            <img src={isLofiTheme(theme) ? "/lofi-guilda-bg.jpg" : "/guild-reception-bg.png"} alt="" />
           </div>
 
           <div className="note-fullscreen-content">

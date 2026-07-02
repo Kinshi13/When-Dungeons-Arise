@@ -17,9 +17,16 @@ export type ThemeId = "escuro" | "claro" | "lofi";
 // Ordem daqui é a ordem de exibição na tela de Temas.
 export const THEME_LABEL: Record<ThemeId, string> = {
   lofi: "Lo-fi (padrão)",
-  claro: "Claro",
+  claro: "Lo-fi Escuro",
   escuro: "Guilda",
 };
+
+// A família Lo-fi (claro e escuro) compartilha todo o visual flat: fundos em
+// gradiente, ícones preenchidos, barra de navegação de botões e a fonte
+// redonda — só a paleta muda entre eles.
+export function isLofiTheme(theme: ThemeId): boolean {
+  return theme === "lofi" || theme === "claro";
+}
 
 // Temas ainda não liberados pro usuário final — aparecem na tela de Temas
 // como bloqueados (futuramente desbloqueáveis com o ouro do Avatar). O tema

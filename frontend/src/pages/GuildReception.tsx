@@ -3,13 +3,16 @@ import { Link } from "react-router-dom";
 import ThemesScreen from "../components/ThemesScreen";
 import { playSfx } from "../sound";
 import { pendingSwipeDirection } from "../useSwipeNav";
-import { useSettings } from "../contexts/SettingsContext";
-import { DiaryIcon, BookIcon } from "../icons";
+import { useSettings, isLofiTheme } from "../contexts/SettingsContext";
+import { DiaryIcon, BookIcon, HourglassIcon } from "../icons";
+import ClockScreen from "../components/ClockScreen";
+import WeatherWidget from "../components/WeatherWidget";
 
 export default function GuildReception() {
   const [themesOpen, setThemesOpen] = useState(false);
+  const [clockOpen, setClockOpen] = useState(false);
   const { theme } = useSettings();
-  const isLofi = theme === "lofi";
+  const isLofi = isLofiTheme(theme);
 
   return (
     <div className="page reception-page">
@@ -67,7 +70,22 @@ export default function GuildReception() {
         </button>
       </div>
 
+      <WeatherWidget />
+
+      {/* Botão do Relógio — ampulheta centralizada acima da barra de navegação. */}
+      <button
+        className="reception-clock-btn"
+        aria-label="Relógio"
+        onClick={() => {
+          playSfx("coin");
+          setClockOpen(true);
+        }}
+      >
+        <HourglassIcon width={28} height={28} />
+      </button>
+
       <ThemesScreen open={themesOpen} onClose={() => setThemesOpen(false)} />
+      <ClockScreen open={clockOpen} onClose={() => setClockOpen(false)} />
     </div>
   );
 }

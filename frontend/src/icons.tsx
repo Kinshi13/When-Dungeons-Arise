@@ -1,5 +1,5 @@
 import type { SVGProps } from "react";
-import { useSettings } from "./contexts/SettingsContext";
+import { useSettings, isLofiTheme } from "./contexts/SettingsContext";
 
 const base: SVGProps<SVGSVGElement> = {
   viewBox: "0 0 24 24",
@@ -11,20 +11,20 @@ const base: SVGProps<SVGSVGElement> = {
   shapeRendering: "crispEdges",
 };
 
-// Ícones flat (tema Lo-fi): formas sólidas preenchidas, cantos arredondados e
-// uma sombra leve — nada de contornos/traços "pixel art". O creme abaixo é o
-// mesmo tom de --surface do tema Lo-fi, usado como "recorte" nos detalhes
-// (marca de check, aros do calendário etc.) — como esses ícones só entram em
-// cena junto do tema Lo-fi, dá pra fixar essa cor com segurança.
-const LOFI_CREAM = "#f6ede0";
+// Ícones flat (família Lo-fi, claro e escuro): formas sólidas preenchidas,
+// cantos arredondados e uma sombra leve — nada de contornos/traços "pixel
+// art". O "recorte" nos detalhes (marca de check, aros do calendário etc.)
+// usa a cor de superfície do tema ativo, então funciona tanto no Lo-fi
+// creme quanto na versão escura acinzentada.
+const LOFI_CREAM = "var(--surface)";
 
 const lofiBase: SVGProps<SVGSVGElement> = {
   viewBox: "0 0 24 24",
-  style: { filter: "drop-shadow(1px 2px 1.5px rgba(58, 46, 38, 0.35))" },
+  style: { filter: "drop-shadow(1px 2px 1.5px rgba(20, 16, 12, 0.35))" },
 };
 
 function useLofi() {
-  return useSettings().theme === "lofi";
+  return isLofiTheme(useSettings().theme);
 }
 
 export function CalendarIcon(props: SVGProps<SVGSVGElement>) {
@@ -403,6 +403,27 @@ export function ProfileIcon(props: SVGProps<SVGSVGElement>) {
     <svg {...base} {...props}>
       <circle cx="12" cy="8" r="3.5" />
       <path d="M5 20c1.2-3.8 4-5.5 7-5.5s5.8 1.7 7 5.5" />
+    </svg>
+  );
+}
+
+// Ampulheta — botão do Relógio na Recepção.
+export function HourglassIcon(props: SVGProps<SVGSVGElement>) {
+  if (useLofi()) {
+    return (
+      <svg {...lofiBase} {...props}>
+        <rect x="5" y="2.4" width="14" height="2.6" rx="1.3" fill="currentColor" />
+        <rect x="5" y="19" width="14" height="2.6" rx="1.3" fill="currentColor" />
+        <path d="M7 5h10v1.8c0 2.4-1.8 3.8-3.4 5.2 1.6 1.4 3.4 2.8 3.4 5.2V19H7v-1.8c0-2.4 1.8-3.8 3.4-5.2C8.8 10.6 7 9.2 7 6.8Z" fill="currentColor" opacity="0.45" />
+        <path d="M9 6.2h6c0 1.8-1.4 2.9-3 4.1-1.6-1.2-3-2.3-3-4.1Z" fill="currentColor" />
+        <path d="M12 14.2c1.6 1.2 3 2.3 3 3.8H9c0-1.5 1.4-2.6 3-3.8Z" fill="currentColor" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...base} {...props}>
+      <path d="M6 3h12M6 21h12" />
+      <path d="M7 3v2.5c0 2.5 2 4 5 6.5-3 2.5-5 4-5 6.5V21M17 3v2.5c0 2.5-2 4-5 6.5 3 2.5 5 4 5 6.5V21" />
     </svg>
   );
 }

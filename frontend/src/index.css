@@ -31,33 +31,44 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* Tema "Claro" — paleta mais suave (azul claro, bege), pensada pra quem
-   prefere algo diferente do roxo escuro padrão. Mantém as bordas pretas (o
-   contorno "pixel art" continua igual) e o texto claro: os fundos de cada
-   tela são arte fixa e sempre escura/pintada, e boa parte do texto do app
-   fica direto sobre essa arte (não só dentro de cartões) — um cartão branco
-   com texto escuro deixaria esse texto ilegível nessas partes. Por isso o
-   "clareamento" aqui é nos cartões/superfícies (de roxo escuro pra azul e
-   bege médios), mantendo o texto claro legível em qualquer lugar. */
+/* Tema "Lo-fi Escuro" — a versão dark do Lo-fi padrão: exatamente a mesma
+   estrutura (fundos flat por área, ícones preenchidos, barra de botões,
+   fonte redonda), só trocando a paleta creme/pastel por tons escuros
+   acinzentados com um leve tom quente. As caixas de texto/superfícies ficam
+   num cinza suave, como pedido. */
 [data-theme="claro"] {
-  --bg: #33516c;
-  --surface: #3f6488;
-  --surface-raised: #7d6a4c;
-  --border: #000000;
-  --text: #f5f0e6;
-  --text-h: #ffffff;
-  --text-muted: #d8cdb8;
+  --bg: #23242a;
+  --surface: #2e3037;
+  --surface-raised: #3b3e47;
+  --border: #16171b;
+  --text: #e6e3dd;
+  --text-h: #f4f1ea;
+  --text-muted: #a29e96;
 
-  --accent: #7dd3fc;
-  --accent-ink: #0b2438;
-  --accent-2: #f0d9a3;
-  --reuniao: #8f89f0;
-  --tarefa: #4fe08a;
-  --outro: #f0d9a3;
-  --danger: #ff8095;
-  --success: #4fe08a;
+  --accent: #cf8a70;
+  --accent-ink: #241a15;
+  --accent-2: #a596bd;
+  --reuniao: #9c88c4;
+  --tarefa: #7fae92;
+  --outro: #cfae74;
+  --danger: #cf7480;
+  --success: #7fae92;
+
+  /* Mesma fonte redonda do Lo-fi padrão. */
+  --font-display: "Quicksand", "Nunito", sans-serif;
+  --font-body: "Quicksand", "Nunito", sans-serif;
 
   color-scheme: dark;
+
+  /* Gradientes por área — os mesmos matizes do Lo-fi claro, em versão
+     escura e dessaturada (tons de cinza com um sussurro de cor). */
+  --lofi-mural: linear-gradient(165deg, #352e30 0%, #423639 55%, #4d3d41 100%);
+  --lofi-tesouraria: linear-gradient(165deg, #2e332c 0%, #383f35 55%, #42493d 100%);
+  --lofi-guilda: linear-gradient(165deg, #322e38 0%, #3c3644 55%, #463e50 100%);
+  --lofi-tempo: linear-gradient(165deg, #2b3238 0%, #343d45 55%, #3d4852 100%);
+  --lofi-ajustes: linear-gradient(165deg, #33302a 0%, #3e3932 55%, #48423a 100%);
+  --lofi-diario: linear-gradient(165deg, #362e31 0%, #44383c 55%, #503f44 100%);
+  --lofi-biblioteca: linear-gradient(165deg, #34312a 0%, #403b31 55%, #4c4537 100%);
 }
 
 /* Tema "Lo-fi" — visual bem mais aconchegante e diferente do padrão: troca a
@@ -100,13 +111,15 @@
   --lofi-biblioteca: linear-gradient(165deg, #f2e6cc 0%, #e3cd9e 55%, #cbab6e 100%);
 }
 
-[data-theme="lofi"] .lofi-scene {
+[data-theme="lofi"] .lofi-scene,
+[data-theme="claro"] .lofi-scene {
   position: absolute;
   inset: 0;
   overflow: hidden;
 }
 
-[data-theme="lofi"] .lofi-scene::after {
+[data-theme="lofi"] .lofi-scene::after,
+[data-theme="claro"] .lofi-scene::after {
   content: "";
   position: absolute;
   top: 12%;
@@ -115,6 +128,18 @@
   aspect-ratio: 1;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 250, 240, 0.8), rgba(255, 250, 240, 0) 70%);
+}
+
+/* Na versão escura o "brilho de sol" fica bem mais tímido — vira uma luz de
+   abajur, não um holofote. */
+[data-theme="claro"] .lofi-scene::after {
+  background: radial-gradient(circle, rgba(255, 244, 224, 0.14), rgba(255, 244, 224, 0) 70%);
+}
+
+/* Ilustração da Recepção levemente escurecida na versão dark, pra não
+   estourar contra o resto da paleta. */
+[data-theme="claro"] .lofi-scene-photo-img {
+  filter: brightness(0.72) saturate(0.85);
 }
 
 .lofi-scene-mural { background: var(--lofi-mural); }
@@ -169,10 +194,12 @@ h2 {
   text-shadow: var(--pixel-shadow-sm);
 }
 
-/* No Lo-fi a sombra "pixelada" (aresta dura) destoa da fonte redonda — troca
-   por um peso maior e uma sombra suave, mais de acordo com o visual flat. */
+/* No Lo-fi (claro e escuro) a sombra "pixelada" (aresta dura) destoa da
+   fonte redonda — troca por peso maior, sem sombra, de acordo com o flat. */
 [data-theme="lofi"] h1,
-[data-theme="lofi"] h2 {
+[data-theme="lofi"] h2,
+[data-theme="claro"] h1,
+[data-theme="claro"] h2 {
   font-weight: 700;
   text-shadow: none;
 }

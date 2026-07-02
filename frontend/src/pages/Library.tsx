@@ -5,7 +5,7 @@ import LibraryDrawer from "../components/LibraryDrawer";
 import { bookSpriteFor } from "../bookSprites";
 import { PlusIcon, ChevronUpIcon } from "../icons";
 import { playSfx } from "../sound";
-import { useSettings } from "../contexts/SettingsContext";
+import { useSettings, isLofiTheme } from "../contexts/SettingsContext";
 
 // Regiões das 4 prateleiras utilizáveis (a primeira, decorativa, fica de fora),
 // em % da altura/largura da arte da estante — descobertas inspecionando as
@@ -21,7 +21,7 @@ const SWIPE_THRESHOLD = 70;
 
 export default function Library() {
   const { theme } = useSettings();
-  const isLofi = theme === "lofi";
+  const isLofi = isLofiTheme(theme);
   const [docs, setDocs] = useState<DocumentMeta[]>([]);
   const [selected, setSelected] = useState<DocumentMeta | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);

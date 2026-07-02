@@ -26,6 +26,7 @@ const NOTIFICATION_CHANNELS = [
   { id: "calendario", name: "Calendário", description: "Avisos de feriados próximos." },
   { id: "contas", name: "Contas & assinaturas", description: "Avisos de contas e assinaturas perto do vencimento." },
   { id: "financas", name: "Finanças", description: "Alertas de gastos acima do normal na semana ou no mês." },
+  { id: "relogio", name: "Despertador", description: "Alarmes do relógio da guilda." },
 ] as const;
 
 // Azul claro simples e discreto para o ícone de todas as notificações — lê
@@ -239,4 +240,36 @@ export async function checkOverspendingAndNotify(week: PeriodComparison, month: 
     notifications: notifications.map((n) => ({ ...n, channelId: "financas", iconColor: NOTIFICATION_ICON_COLOR })),
   });
   saveOverspendState(state);
+}
+
+// ---- Despertador (tela Relógio) ----
+// A notificação repete diariamente no horário e serve de "porta de entrada":
+// tocar nela abre o app, e aí o AlarmRinger assume (áudio escolhido pelo
+// usuário em loop + quebra-cabeça pra desligar).
+
+function alarmNotificationId(alarmId: string): number {
+  return hashId(`alarm:${alarmId}`);
+}
+
+export async function scheduleAlarmNotification(alarmId: string, time: string, label?: string) {
+  if (!isNativePlatform()) return;
+  await cancelAlarmNotification(alarmId);
+  const [hour, minute] = time.split(":").map(Number);
+  await LocalNotifications.schedule({
+    notifications: [
+      {
+        id: alarmNotificationId(alarmId),
+        title: `Despertador — ${time}`,
+        body: label || "Toque para desligar o alarme.",
+        schedule: { on: { hour, minute }, allowWhileIdle: true },
+        channelId: "relogio",
+        iconColor: NOTIFICATION_ICON_COLOR,
+      },
+    ],
+  });
+}
+
+export async function cancelAlarmNotification(alarmId: string) {
+  if (!isNativePlatform()) return;
+  await LocalNotifications.cancel({ notifications: [{ id: alarmNotificationId(alarmId) }] });
 }

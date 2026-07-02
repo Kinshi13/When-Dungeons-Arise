@@ -12,8 +12,9 @@ import RulesBook from "./pages/RulesBook";
 import CharacterDetail from "./pages/CharacterDetail";
 import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
+import AlarmRinger from "./components/AlarmRinger";
 import Splash from "./components/Splash";
-import { useSettings } from "./contexts/SettingsContext";
+import { useSettings, isLofiTheme } from "./contexts/SettingsContext";
 import { useSwipeNav, sectionOf, MAIN_ORDER, pendingSwipeDirection, skipNextEnterAnimation } from "./useSwipeNav";
 import { isNativePlatform } from "./notifications";
 import { playSfx } from "./sound";
@@ -180,7 +181,7 @@ function useAndroidBackButton() {
 
 function App() {
   const { animationsEnabled, theme } = useSettings();
-  const isLofi = theme === "lofi";
+  const isLofi = isLofiTheme(theme);
   const { onTouchStart, onTouchMove, onTouchEnd, x, preview } = useSwipeNav();
   const location = useLocation();
   useAndroidBackButton();
@@ -250,6 +251,7 @@ function App() {
         <Routes>
           <Route path="/leitor/:id" element={<ReaderScreen />} />
         </Routes>
+        <AlarmRinger />
       </MotionConfig>
     );
   }
@@ -330,6 +332,7 @@ function App() {
           </motion.div>
         </main>
         <DueBillsPopup />
+        <AlarmRinger />
         <nav className={`tabbar${isLofi ? " tabbar-lofi" : ""}${isSpecialScreen ? " tabbar-tucked" : ""}`}>
           <MotionNavLink
             to="/missoes"
