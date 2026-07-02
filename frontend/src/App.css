@@ -2652,6 +2652,7 @@
   display: grid;
   grid-template-columns: 1.5fr 1fr;
   grid-template-areas:
+    "resumo resumo"
     "temas ."
     "clima relogio";
   gap: 10px;
@@ -2753,6 +2754,44 @@
   font-size: 0.62rem;
   color: var(--text-muted);
   line-height: 1.2;
+}
+
+/* Card de resumo — centralizado e por cima dos outros três, com as
+   informações mais importantes de relance: clima atual, próximo alarme e o
+   compromisso mais urgente (lembrete, conta ou aniversário mais próximo). */
+.reception-card-resumo {
+  grid-area: resumo;
+  align-items: center;
+  text-align: center;
+  gap: 3px;
+  padding: 10px 14px;
+}
+
+.reception-summary-title {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.reception-summary-row {
+  font-size: 0.78rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.reception-summary-highlight {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.reception-summary-empty {
+  color: var(--text-muted);
 }
 
 /* Fallback fora do grid (tema "Guilda", trancado): mesma janelinha

@@ -1,4 +1,4 @@
-import { useRef, useState, type TouchEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
 import ThemesScreen from "../components/ThemesScreen";
 import { playSfx } from "../sound";
 import { useVerticalSwipe } from "../useVerticalSwipe";
@@ -9,6 +9,9 @@ import ClockScreen from "../components/ClockScreen";
 import WeatherWidget, { type WeatherWidgetHandle } from "../components/WeatherWidget";
 import WeatherScreen from "../components/WeatherScreen";
 import { nextAlarm, type Alarm } from "../clockStore";
+import { api, type Bill, type Reminder } from "../api";
+import { getCachedPrimaryWeather, fetchPrimaryWeather, type WeatherInfo } from "../weather";
+import { buildHomeSummary } from "../game/homeSummary";
 
 type ClockTab = "despertador" | "cronometro" | "temporizador";
 
@@ -79,9 +82,38 @@ export default function GuildReception() {
   const [clockTab, setClockTab] = useState<ClockTab>("despertador");
   const [weatherOpen, setWeatherOpen] = useState(false);
   const [nextAlarmInfo, setNextAlarmInfo] = useState<Alarm | null>(() => nextAlarm());
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [summaryWeather, setSummaryWeather] = useState<WeatherInfo | null>(() => getCachedPrimaryWeather());
   const weatherWidgetRef = useRef<WeatherWidgetHandle>(null);
   const { theme } = useSettings();
   const isLofi = isLofiTheme(theme);
+
+  // Card de resumo no topo: dados carregados uma vez ao entrar na Recepção
+  // (lembretes/contas não mudam por gesto aqui, só em Agenda/Contas — ao
+  // voltar pra essa tela o componente remonta e recarrega sozinho) e o clima
+  // é re-sincronizado nos mesmos pontos que já atualizavam a janelinha de
+  // Clima (fechar a tela de Clima / trocar de local).
+  useEffect(() => {
+    api.reminders.list().then(setReminders);
+    api.bills.list().then(setBills);
+  }, []);
+
+  function refreshSummaryWeather() {
+    setSummaryWeather(getCachedPrimaryWeather());
+    fetchPrimaryWeather().then((data) => {
+      if (data) setSummaryWeather(data);
+    });
+  }
+
+  useEffect(() => {
+    refreshSummaryWeather();
+  }, []);
+
+  const homeSummary = useMemo(
+    () => buildHomeSummary(reminders, bills, summaryWeather, nextAlarmInfo),
+    [reminders, bills, summaryWeather, nextAlarmInfo]
+  );
 
   function openClock(tab: ClockTab) {
     playSfx("coin");
@@ -121,6 +153,27 @@ export default function GuildReception() {
 
       {isLofi ? (
         <div className="reception-cards">
+          <div className="reception-card reception-card-resumo" aria-live="polite">
+            <span className="reception-summary-title">Resumo</span>
+            {homeSummary.weather && (
+              <span className="reception-summary-row">
+                <span aria-hidden="true">{homeSummary.weather.icon}</span> {homeSummary.weather.text}
+              </span>
+            )}
+            {homeSummary.alarm && (
+              <span className="reception-summary-row">
+                <span aria-hidden="true">{homeSummary.alarm.icon}</span> {homeSummary.alarm.text}
+              </span>
+            )}
+            {homeSummary.highlight ? (
+              <span className="reception-summary-row reception-summary-highlight">
+                <span aria-hidden="true">{homeSummary.highlight.icon}</span> {homeSummary.highlight.text}
+              </span>
+            ) : (
+              <span className="reception-summary-row reception-summary-empty">Nada urgente por perto.</span>
+            )}
+          </div>
+
           <button
             className="reception-card reception-card-temas"
             onClick={() => {
@@ -195,8 +248,12 @@ export default function GuildReception() {
         onClose={() => {
           setWeatherOpen(false);
           weatherWidgetRef.current?.refresh();
+          refreshSummaryWeather();
         }}
-        onPlacesChanged={() => weatherWidgetRef.current?.refresh()}
+        onPlacesChanged={() => {
+          weatherWidgetRef.current?.refresh();
+          refreshSummaryWeather();
+        }}
       />
     </div>
   );
