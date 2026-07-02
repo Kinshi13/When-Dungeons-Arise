@@ -3,6 +3,7 @@ import { isNativePlatform } from "./notifications";
 import type { Reminder, Bill } from "./api";
 import { buildCalendarEntries, toDateKey } from "./game/calendarEntries";
 import { getBrazilianHolidays } from "./game/holidays";
+import { CURRENCY_PAIRS } from "./currencyWidgetStore";
 
 interface WidgetItem {
   title: string;
@@ -18,13 +19,14 @@ interface CalendarWidgetCell {
 interface WidgetBridgePluginApi {
   syncReminders(options: { items: WidgetItem[] }): Promise<void>;
   syncCalendar(options: { monthLabel: string; cells: CalendarWidgetCell[] }): Promise<void>;
+  syncCurrencyPair(options: { pair: string; label: string }): Promise<void>;
 }
 
-// Ponte pro widgets nativos (ReminderWidgetProvider e CalendarWidgetProvider,
-// em android/app/.../com/lembretes/app). Os widgets rodam fora do WebView —
-// não têm acesso ao localStorage, então toda vez que os dados mudam mandamos
-// um resumo pronto (só o que cabe na tela do widget) pra guardar em
-// SharedPreferences nativo e se redesenhar.
+// Ponte pro widgets nativos (ReminderWidgetProvider, CalendarWidgetProvider e
+// CurrencyWidgetProvider, em android/app/.../com/lembretes/app). Os widgets
+// rodam fora do WebView — não têm acesso ao localStorage, então toda vez que
+// os dados mudam mandamos um resumo pronto (só o que cabe na tela do widget)
+// pra guardar em SharedPreferences nativo e se redesenhar.
 const WidgetBridge = registerPlugin<WidgetBridgePluginApi>("WidgetBridge");
 
 const MAX_WIDGET_ITEMS = 5;
@@ -98,6 +100,21 @@ export async function syncCalendarWidget(reminders: Reminder[], bills: Bill[]) {
 
   try {
     await WidgetBridge.syncCalendar({ monthLabel: `${MONTH_NAMES[month]} ${year}`, cells });
+  } catch {
+    // O widget é um bônus — se a ponte falhar, não deve derrubar o resto do app.
+  }
+}
+
+// Chamado quando o usuário troca o par nas configurações e uma vez ao abrir
+// o app. A busca da cotação em si acontece do lado nativo (o widget precisa
+// continuar atualizando sozinho mesmo com o app fechado, ver
+// CurrencyWidgetProvider) — aqui só avisamos qual par mostrar.
+export async function syncCurrencyWidgetPair(pairCode: string) {
+  if (!isNativePlatform()) return;
+  const option = CURRENCY_PAIRS.find((p) => p.code === pairCode) ?? CURRENCY_PAIRS[0];
+
+  try {
+    await WidgetBridge.syncCurrencyPair({ pair: option.code, label: option.label });
   } catch {
     // O widget é um bônus — se a ponte falhar, não deve derrubar o resto do app.
   }

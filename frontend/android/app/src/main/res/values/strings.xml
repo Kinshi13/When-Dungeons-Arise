@@ -9,4 +9,6 @@
     <string name="widget_reminders_description">Mostra seus próximos lembretes da Guilda.</string>
     <string name="widget_calendar_title">Calendário</string>
     <string name="widget_calendar_description">Mini calendário do mês com lembretes, contas e feriados.</string>
+    <string name="widget_currency_title">Câmbio</string>
+    <string name="widget_currency_description">Mostra a cotação de uma moeda escolhida em relação ao Real.</string>
 </resources>

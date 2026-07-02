@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Necessária pro app buscar dados de rede (clima, cotação de moedas) tanto na WebView
+         quanto no fetch nativo em background do widget de Câmbio. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -58,6 +63,22 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_calendar_info" />
+        </receiver>
+
+        <!-- Widget de tela inicial com a cotação de uma moeda (par escolhido nas configurações
+             do app). Só informativo: tocar abre o app. Busca a cotação direto da AwesomeAPI em
+             background, tanto no ciclo automático do próprio widget quanto quando o app avisa
+             que o par mudou. -->
+        <receiver
+            android:name=".CurrencyWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_currency_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_currency_info" />
         </receiver>
 
         <!-- Leitor de notificações do sistema (gerenciador de notificações do Mural).

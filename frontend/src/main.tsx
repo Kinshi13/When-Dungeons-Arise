@@ -29,7 +29,8 @@ import {
   syncAllHolidayNotifications,
 } from './notifications'
 import { getBrazilianHolidays } from './game/holidays'
-import { syncReminderWidget, syncCalendarWidget } from './widgetBridge'
+import { syncReminderWidget, syncCalendarWidget, syncCurrencyWidgetPair } from './widgetBridge'
+import { getCurrencyWidgetPair } from './currencyWidgetStore'
 import { SettingsProvider } from './contexts/SettingsContext'
 import { GameProvider } from './game/GameContext'
 import './index.css'
@@ -44,6 +45,7 @@ if (isNativePlatform()) {
     syncReminderWidget(reminders)
     syncCalendarWidget(reminders, bills)
   })
+  syncCurrencyWidgetPair(getCurrencyWidgetPair())
 
   hasNotificationPermission().then(async (granted) => {
     if (granted) {

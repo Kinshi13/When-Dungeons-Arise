@@ -85,4 +85,22 @@ public class WidgetBridgePlugin extends Plugin {
         CalendarWidgetProvider.updateAll(context);
         call.resolve();
     }
+
+    @PluginMethod
+    public void syncCurrencyPair(PluginCall call) {
+        String pair = call.getString("pair", "USD-BRL");
+        String label = call.getString("label", "Dólar (USD)");
+
+        Context context = getContext();
+        SharedPreferences prefs = context.getSharedPreferences(CurrencyWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit()
+            .putString(CurrencyWidgetProvider.KEY_PAIR, pair)
+            .putString(CurrencyWidgetProvider.KEY_PAIR_LABEL, label)
+            .apply();
+
+        // Muda o par exibido na hora e já dispara uma busca nova (a cotação salva era de outro
+        // par, não serve mais).
+        CurrencyWidgetProvider.refreshNow(context);
+        call.resolve();
+    }
 }

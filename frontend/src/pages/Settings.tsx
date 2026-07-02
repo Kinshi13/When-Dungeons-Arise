@@ -30,6 +30,8 @@ import {
   type AlarmChallengePrefs,
   type PuzzleLevel,
 } from "../clockStore";
+import { CURRENCY_PAIRS, getCurrencyWidgetPair, setCurrencyWidgetPair } from "../currencyWidgetStore";
+import { syncCurrencyWidgetPair } from "../widgetBridge";
 import { TrashIcon, PlusIcon, MinusIcon } from "../icons";
 
 const PUZZLE_LEVEL_LABEL: Record<PuzzleLevel, string> = {
@@ -51,6 +53,7 @@ export default function Settings() {
   const [message, setMessage] = useState<string | null>(null);
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => loadNotificationPrefs());
   const [challenge, setChallenge] = useState<AlarmChallengePrefs>(() => loadAlarmChallengePrefs());
+  const [currencyPair, setCurrencyPair] = useState<string>(() => getCurrencyWidgetPair());
   const [monitoredApps, setMonitoredApps] = useState<MonitoredApp[]>([]);
   const [newAppName, setNewAppName] = useState("");
   const [newPackageName, setNewPackageName] = useState("");
@@ -154,6 +157,12 @@ export default function Settings() {
     saveAlarmChallengePrefs(updated);
   }
 
+  function handleChangeCurrencyPair(code: string) {
+    setCurrencyPair(code);
+    setCurrencyWidgetPair(code);
+    syncCurrencyWidgetPair(code);
+  }
+
   return (
     <div className="page">
       <section className="settings-section">
@@ -234,6 +243,25 @@ export default function Settings() {
         ) : (
           <p className="hint">Sem desafio, o alarme mostra só um botão de desligar.</p>
         )}
+      </section>
+
+      <section className="settings-section">
+        <h2>Widget de Câmbio</h2>
+        <p className="hint">
+          Escolha qual moeda o widget de Câmbio da tela inicial mostra em relação ao Real. A
+          cotação atualiza sozinha de tempos em tempos, mesmo com o app fechado.
+        </p>
+        <div className="filters">
+          {CURRENCY_PAIRS.map((option) => (
+            <button
+              key={option.code}
+              className={currencyPair === option.code ? "filter active" : "filter"}
+              onClick={() => handleChangeCurrencyPair(option.code)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
       </section>
 
       <section className="settings-section">
