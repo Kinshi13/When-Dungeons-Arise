@@ -10,6 +10,15 @@ import '@fontsource/alegreya/latin-400.css'
 import '@fontsource/alegreya/latin-ext-400.css'
 import '@fontsource/alegreya/latin-700.css'
 import '@fontsource/alegreya/latin-ext-700.css'
+// Fonte redonda/moderna usada só no tema Lo-fi (ver [data-theme="lofi"] em index.css).
+import '@fontsource/quicksand/latin-400.css'
+import '@fontsource/quicksand/latin-ext-400.css'
+import '@fontsource/quicksand/latin-500.css'
+import '@fontsource/quicksand/latin-ext-500.css'
+import '@fontsource/quicksand/latin-600.css'
+import '@fontsource/quicksand/latin-ext-600.css'
+import '@fontsource/quicksand/latin-700.css'
+import '@fontsource/quicksand/latin-ext-700.css'
 import { api } from './api'
 import {
   isNativePlatform,

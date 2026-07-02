@@ -84,6 +84,10 @@
   --danger: #d9707c;
   --success: #8bbf9f;
 
+  /* Fonte redonda/moderna no lugar da pixel art — só neste tema. */
+  --font-display: "Quicksand", "Nunito", sans-serif;
+  --font-body: "Quicksand", "Nunito", sans-serif;
+
   color-scheme: light;
 
   /* Cores/gradientes por área — usados nos fundos flat de cada tela. */
@@ -121,6 +125,21 @@
 .lofi-scene-diario { background: var(--lofi-diario); }
 .lofi-scene-biblioteca { background: var(--lofi-biblioteca); }
 
+/* Área com ilustração fixa (hoje só a Guilda) — sem o brilho ::after (a
+   ilustração já tem sua própria luz) e com a foto preenchendo a tela. */
+.lofi-scene-photo::after {
+  content: none;
+}
+
+.lofi-scene-photo-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -148,6 +167,14 @@ h2 {
   color: var(--text-h);
   margin: 0 0 16px;
   text-shadow: var(--pixel-shadow-sm);
+}
+
+/* No Lo-fi a sombra "pixelada" (aresta dura) destoa da fonte redonda — troca
+   por um peso maior e uma sombra suave, mais de acordo com o visual flat. */
+[data-theme="lofi"] h1,
+[data-theme="lofi"] h2 {
+  font-weight: 700;
+  text-shadow: none;
 }
 
 h1 {

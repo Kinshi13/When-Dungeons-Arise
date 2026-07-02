@@ -1132,6 +1132,12 @@
   text-overflow: ellipsis;
 }
 
+/* Quicksand é mais larga que a fonte pixel art no mesmo tamanho — reduz um
+   pouco pra "Calculadora" continuar cabendo sem cortar no tema Lo-fi. */
+[data-theme="lofi"] .drawer-tab {
+  font-size: 0.7rem;
+}
+
 .drawer-tab.active {
   color: var(--accent);
   background: var(--surface-raised);

@@ -81,9 +81,24 @@ function lofiSceneClass(pathname: string): string {
   return (section && LOFI_SECTION_CLASS[section]) || "lofi-scene-guilda";
 }
 
+// Ilustração fixa por área no Lo-fi (em vez do gradiente flat) — hoje só a
+// Guilda tem uma, mas o mapa já fica pronto pra receber mais no futuro.
+const LOFI_SECTION_IMAGE: Record<string, string> = {
+  "lofi-scene-guilda": "/lofi-guilda-bg.jpg",
+};
+
 function renderBackgroundContent(bg: { src: string; blurred?: boolean } | undefined, isLofi: boolean, pathname: string) {
   if (isLofi) {
-    return <div className={`lofi-scene ${lofiSceneClass(pathname)}`} aria-hidden="true" />;
+    const sceneClass = lofiSceneClass(pathname);
+    const image = LOFI_SECTION_IMAGE[sceneClass];
+    if (image) {
+      return (
+        <div className={`lofi-scene ${sceneClass} lofi-scene-photo`} aria-hidden="true">
+          <img src={image} alt="" className="lofi-scene-photo-img" />
+        </div>
+      );
+    }
+    return <div className={`lofi-scene ${sceneClass}`} aria-hidden="true" />;
   }
   return bg ? (
     <div className={`page-bg${bg.blurred ? " page-bg-blurred" : ""}`}>

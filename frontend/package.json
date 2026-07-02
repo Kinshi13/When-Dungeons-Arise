@@ -17,6 +17,7 @@
     "@capacitor/local-notifications": "^8.2.0",
     "@fontsource/alegreya": "^5.2.8",
     "@fontsource/press-start-2p": "^5.2.7",
+    "@fontsource/quicksand": "^5.2.10",
     "@fontsource/vt323": "^5.2.7",
     "epubjs": "^0.3.93",
     "framer-motion": "^12.42.0",
