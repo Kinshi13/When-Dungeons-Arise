@@ -11,7 +11,7 @@ import {
   checkOverspendingAndNotify,
 } from "./notifications";
 import { compareWeek, compareMonth } from "./game/financeAnalysis";
-import { syncReminderWidget } from "./widgetBridge";
+import { syncReminderWidget, syncCalendarWidget } from "./widgetBridge";
 
 export type ReminderType = "REUNIAO" | "TAREFA" | "OUTRO";
 export type Priority = "BAIXA" | "MEDIA" | "ALTA";
@@ -176,6 +176,12 @@ function ensureDailySummariesBackfilled() {
 }
 ensureDailySummariesBackfilled();
 
+// O widget de Calendário combina lembretes + contas, então qualquer mutação
+// em um dos dois precisa recalcular o mini calendário do mês.
+function syncCalendarWidgetFromTables() {
+  return syncCalendarWidget(reminderTable.list(), billTable.list());
+}
+
 export const api = {
   reminders: {
     list: async () =>
@@ -196,6 +202,7 @@ export const api = {
       reminderTable.insert(reminder);
       await scheduleReminderNotification(reminder);
       await syncReminderWidget(reminderTable.list());
+      await syncCalendarWidgetFromTables();
       return reminder;
     },
     update: async (id: string, data: Partial<Reminder>) => {
@@ -203,6 +210,7 @@ export const api = {
       if (!updated) throw new Error("Lembrete não encontrado");
       await scheduleReminderNotification(updated);
       await syncReminderWidget(reminderTable.list());
+      await syncCalendarWidgetFromTables();
       return updated;
     },
     complete: async (id: string) => {
@@ -210,12 +218,14 @@ export const api = {
       if (!updated) throw new Error("Lembrete não encontrado");
       await cancelReminderNotification(id);
       await syncReminderWidget(reminderTable.list());
+      await syncCalendarWidgetFromTables();
       return updated;
     },
     remove: async (id: string) => {
       reminderTable.remove(id);
       await cancelReminderNotification(id);
       await syncReminderWidget(reminderTable.list());
+      await syncCalendarWidgetFromTables();
     },
   },
   notes: {
@@ -365,6 +375,7 @@ export const api = {
           await scheduleBillNotifications(occurrence);
         }
       }
+      await syncCalendarWidgetFromTables();
       return bill;
     },
     update: async (id: string, data: Partial<Bill>) => {
@@ -393,11 +404,13 @@ export const api = {
           await scheduleBillNotifications(occurrence);
         }
       }
+      await syncCalendarWidgetFromTables();
       return updated;
     },
     remove: async (id: string) => {
       billTable.remove(id);
       await cancelBillNotifications(id);
+      await syncCalendarWidgetFromTables();
     },
   },
   wallet: {

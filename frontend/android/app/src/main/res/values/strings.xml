@@ -7,4 +7,6 @@
     <string name="widget_reminders_title">Próximos lembretes</string>
     <string name="widget_reminders_empty">Nenhum lembrete por aqui.</string>
     <string name="widget_reminders_description">Mostra seus próximos lembretes da Guilda.</string>
+    <string name="widget_calendar_title">Calendário</string>
+    <string name="widget_calendar_description">Mini calendário do mês com lembretes, contas e feriados.</string>
 </resources>

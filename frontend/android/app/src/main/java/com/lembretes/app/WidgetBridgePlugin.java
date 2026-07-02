@@ -48,4 +48,41 @@ public class WidgetBridgePlugin extends Plugin {
         ReminderWidgetProvider.updateAll(context);
         call.resolve();
     }
+
+    @PluginMethod
+    public void syncCalendar(PluginCall call) {
+        String monthLabel = call.getString("monthLabel", "");
+        JSArray cellsArray = call.getArray("cells");
+        JSONArray jsonCells = new JSONArray();
+
+        if (cellsArray != null) {
+            try {
+                for (int i = 0; i < cellsArray.length(); i++) {
+                    JSONObject cell = cellsArray.getJSONObject(i);
+                    JSONObject out = new JSONObject();
+                    if (cell.isNull("day")) {
+                        out.put("day", JSONObject.NULL);
+                    } else {
+                        out.put("day", cell.optInt("day"));
+                    }
+                    out.put("hasEvents", cell.optBoolean("hasEvents", false));
+                    out.put("isToday", cell.optBoolean("isToday", false));
+                    jsonCells.put(out);
+                }
+            } catch (JSONException e) {
+                call.reject("Dados de calendário inválidos", e);
+                return;
+            }
+        }
+
+        Context context = getContext();
+        SharedPreferences prefs = context.getSharedPreferences(CalendarWidgetProvider.PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit()
+            .putString(CalendarWidgetProvider.KEY_MONTH_LABEL, monthLabel)
+            .putString(CalendarWidgetProvider.KEY_CELLS_JSON, jsonCells.toString())
+            .apply();
+
+        CalendarWidgetProvider.updateAll(context);
+        call.resolve();
+    }
 }

@@ -47,6 +47,19 @@
                 android:resource="@xml/widget_reminders_info" />
         </receiver>
 
+        <!-- Widget de tela inicial com o mini calendário do mês. Só informativo: tocar abre o app. -->
+        <receiver
+            android:name=".CalendarWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_calendar_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_calendar_info" />
+        </receiver>
+
         <!-- Leitor de notificações do sistema (gerenciador de notificações do Mural).
              Só ativa depois que o usuário liga manualmente o acesso em Ajustes > Apps >
              Acesso especial > Acesso a notificações. -->
