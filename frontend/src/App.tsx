@@ -320,7 +320,7 @@ function useAndroidBackButton() {
 function App() {
   const { animationsEnabled, theme } = useSettings();
   const isLofi = isLofiTheme(theme);
-  const { onTouchStart, onTouchMove, onTouchEnd, x, preview } = useSwipeNav();
+  const { onTouchStart, onTouchMove, onTouchEnd, x, preview, riseY, riseOpacity } = useSwipeNav();
   const location = useLocation();
   useAndroidBackButton();
   const resolveCustomWallpaper = useWallpaperState();
@@ -443,15 +443,24 @@ function App() {
                 style={{ transform: `translateX(${preview.direction > 0 ? "100%" : "-100%"})` }}
               >
                 {/* Efeito "gaveta": enquanto o arraste lateral acontece, o
-                    conteúdo da tela de destino sobe de baixo pra cima. Quando
-                    a rota assenta, o conteúdo real monta já na posição final
-                    (a animação de entrada pós-navegação é pulada). Só entre
-                    áreas diferentes — trocar de sub-aba dentro da mesma área
-                    (Finanças/Contas, Notas/Listas) já remonta o componente
-                    sozinho, e a gaveta por cima disso só criava um flicker. */}
-                <div className={preview.sameSection ? undefined : "drawer-rise"}>
+                    conteúdo da tela de destino sobe de baixo pra cima —
+                    preso à posição REAL do arraste (x), nunca a um timer de
+                    duração fixa (ver riseY/riseOpacity em useSwipeNav.ts),
+                    senão um gesto lento/parcial/cancelado terminava a
+                    animação sozinha e mostrava a tela vizinha 100% "chegada"
+                    com o fundo (esse sim preso à posição do dedo) parado.
+                    Quando a rota assenta, o conteúdo real monta já na
+                    posição final (a animação de entrada pós-navegação é
+                    pulada). Só entre áreas diferentes — trocar de sub-aba
+                    dentro da mesma área (Finanças/Contas, Notas/Listas) já
+                    remonta o componente sozinho, e a gaveta por cima disso
+                    só criava um flicker. */}
+                <motion.div
+                  className="drawer-rise-content"
+                  style={preview.sameSection ? undefined : { y: riseY, opacity: riseOpacity }}
+                >
                   {renderRoutePreview(preview.path)}
-                </div>
+                </motion.div>
               </div>
             )}
             <motion.div

@@ -1,6 +1,6 @@
 import { useRef, useState, type TouchEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useMotionValue, animate } from "framer-motion";
+import { useMotionValue, useTransform, animate } from "framer-motion";
 
 // Sequência "achatada" de TODAS as 7 telas da barra inferior + suas
 // sub-abas, na ordem em que o swipe as percorre (Diário e Biblioteca nas
@@ -25,7 +25,14 @@ const FLAT_SEQUENCE = [
 ];
 
 const SWIPE_THRESHOLD = 60;
-const ACTIVATION_THRESHOLD = 10;
+// Mais altos que antes (eram 10 / 1.5x) — em telas com bastante conteúdo pra
+// rolar (ex: Ajustes), um toque levemente diagonal no início de uma rolagem
+// vertical bastava pra "travar" o gesto como swipe horizontal (a decisão só
+// acontece uma vez, no primeiro movimento que passa do limiar) e montar a
+// prévia da tela vizinha por engano. Exigir uma diferença bem mais clara
+// entre os eixos reduz drasticamente esse falso positivo.
+const ACTIVATION_THRESHOLD = 16;
+const AXIS_DOMINANCE = 2.2;
 
 // Duração fixa e curta, mas com uma curva que acelera suave em vez de soltar
 // o freio de vez (easeIn) — evita tanto a sensação rígida/mecânica quanto o
@@ -115,6 +122,26 @@ export function useSwipeNav() {
   const x = useMotionValue(0);
   const [preview, setPreview] = useState<SlidePreview | null>(null);
 
+  // Efeito "gaveta" da prévia (sobe + esmaece) derivado DIRETO da posição real
+  // do arraste (x), em vez de um "@keyframes" de duração fixa disparado só
+  // uma vez na montagem. Antes, um gesto lento, parcial ou cancelado (ex:
+  // uma rolagem vertical que por acaso "travava" como swipe horizontal, ver
+  // ACTIVATION_THRESHOLD acima) deixava a animação de tempo fixo terminar
+  // sozinha e mostrar o conteúdo da tela vizinha 100% "chegado" — mesmo com
+  // o fundo (que É preso à posição real do dedo) praticamente parado, criando
+  // o flash de conteúdo errado sobre o fundo antigo. Presa à mesma posição
+  // que já governa o fundo, essa prévia nunca pode ficar "à frente" dele.
+  const riseY = useTransform(x, (v) => {
+    const screenWidth = typeof window !== "undefined" && window.innerWidth ? window.innerWidth : 1;
+    const progress = Math.min(1, Math.abs(v) / screenWidth);
+    return 64 * (1 - progress);
+  });
+  const riseOpacity = useTransform(x, (v) => {
+    const screenWidth = typeof window !== "undefined" && window.innerWidth ? window.innerWidth : 1;
+    const progress = Math.min(1, Math.abs(v) / screenWidth);
+    return 0.4 + 0.6 * progress;
+  });
+
   const startX = useRef<number | null>(null);
   const startY = useRef<number | null>(null);
   const decided = useRef(false);
@@ -142,7 +169,7 @@ export function useSwipeNav() {
     const dy = e.touches[0].clientY - startY.current;
 
     if (!decided.current) {
-      if (Math.abs(dx) < ACTIVATION_THRESHOLD || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      if (Math.abs(dx) < ACTIVATION_THRESHOLD || Math.abs(dx) < Math.abs(dy) * AXIS_DOMINANCE) return;
       decided.current = true;
       const resolved = resolveGesture(location.pathname, dx);
       targetPath.current = resolved.targetPath;
@@ -188,5 +215,5 @@ export function useSwipeNav() {
     reset();
   }
 
-  return { onTouchStart, onTouchMove, onTouchEnd, x, preview };
+  return { onTouchStart, onTouchMove, onTouchEnd, x, preview, riseY, riseOpacity };
 }

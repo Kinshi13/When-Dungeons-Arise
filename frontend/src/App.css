@@ -160,22 +160,10 @@
 }
 
 /* Conteúdo da tela de destino subindo em "gaveta" enquanto o arraste lateral
-   acontece — roda uma vez, na montagem da prévia, e termina antes do commit
-   na maioria dos gestos (a rota assenta com o conteúdo já parado no lugar). */
-.drawer-rise {
+   acontece — o movimento (translateY + opacity) vem de riseY/riseOpacity em
+   useSwipeNav.ts, presos à posição real do arraste, não a uma duração fixa. */
+.drawer-rise-content {
   min-height: 100%;
-  animation: drawer-rise 0.32s cubic-bezier(0.22, 0.9, 0.36, 1) both;
-}
-
-@keyframes drawer-rise {
-  from {
-    transform: translateY(64px);
-    opacity: 0.4;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
 }
 
 /* Camada que anima a entrada da tela nova, vinda do lado certo (esquerda ou
