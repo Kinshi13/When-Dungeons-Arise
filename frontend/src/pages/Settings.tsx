@@ -70,6 +70,13 @@ export default function Settings() {
     setUiScale,
     animationsEnabled,
     setAnimationsEnabled,
+    dragSlideAnimationEnabled,
+    setDragSlideAnimationEnabled,
+    screenTransitionAnimationEnabled,
+    setScreenTransitionAnimationEnabled,
+    lockWallpaperToMain,
+    setLockWallpaperToMain,
+    theme,
   } = useSettings();
 
   // Sempre que a lista muda, avisa o serviço nativo quais pacotes ficam liberados
@@ -427,6 +434,47 @@ export default function Settings() {
           />
         </label>
         <p className="hint">Desative para um app mais leve em aparelhos mais fracos.</p>
+      </section>
+
+      <section className="settings-section">
+        <h2>Animações de navegação</h2>
+        <p className="hint">
+          Em alguns aparelhos, a animação de deslizar entre telas pode piscar rapidamente a
+          tela vizinha antes de assentar na certa. Se você notar isso, desative as opções abaixo
+          — deslizar continua funcionando pra navegar, só sem o efeito visual.
+        </p>
+        <label className="slider-row">
+          <span>Efeito de arrastar ao deslizar</span>
+          <input
+            type="checkbox"
+            checked={dragSlideAnimationEnabled}
+            onChange={(e) => setDragSlideAnimationEnabled(e.target.checked)}
+          />
+        </label>
+        <label className="slider-row">
+          <span>Animação de transição entre telas</span>
+          <input
+            type="checkbox"
+            checked={screenTransitionAnimationEnabled}
+            onChange={(e) => setScreenTransitionAnimationEnabled(e.target.checked)}
+          />
+        </label>
+        {theme === "personalizado" && (
+          <>
+            <label className="slider-row">
+              <span>Fixar papel de parede da Recepção em todas as telas</span>
+              <input
+                type="checkbox"
+                checked={lockWallpaperToMain}
+                onChange={(e) => setLockWallpaperToMain(e.target.checked)}
+              />
+            </label>
+            <p className="hint">
+              Usa sempre a mesma imagem da Recepção em qualquer tela, em vez de uma por tela —
+              assim o fundo nunca troca ao navegar.
+            </p>
+          </>
+        )}
       </section>
     </div>
   );

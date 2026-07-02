@@ -318,13 +318,17 @@ function useAndroidBackButton() {
 }
 
 function App() {
-  const { animationsEnabled, theme } = useSettings();
+  const { animationsEnabled, theme, screenTransitionAnimationEnabled, lockWallpaperToMain } = useSettings();
   const isLofi = isLofiTheme(theme);
   const { onTouchStart, onTouchMove, onTouchEnd, x, preview, riseY, riseOpacity } = useSwipeNav();
   const location = useLocation();
   useAndroidBackButton();
   const resolveCustomWallpaper = useWallpaperState();
-  const customWallpaper = theme === "personalizado" ? resolveCustomWallpaper(location.pathname) : null;
+  // Com "Fixar papel de parede da Recepção em todas as telas" ligado, toda
+  // tela resolve a mesma imagem da Guilda (mainSlot), então o fundo nunca
+  // muda ao navegar — nada pra "dessincronizar" visualmente no meio da troca.
+  const customWallpaper =
+    theme === "personalizado" ? resolveCustomWallpaper(lockWallpaperToMain ? "/" : location.pathname) : null;
   const [tabBurst, setTabBurst] = useState<{ tab: string; id: number } | null>(null);
   function handleTabTap(tab: string) {
     playSfx("coin");
@@ -354,7 +358,7 @@ function App() {
   const isRedirectStub =
     location.pathname === "/tesouraria" || location.pathname === "/sala-do-tempo" || location.pathname === "/diario";
   const pathChanged = !isRedirectStub && prevPathRef.current !== location.pathname;
-  if (pathChanged) {
+  if (pathChanged && screenTransitionAnimationEnabled) {
     const section = sectionOf(location.pathname);
     const sectionIndex = section ? MAIN_ORDER.indexOf(section) : null;
     // Navegação vinda do commit de um arraste: a tela já entrou acompanhando

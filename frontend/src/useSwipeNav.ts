@@ -1,6 +1,7 @@
 import { useRef, useState, type TouchEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMotionValue, useTransform, animate } from "framer-motion";
+import { useSettings } from "./contexts/SettingsContext";
 
 // Sequência "achatada" de TODAS as 7 telas da barra inferior + suas
 // sub-abas, na ordem em que o swipe as percorre (Diário e Biblioteca nas
@@ -119,6 +120,7 @@ export const skipNextEnterAnimation = { current: false };
 export function useSwipeNav() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { dragSlideAnimationEnabled } = useSettings();
   const x = useMotionValue(0);
   const [preview, setPreview] = useState<SlidePreview | null>(null);
 
@@ -173,10 +175,14 @@ export function useSwipeNav() {
       decided.current = true;
       const resolved = resolveGesture(location.pathname, dx);
       targetPath.current = resolved.targetPath;
-      animated.current = resolved.animated;
+      // Com a animação de arrastar desligada nas configurações, o gesto
+      // continua navegando normalmente (ver o "else if" no onTouchEnd
+      // abaixo) — só a prévia acompanhando o dedo fica de fora, trocando de
+      // tela na hora em vez de deslizar.
+      animated.current = resolved.animated && dragSlideAnimationEnabled;
       direction.current = resolved.direction;
 
-      if (resolved.animated && resolved.targetPath) {
+      if (animated.current && resolved.targetPath) {
         setPreview({ path: resolved.targetPath, direction: resolved.direction, sameSection: resolved.sameSection });
       }
     }
