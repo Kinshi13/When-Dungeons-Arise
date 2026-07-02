@@ -1164,7 +1164,8 @@
 /* Quicksand é mais larga que a fonte pixel art no mesmo tamanho — reduz um
    pouco pra "Calculadora" continuar cabendo sem cortar na família Lo-fi. */
 [data-theme="lofi"] .drawer-tab,
-[data-theme="claro"] .drawer-tab {
+[data-theme="claro"] .drawer-tab,
+[data-theme="personalizado"] .drawer-tab {
   font-size: 0.7rem;
 }
 
@@ -2639,7 +2640,10 @@
    linha o card de Clima fica mais "deitado" (retangular) e o do Relógio mais
    quadrado, sem precisar de aspect-ratio diferente forçado nos dois. */
 .reception-cards {
-  position: relative;
+  /* Alinhado com a barra de navegação inferior, não mais colado no topo. */
+  position: absolute;
+  left: 16px;
+  bottom: -8px;
   z-index: 2;
   display: grid;
   grid-template-columns: 1.5fr 1fr;
@@ -2647,7 +2651,6 @@
     "temas ."
     "clima relogio";
   gap: 10px;
-  padding: 16px 16px 0;
   max-width: 320px;
 }
 
@@ -2760,6 +2763,182 @@
   border-radius: 14px;
   padding: 8px 12px;
   z-index: 2;
+}
+
+/* Tela de configuração do papel de parede (tema Lo-fi Personalizado) */
+
+.wallpaper-slots h2,
+.wallpaper-mode h2 {
+  margin-bottom: 10px;
+}
+
+.wallpaper-slot-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.wallpaper-slot-card {
+  position: relative;
+  aspect-ratio: 1;
+}
+
+.wallpaper-slot-thumb {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(20, 16, 12, 0.25);
+}
+
+.wallpaper-slot-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.wallpaper-slot-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: var(--danger);
+  color: var(--accent-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(20, 16, 12, 0.3);
+}
+
+.wallpaper-slot-empty {
+  width: 100%;
+  height: 100%;
+  border: 2px dashed var(--text-muted);
+  border-radius: 14px;
+  background: none;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.wallpaper-screen-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wallpaper-screen-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--surface-raised);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.wallpaper-screen-row select {
+  border: none;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 6px 8px;
+}
+
+/* Painel de ajuste (zoom/posição/desfoque) de uma imagem — cobre a tela de
+   papel de parede inteira enquanto está aberto. */
+.wallpaper-adjust-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  background: var(--bg);
+}
+
+.wallpaper-adjust-preview {
+  position: relative;
+  flex: 1;
+  border-radius: 16px;
+  background-color: var(--surface-raised);
+  box-shadow: inset 0 0 0 2px var(--border);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  touch-action: none;
+  overflow: hidden;
+}
+
+.wallpaper-adjust-preview-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center;
+  pointer-events: none;
+}
+
+/* Fundo com papel de parede personalizado — mesma ideia do preview de
+   ajuste: object-fit:cover garante que a imagem sempre preenche a tela,
+   qualquer que seja a proporção original, e o zoom/posição do usuário
+   entram por cima via transform. */
+.wallpaper-custom-bg {
+  overflow: hidden;
+}
+
+.wallpaper-custom-bg::after {
+  content: none;
+}
+
+.wallpaper-custom-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center;
+}
+
+.wallpaper-adjust-hint {
+  margin: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(20, 16, 12, 0.55);
+  color: #fff;
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+.wallpaper-adjust-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wallpaper-adjust-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.wallpaper-adjust-slider input {
+  width: 100%;
 }
 
 /* Desafio hardcore — um lance de xadrez pra desligar o alarme */

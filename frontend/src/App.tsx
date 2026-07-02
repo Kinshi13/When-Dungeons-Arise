@@ -16,6 +16,17 @@ import Splash from "./components/Splash";
 import { useSettings, isLofiTheme } from "./contexts/SettingsContext";
 import { useSwipeNav, sectionOf, MAIN_ORDER, pendingSwipeDirection, skipNextEnterAnimation } from "./useSwipeNav";
 import { isNativePlatform } from "./notifications";
+import {
+  WALLPAPER_SLOT_IDS,
+  wallpaperScreenOf,
+  slotForScreen,
+  getSlotAdjust,
+  getWallpaperUrl,
+  loadWallpaperConfig,
+  type WallpaperConfig,
+  type WallpaperSlotId,
+} from "./wallpaperStore";
+import { onWallpaperChanged } from "./wallpaperEvents";
 import { playSfx } from "./sound";
 import {
   TabBellIcon,
@@ -95,7 +106,33 @@ const LOFI_SECTION_IMAGE: Record<string, string> = {
   "lofi-scene-guilda": "/lofi-guilda-bg.jpg",
 };
 
-function renderBackgroundContent(bg: { src: string; blurred?: boolean } | undefined, isLofi: boolean, pathname: string) {
+interface CustomWallpaperInfo {
+  url: string;
+  adjust: { zoom: number; offsetX: number; offsetY: number; blur: number };
+}
+
+function renderBackgroundContent(
+  bg: { src: string; blurred?: boolean } | undefined,
+  isLofi: boolean,
+  pathname: string,
+  customWallpaper?: CustomWallpaperInfo | null
+) {
+  if (customWallpaper) {
+    const { zoom, offsetX, offsetY, blur } = customWallpaper.adjust;
+    return (
+      <div className="lofi-scene wallpaper-custom-bg" aria-hidden="true">
+        <img
+          src={customWallpaper.url}
+          alt=""
+          className="wallpaper-custom-bg-img"
+          style={{
+            transform: `scale(${zoom}) translate(${offsetX}%, ${offsetY}%)`,
+            filter: blur > 0 ? `blur(${blur}px)` : undefined,
+          }}
+        />
+      </div>
+    );
+  }
   if (isLofi) {
     const sceneClass = lofiSceneClass(pathname);
     const image = LOFI_SECTION_IMAGE[sceneClass];
@@ -212,6 +249,38 @@ function TabBurst({ onDone }: { onDone: () => void }) {
 
 const SLIDE_ENTER_TRANSITION = { type: "spring" as const, stiffness: 280, damping: 32, mass: 0.8 };
 
+// Config + URLs do papel de parede personalizado, recarregados sempre que a
+// tela de configuração avisa uma mudança (ver wallpaperEvents.ts) — só
+// interessa de verdade quando o tema ativo é "personalizado", mas carregar
+// incondicionalmente é barato (localStorage + 3 leituras no IndexedDB, cada
+// uma cacheada em memória depois da primeira vez).
+function useWallpaperState() {
+  const [config, setConfig] = useState<WallpaperConfig>(() => loadWallpaperConfig());
+  const [urls, setUrls] = useState<Partial<Record<WallpaperSlotId, string>>>({});
+
+  async function refresh() {
+    setConfig(loadWallpaperConfig());
+    const entries = await Promise.all(WALLPAPER_SLOT_IDS.map(async (id) => [id, await getWallpaperUrl(id)] as const));
+    setUrls(Object.fromEntries(entries.filter(([, url]) => url)));
+  }
+
+  useEffect(() => {
+    refresh();
+    return onWallpaperChanged(refresh);
+  }, []);
+
+  function resolve(pathname: string): CustomWallpaperInfo | null {
+    const screen = wallpaperScreenOf(pathname);
+    const slotId = slotForScreen(config, screen);
+    if (!slotId) return null;
+    const url = urls[slotId];
+    if (!url) return null;
+    return { url, adjust: getSlotAdjust(config, slotId) };
+  }
+
+  return resolve;
+}
+
 function useAndroidBackButton() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -239,6 +308,8 @@ function App() {
   const { onTouchStart, onTouchMove, onTouchEnd, x, preview } = useSwipeNav();
   const location = useLocation();
   useAndroidBackButton();
+  const resolveCustomWallpaper = useWallpaperState();
+  const customWallpaper = theme === "personalizado" ? resolveCustomWallpaper(location.pathname) : null;
   const [tabBurst, setTabBurst] = useState<{ tab: string; id: number } | null>(null);
   function handleTabTap(tab: string) {
     playSfx("coin");
@@ -326,7 +397,8 @@ function App() {
             {renderBackgroundContent(
               SECTION_BACKGROUND[sectionOf(preview.path) ?? ""] ?? PAGE_BACKGROUNDS[preview.path],
               isLofi,
-              preview.path
+              preview.path,
+              theme === "personalizado" ? resolveCustomWallpaper(preview.path) : null
             )}
           </div>
         )}
@@ -337,7 +409,7 @@ function App() {
           animate={{ x: 0, opacity: 1 }}
           transition={SLIDE_ENTER_TRANSITION}
         >
-          {renderBackgroundContent(pageBackground, isLofi, location.pathname)}
+          {renderBackgroundContent(pageBackground, isLofi, location.pathname, customWallpaper)}
         </motion.div>
       </motion.div>
       <div className="app">

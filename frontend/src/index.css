@@ -76,8 +76,14 @@
    mais abaixo), a barra de navegação por botões simples e os ícones por
    versões preenchidas/flat com sombra leve (ver icons.tsx). Como o fundo
    deixa de ser arte escura em toda tela, o texto pode ficar escuro sempre
-   (sem o conflito que existe no tema Claro). */
-[data-theme="lofi"] {
+   (sem o conflito que existe no tema Claro).
+
+   "Lo-fi Personalizado" usa exatamente a mesma paleta — a única diferença
+   dele é o fundo, que vira o papel de parede escolhido pelo usuário em vez
+   do gradiente flat (ver wallpaperStore.ts e renderBackgroundContent em
+   App.tsx), então reaproveita todas essas variáveis sem duplicar nada. */
+[data-theme="lofi"],
+[data-theme="personalizado"] {
   --bg: #f3ead9;
   --surface: #f6ede0;
   --surface-raised: #ecdcc4;
@@ -112,14 +118,16 @@
 }
 
 [data-theme="lofi"] .lofi-scene,
-[data-theme="claro"] .lofi-scene {
+[data-theme="claro"] .lofi-scene,
+[data-theme="personalizado"] .lofi-scene {
   position: absolute;
   inset: 0;
   overflow: hidden;
 }
 
 [data-theme="lofi"] .lofi-scene::after,
-[data-theme="claro"] .lofi-scene::after {
+[data-theme="claro"] .lofi-scene::after,
+[data-theme="personalizado"] .lofi-scene::after {
   content: "";
   position: absolute;
   top: 12%;
@@ -199,7 +207,9 @@ h2 {
 [data-theme="lofi"] h1,
 [data-theme="lofi"] h2,
 [data-theme="claro"] h1,
-[data-theme="claro"] h2 {
+[data-theme="claro"] h2,
+[data-theme="personalizado"] h1,
+[data-theme="personalizado"] h2 {
   font-weight: 700;
   text-shadow: none;
 }
