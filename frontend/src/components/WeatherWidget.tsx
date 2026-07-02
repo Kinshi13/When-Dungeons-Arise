@@ -34,7 +34,7 @@ const WeatherWidget = forwardRef<WeatherWidgetHandle, WeatherWidgetProps>(functi
 
   return (
     <button
-      className="weather-widget"
+      className="reception-card reception-card-clima"
       onClick={() => {
         playSfx("coin");
         onOpen();
@@ -43,16 +43,19 @@ const WeatherWidget = forwardRef<WeatherWidgetHandle, WeatherWidgetProps>(functi
     >
       {info ? (
         <>
-          <span className="weather-widget-now">
-            {info.emoji} {info.temperature}°
+          <span className="reception-card-clima-emoji" aria-hidden="true">
+            {info.emoji}
           </span>
-          <span className="weather-widget-desc">{info.description}</span>
-          <span className="weather-widget-minmax">
-            {info.today.min}° / {info.today.max}°
+          <span className="reception-card-clima-info">
+            <span className="reception-card-clima-now">{info.temperature}°</span>
+            <span className="reception-card-clima-desc">{info.description}</span>
+            <span className="reception-card-clima-minmax">
+              {info.today.min}° / {info.today.max}°
+            </span>
           </span>
         </>
       ) : (
-        <span className="weather-widget-desc">🌤️ Clima</span>
+        <span className="reception-card-clima-desc">🌤️ Toque para configurar o clima</span>
       )}
     </button>
   );

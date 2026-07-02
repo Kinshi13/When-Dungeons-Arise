@@ -66,6 +66,25 @@ export function markAlarmHandled(id: string, now: Date) {
   alarmTable.update(id, { lastHandledDate: todayKey(now) });
 }
 
+// Próximo alarme ativado a partir de agora — alarmes só têm horário (sem
+// data, tocam todo dia), então "próximo" é sempre o de menor distância até
+// o horário de hoje, contando a virada de meia-noite (um alarme das 06:00
+// às 23h de hoje está a 7h de distância, não "no passado"). Usado pelo card
+// do Relógio na Recepção.
+export function nextAlarm(now: Date = new Date()): Alarm | null {
+  const enabled = alarms.list().filter((a) => a.enabled);
+  if (enabled.length === 0) return null;
+
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  function minutesUntil(time: string): number {
+    const [h, m] = time.split(":").map(Number);
+    const diff = h * 60 + m - nowMinutes;
+    return diff >= 0 ? diff : diff + 24 * 60;
+  }
+
+  return [...enabled].sort((a, b) => minutesUntil(a.time) - minutesUntil(b.time))[0];
+}
+
 // ---- Som do despertador (arquivo escolhido pelo usuário, salvo no aparelho) ----
 
 const ALARM_SOUND_ID = "alarm-sound";

@@ -107,3 +107,20 @@ export function TabGearIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+// Florzinha decorativa — usada no card de Temas da Recepção (tema Lo-fi),
+// puramente decorativa (não representa nenhuma tela). Pétalas macias em vez
+// do estilo pixel-art dos ícones de aba acima, pra combinar com o resto da
+// vibe Lo-fi.
+export function FlowerDecorIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 40 40" {...props}>
+      <g opacity="0.9">
+        {[0, 72, 144, 216, 288].map((angle) => (
+          <ellipse key={angle} cx="20" cy="11.5" rx="5.2" ry="8.4" fill="var(--accent-2)" transform={`rotate(${angle} 20 20)`} />
+        ))}
+        <circle cx="20" cy="20" r="4.6" fill="var(--accent)" />
+      </g>
+    </svg>
+  );
+}

@@ -2438,28 +2438,6 @@
   cursor: pointer;
 }
 
-/* Tema Lo-fi: sem a arte/balão de fala, "Temas" vira um botão flat comum,
-   ancorado no topo da tela em vez de tentar acertar a posição do balão. */
-.reception-dialog-bubble-lofi {
-  position: absolute;
-  top: 6%;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.reception-dialog-bubble-link-lofi {
-  background: var(--surface);
-  border: none;
-  border-radius: 14px;
-  padding: 8px 18px;
-  font-family: var(--font-body);
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text);
-  box-shadow: 0 2px 6px rgba(74, 59, 50, 0.25);
-  cursor: pointer;
-}
-
 .theme-picker {
   display: flex;
   flex-direction: column;
@@ -2756,27 +2734,9 @@
   cursor: pointer;
 }
 
-/* Janelinha de clima flutuante (Recepção) */
-
-.weather-widget {
-  position: absolute;
-  top: 5%;
-  left: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
-  border: none;
-  border-radius: 14px;
-  background: var(--surface);
-  color: var(--text);
-  padding: 8px 12px;
-  box-shadow: 0 2px 6px rgba(20, 16, 12, 0.25);
-  cursor: pointer;
-  text-align: left;
-  z-index: 2;
-}
-
+/* Janelinha de clima flutuante — usada fora do grid de cards (tema "Guilda",
+   trancado, sem o layout novo ainda). No tema Lo-fi essa mesma classe vira
+   item do grid .reception-cards, ver override mais abaixo. */
 .weather-widget-now {
   font-family: var(--font-display);
   font-size: 1.1rem;
@@ -2793,34 +2753,133 @@
   color: var(--text-muted);
 }
 
-.weather-config {
-  position: absolute;
-  top: calc(5% + 84px);
-  left: 12px;
-  right: 12px;
+/* Cards flutuantes da Recepção (tema Lo-fi): Temas (4:3) em cima à esquerda,
+   Clima (retangular, mais largo) e Relógio (4:3) lado a lado embaixo dele —
+   a coluna do Clima é mais larga que a do Relógio, então na mesma altura de
+   linha o card de Clima fica mais "deitado" (retangular) e o do Relógio mais
+   quadrado, sem precisar de aspect-ratio diferente forçado nos dois. */
+.reception-cards {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  grid-template-areas:
+    "temas ."
+    "clima relogio";
+  gap: 10px;
+  padding: 16px 16px 0;
   max-width: 320px;
+}
+
+.reception-card {
+  border: none;
+  border-radius: 20px;
   background: var(--surface);
-  border-radius: 14px;
-  padding: 12px;
-  box-shadow: 0 4px 12px rgba(20, 16, 12, 0.3);
+  color: var(--text);
+  box-shadow: 0 3px 10px rgba(20, 16, 12, 0.22);
+  cursor: pointer;
+  text-align: left;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  z-index: 3;
 }
 
-.weather-config-form {
+.reception-card-temas {
+  grid-area: temas;
+  aspect-ratio: 4 / 3;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.reception-card-temas-flower {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 44px;
+  height: 44px;
+  opacity: 0.9;
+}
+
+.reception-card-temas-label {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-h);
+  z-index: 1;
+}
+
+.reception-cards .reception-card-clima {
+  grid-area: clima;
+  position: static;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  z-index: auto;
+}
+
+.reception-card-clima-emoji {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.reception-card-clima-info {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 1px;
 }
 
-.weather-config-form input {
-  flex: 1;
-  padding: 8px 10px;
-  border: none;
-  border-radius: 10px;
-  background: var(--surface-raised);
-  color: var(--text);
+.reception-card-clima-now {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--text-h);
+}
+
+.reception-card-clima-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.reception-card-clima-minmax {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.reception-card-relogio {
+  grid-area: relogio;
+  aspect-ratio: 4 / 3;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.reception-card-relogio-label {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--text-h);
+}
+
+.reception-card-relogio-hint {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+/* Fallback fora do grid (tema "Guilda", trancado): mesma janelinha
+   flutuante de antes, só com as novas classes internas do conteúdo. */
+.reception-card-clima {
+  position: absolute;
+  top: 5%;
+  left: 12px;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  padding: 8px 12px;
+  z-index: 2;
 }
 
 /* Desafio hardcore — um lance de xadrez pra desligar o alarme */

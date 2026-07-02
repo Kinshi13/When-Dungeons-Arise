@@ -17,6 +17,7 @@ import { scheduleAlarmNotification, cancelAlarmNotification } from "../notificat
 import { ChevronLeftIcon, PlusIcon, TrashIcon } from "../icons";
 import { playSfx } from "../sound";
 import { useVerticalSwipe } from "../useVerticalSwipe";
+import { api } from "../api";
 
 type Tab = "despertador" | "cronometro" | "temporizador";
 
@@ -229,6 +230,8 @@ function TimerTab() {
   const [, forceRender] = useState(0);
   const [minutesInput, setMinutesInput] = useState("5");
   const [finished, setFinished] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+  const [savingNote, setSavingNote] = useState(false);
   const stopBeepRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -263,6 +266,7 @@ function TimerTab() {
   function handleStartPause() {
     playSfx("coin");
     setFinished(false);
+    setNoteSaved(false);
     if (timerState.running) {
       timerState.remainingWhenPaused = Math.max(0, timerState.endsAt - Date.now());
       timerState.running = false;
@@ -286,7 +290,26 @@ function TimerTab() {
     stopBeepRef.current?.();
     stopBeepRef.current = null;
     setFinished(false);
+    setNoteSaved(false);
     forceRender((n) => n + 1);
+  }
+
+  async function handleSaveNote() {
+    setSavingNote(true);
+    try {
+      const minutes = Math.round(timerState.totalMs / 60000);
+      const durationLabel = minutes > 0 ? `${minutes} min` : `${Math.round(timerState.totalMs / 1000)} s`;
+      const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      await api.notes.create({
+        type: "NOTA",
+        title: `Temporizador de ${durationLabel}`,
+        content: `Concluído às ${time}.`,
+      });
+      playSfx("coin");
+      setNoteSaved(true);
+    } finally {
+      setSavingNote(false);
+    }
   }
 
   const idle = !timerState.running && timerState.remainingWhenPaused === 0 && !finished;
@@ -307,13 +330,27 @@ function TimerTab() {
         <div className="clock-big-display">{formatTimer(remaining)}</div>
       )}
 
-      {finished && <p className="clock-timer-done">Tempo esgotado!</p>}
+      {finished && (
+        <div className="clock-timer-suggestion">
+          <p className="clock-timer-done">Tempo esgotado!</p>
+          <p className="hint">
+            {noteSaved ? "Nota guardada no Diário." : "Guardar esse tempo como nota no Diário antes de zerar?"}
+          </p>
+        </div>
+      )}
 
       <div className="clock-controls">
         {finished ? (
-          <button className="clock-main-btn" onClick={handleReset}>
-            Parar
-          </button>
+          <>
+            {!noteSaved && (
+              <button className="small" onClick={handleSaveNote} disabled={savingNote}>
+                {savingNote ? "Guardando..." : "Guardar no Diário"}
+              </button>
+            )}
+            <button className="clock-main-btn" onClick={handleReset}>
+              {noteSaved ? "Fechar" : "Parar"}
+            </button>
+          </>
         ) : (
           <>
             <button className="clock-main-btn" onClick={handleStartPause}>
@@ -334,10 +371,20 @@ function TimerTab() {
 interface ClockScreenProps {
   open: boolean;
   onClose: () => void;
+  // Aba que abre por padrão (o card do Relógio na Recepção usa isso: toque
+  // normal abre no Despertador, deslizar o card abre direto no Cronômetro
+  // ou Temporizador). A tela fica sempre montada (só o overlay entra/sai via
+  // AnimatePresence), então precisa reaplicar isso toda vez que abrir de
+  // novo, não só na primeira montagem.
+  initialTab?: Tab;
 }
 
-export default function ClockScreen({ open, onClose }: ClockScreenProps) {
-  const [tab, setTab] = useState<Tab>("despertador");
+export default function ClockScreen({ open, onClose, initialTab = "despertador" }: ClockScreenProps) {
+  const [tab, setTab] = useState<Tab>(initialTab);
+  useEffect(() => {
+    if (open) setTab(initialTab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
   // Reverso do gesto que abre esta tela (deslizar pra cima na Recepção):
   // deslizar pra baixo aqui fecha de volta. Só no cabeçalho, pra não brigar
   // com a rolagem da lista de alarmes.
