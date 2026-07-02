@@ -34,6 +34,19 @@
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
 
+        <!-- Widget de tela inicial com os próximos lembretes. Só informativo: tocar abre o app. -->
+        <receiver
+            android:name=".ReminderWidgetProvider"
+            android:exported="false"
+            android:label="@string/widget_reminders_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_reminders_info" />
+        </receiver>
+
         <!-- Leitor de notificações do sistema (gerenciador de notificações do Mural).
              Só ativa depois que o usuário liga manualmente o acesso em Ajustes > Apps >
              Acesso especial > Acesso a notificações. -->

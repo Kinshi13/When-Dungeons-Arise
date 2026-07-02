@@ -29,12 +29,18 @@ import {
   syncAllHolidayNotifications,
 } from './notifications'
 import { getBrazilianHolidays } from './game/holidays'
+import { syncReminderWidget } from './widgetBridge'
 import { SettingsProvider } from './contexts/SettingsContext'
 import { GameProvider } from './game/GameContext'
 import './index.css'
 import App from './App.tsx'
 
 if (isNativePlatform()) {
+  // Widgets nativos não dependem de permissão de notificação — sincroniza
+  // sempre que o app abre, pra pegar qualquer lembrete criado/concluído
+  // desde a última vez (o widget não vê o app fechado atualizando dados).
+  api.reminders.list().then(syncReminderWidget)
+
   hasNotificationPermission().then(async (granted) => {
     if (granted) {
       await setupNotificationChannels()

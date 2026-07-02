@@ -11,6 +11,7 @@ import {
   checkOverspendingAndNotify,
 } from "./notifications";
 import { compareWeek, compareMonth } from "./game/financeAnalysis";
+import { syncReminderWidget } from "./widgetBridge";
 
 export type ReminderType = "REUNIAO" | "TAREFA" | "OUTRO";
 export type Priority = "BAIXA" | "MEDIA" | "ALTA";
@@ -194,23 +195,27 @@ export const api = {
       };
       reminderTable.insert(reminder);
       await scheduleReminderNotification(reminder);
+      await syncReminderWidget(reminderTable.list());
       return reminder;
     },
     update: async (id: string, data: Partial<Reminder>) => {
       const updated = reminderTable.update(id, data);
       if (!updated) throw new Error("Lembrete não encontrado");
       await scheduleReminderNotification(updated);
+      await syncReminderWidget(reminderTable.list());
       return updated;
     },
     complete: async (id: string) => {
       const updated = reminderTable.update(id, { done: true });
       if (!updated) throw new Error("Lembrete não encontrado");
       await cancelReminderNotification(id);
+      await syncReminderWidget(reminderTable.list());
       return updated;
     },
     remove: async (id: string) => {
       reminderTable.remove(id);
       await cancelReminderNotification(id);
+      await syncReminderWidget(reminderTable.list());
     },
   },
   notes: {
