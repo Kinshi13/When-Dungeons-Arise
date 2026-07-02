@@ -24,7 +24,20 @@ import {
 import { useSettings, UI_SCALE_MIN, UI_SCALE_MAX, UI_SCALE_STEP } from "../contexts/SettingsContext";
 import { listMonitoredApps, upsertMonitoredApp, removeMonitoredApp, type MonitoredApp } from "../notificationAppPrefs";
 import { syncMonitoredPackages } from "../notificationBridge";
+import {
+  loadAlarmChallengePrefs,
+  saveAlarmChallengePrefs,
+  type AlarmChallengePrefs,
+  type PuzzleLevel,
+} from "../clockStore";
 import { TrashIcon, PlusIcon, MinusIcon } from "../icons";
+
+const PUZZLE_LEVEL_LABEL: Record<PuzzleLevel, string> = {
+  "2x2": "Fácil (2x2)",
+  "3x3": "Médio (3x3)",
+  "4x4": "Difícil (4x4)",
+  hardcore: "Hardcore (xadrez)",
+};
 
 const NOTIFICATION_SCREENS: NotificationScreen[] = ["agenda", "calendario", "contas", "financas"];
 
@@ -37,6 +50,7 @@ export default function Settings() {
   const [granted, setGranted] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => loadNotificationPrefs());
+  const [challenge, setChallenge] = useState<AlarmChallengePrefs>(() => loadAlarmChallengePrefs());
   const [monitoredApps, setMonitoredApps] = useState<MonitoredApp[]>([]);
   const [newAppName, setNewAppName] = useState("");
   const [newPackageName, setNewPackageName] = useState("");
@@ -134,6 +148,12 @@ export default function Settings() {
     // agendado pra cancelar/sincronizar, só o próximo alerta deixa de ocorrer.
   }
 
+  function updateChallenge(patch: Partial<AlarmChallengePrefs>) {
+    const updated = { ...challenge, ...patch };
+    setChallenge(updated);
+    saveAlarmChallengePrefs(updated);
+  }
+
   return (
     <div className="page">
       <section className="settings-section">
@@ -180,6 +200,40 @@ export default function Settings() {
             />
           </label>
         ))}
+      </section>
+
+      <section className="settings-section">
+        <h2>Desafio do despertador</h2>
+        <label className="slider-row">
+          <span>Exigir desafio pra desligar o alarme</span>
+          <input
+            type="checkbox"
+            checked={challenge.enabled}
+            onChange={(e) => updateChallenge({ enabled: e.target.checked })}
+          />
+        </label>
+        {challenge.enabled ? (
+          <>
+            <div className="filters">
+              {(Object.keys(PUZZLE_LEVEL_LABEL) as PuzzleLevel[]).map((level) => (
+                <button
+                  key={level}
+                  className={challenge.level === level ? "filter active" : "filter"}
+                  onClick={() => updateChallenge({ level })}
+                >
+                  {PUZZLE_LEVEL_LABEL[level]}
+                </button>
+              ))}
+            </div>
+            <p className="hint">
+              {challenge.level === "hardcore"
+                ? "Hardcore: um lance de xadrez resolve — dê o xeque-mate ou escape dele pra desligar o alarme."
+                : "Quebra-cabeça deslizante: ordene os números pra desligar o alarme."}
+            </p>
+          </>
+        ) : (
+          <p className="hint">Sem desafio, o alarme mostra só um botão de desligar.</p>
+        )}
       </section>
 
       <section className="settings-section">

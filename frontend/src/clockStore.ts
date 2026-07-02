@@ -114,3 +114,31 @@ export function timerRemaining(now: number): number {
   if (timerState.running) return Math.max(0, timerState.endsAt - now);
   return timerState.remainingWhenPaused;
 }
+
+// ---- Desafio pra desligar o alarme ----
+// Configurável em Ajustes: liga/desliga e nível. "hardcore" troca o
+// quebra-cabeça deslizante por um lance único de xadrez.
+
+export type PuzzleLevel = "2x2" | "3x3" | "4x4" | "hardcore";
+
+export interface AlarmChallengePrefs {
+  enabled: boolean;
+  level: PuzzleLevel;
+}
+
+const CHALLENGE_PREFS_KEY = "lembretes-app:alarm-challenge";
+
+const DEFAULT_CHALLENGE: AlarmChallengePrefs = { enabled: true, level: "4x4" };
+
+export function loadAlarmChallengePrefs(): AlarmChallengePrefs {
+  try {
+    const raw = localStorage.getItem(CHALLENGE_PREFS_KEY);
+    return raw ? { ...DEFAULT_CHALLENGE, ...JSON.parse(raw) } : { ...DEFAULT_CHALLENGE };
+  } catch {
+    return { ...DEFAULT_CHALLENGE };
+  }
+}
+
+export function saveAlarmChallengePrefs(prefs: AlarmChallengePrefs) {
+  localStorage.setItem(CHALLENGE_PREFS_KEY, JSON.stringify(prefs));
+}

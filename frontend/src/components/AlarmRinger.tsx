@@ -1,8 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { getDueAlarm, markAlarmHandled, loadAlarmSound, type Alarm } from "../clockStore";
-import { fetchWeather, getCachedWeather, type WeatherInfo } from "../weather";
+import {
+  getDueAlarm,
+  markAlarmHandled,
+  loadAlarmSound,
+  loadAlarmChallengePrefs,
+  type Alarm,
+} from "../clockStore";
+import { fetchPrimaryWeather, getCachedPrimaryWeather, type WeatherInfo } from "../weather";
 import SlidingPuzzle from "./SlidingPuzzle";
+import ChessChallenge from "./ChessChallenge";
 
 const CHECK_INTERVAL_MS = 15000;
 
@@ -49,6 +56,9 @@ export default function AlarmRinger() {
   const [weather, setWeather] = useState<WeatherInfo | null>(null);
   const [solved, setSolved] = useState(false);
   const stopAudioRef = useRef<(() => void) | null>(null);
+  // Congela as preferências do desafio no momento em que o alarme começa a
+  // tocar — mudar em Ajustes no meio do toque não troca o desafio na cara.
+  const challenge = useMemo(() => loadAlarmChallengePrefs(), [ringing?.id]);
 
   // Vigia os despertadores: no carregamento, ao voltar pro app e a cada 15s.
   useEffect(() => {
@@ -94,8 +104,8 @@ export default function AlarmRinger() {
       }
     })();
 
-    setWeather(getCachedWeather());
-    fetchWeather().then((info) => {
+    setWeather(getCachedPrimaryWeather());
+    fetchPrimaryWeather().then((info) => {
       if (!cancelled && info) setWeather(info);
     });
 
@@ -130,16 +140,24 @@ export default function AlarmRinger() {
         <div className="alarm-ring-weather">
           {weather.emoji} {weather.temperature}°C · {weather.description}
           <span className="alarm-ring-weather-minmax">
-            mín {weather.min}° · máx {weather.max}°
+            mín {weather.today.min}° · máx {weather.today.max}°
           </span>
         </div>
       )}
 
       {!solved ? (
-        <>
-          <p className="alarm-ring-hint">Resolva o quebra-cabeça pra desligar o alarme</p>
-          <SlidingPuzzle onSolved={handleSolved} />
-        </>
+        !challenge.enabled ? (
+          <button className="alarm-ring-close" onClick={handleSolved}>
+            Desligar
+          </button>
+        ) : challenge.level === "hardcore" ? (
+          <ChessChallenge onSolved={handleSolved} />
+        ) : (
+          <>
+            <p className="alarm-ring-hint">Resolva o quebra-cabeça pra desligar o alarme</p>
+            <SlidingPuzzle size={Number(challenge.level[0]) as 2 | 3 | 4} onSolved={handleSolved} />
+          </>
+        )
       ) : (
         <>
           <p className="alarm-ring-done">Bom dia! Alarme desligado.</p>

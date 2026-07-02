@@ -2855,3 +2855,207 @@
   background: var(--surface-raised);
   color: var(--text);
 }
+
+/* Desafio hardcore — um lance de xadrez pra desligar o alarme */
+
+.chess-challenge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.chess-goal {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  max-width: 340px;
+}
+
+.chess-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  width: min(88vw, 352px);
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(20, 16, 12, 0.3);
+}
+
+.chess-board[data-shake="on"] {
+  animation: chess-shake 0.3s;
+}
+
+@keyframes chess-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.chess-sq {
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.chess-sq.light {
+  background: #ead9b9;
+}
+
+.chess-sq.dark {
+  background: #a8875f;
+}
+
+.chess-sq.movable {
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+.chess-piece.white {
+  color: #fdf6ea;
+  text-shadow: 0 1px 2px rgba(30, 22, 14, 0.75);
+}
+
+.chess-piece.black {
+  color: #2b2118;
+  text-shadow: 0 1px 1px rgba(255, 248, 235, 0.35);
+}
+
+.chess-feedback {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+
+/* Tela completa de Clima */
+
+.weather-screen {
+  background: var(--bg);
+}
+
+.weather-screen-content {
+  overflow-y: auto;
+}
+
+.weather-primary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0 4px;
+}
+
+.weather-primary-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.weather-primary-now {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  color: var(--text-h);
+}
+
+.weather-primary-desc {
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.weather-day-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+.weather-day-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 12px 10px;
+  box-shadow: 0 2px 6px rgba(20, 16, 12, 0.18);
+}
+
+.weather-day-title {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--text-h);
+}
+
+.weather-day-emoji {
+  font-size: 1.6rem;
+}
+
+.weather-day-minmax {
+  font-family: var(--font-display);
+  color: var(--text-h);
+}
+
+.weather-day-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.weather-day-precip {
+  font-size: 0.8rem;
+  color: var(--accent-2);
+}
+
+.weather-place-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.weather-place-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: 0 2px 6px rgba(20, 16, 12, 0.18);
+}
+
+.weather-place-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.weather-place-label {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--text-h);
+}
+
+.weather-place-remove {
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+}
+
+.weather-add-section {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.weather-add-form input {
+  border: none;
+  background: var(--surface);
+}
