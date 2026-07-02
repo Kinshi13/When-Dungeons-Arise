@@ -149,7 +149,14 @@
   inset: 0;
   pointer-events: none;
   will-change: transform;
-  overflow: hidden;
+  /* Só o eixo horizontal precisa ficar contido (a barra lateral que "sobra"
+     durante o arraste) — o corte vertical já é redundante (.main já tem
+     overflow-x: hidden) e além de redundante cortava pela metade qualquer
+     tela de destino mais alta que a tela atual, já que esta camada é
+     position:absolute;inset:0 e por isso herda a altura da tela ATUAL (a
+     que já está montada), não a da tela de destino sendo pré-renderizada. */
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 /* Conteúdo da tela de destino subindo em "gaveta" enquanto o arraste lateral
@@ -202,12 +209,6 @@
   border-top: var(--pixel-border);
   padding: 0;
   transition: transform 0.35s ease;
-}
-
-/* Nas telas do Diário/Biblioteca a barra desce quase toda, sobrando só a
-   linha de cima (o resto da altura menos essa tira fica fora da tela). */
-.tabbar-tucked {
-  transform: translateX(-50%) translateY(calc(100% - 10px));
 }
 
 .tab {
@@ -276,28 +277,37 @@
   background-image: none;
   aspect-ratio: unset;
   height: auto;
-  gap: 8px;
-  padding: 10px 12px max(10px, env(safe-area-inset-bottom));
+  /* 7 abas agora (Diário e Biblioteca entraram na barra) — gap e padding um
+     pouco mais enxutos que antes pra caber sem apertar, e espaço em cima
+     (overflow visível, ver .tab-lofi) pra aba ativa "saltar" pra fora. */
+  gap: 5px;
+  padding: 10px 8px max(10px, env(safe-area-inset-bottom));
   border-top: none;
   border-radius: 22px 22px 0 0;
   box-shadow: 0 -6px 16px rgba(74, 59, 50, 0.18);
+  overflow: visible;
 }
 
 .tab-lofi {
   position: relative;
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--surface-raised);
   box-shadow: 0 2px 5px rgba(74, 59, 50, 0.25);
   text-decoration: none;
+  /* A pose "ativa" (ver ACTIVE_TAB_POSE em App.tsx) empurra a aba pra cima e
+     aumenta o zoom — precisa ficar por cima das vizinhas nesse momento, sem
+     ser cortada pela barra. */
+  z-index: 1;
 }
 
 .tab-lofi svg {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   filter: drop-shadow(0 1px 1.5px rgba(74, 59, 50, 0.3));
 }
 
@@ -1487,8 +1497,9 @@
   margin-bottom: 0;
 }
 
-/* Estante de documentos — tela cheia, sem barra de navegação (recolhida via
-   isSpecialScreen), a própria arte da estante é a tela inteira. */
+/* Estante de documentos — tela cheia (a barra de navegação continua visível
+   por cima, agora que Biblioteca é uma aba normal), a própria arte da
+   estante ocupa o espaço restante. */
 
 .library-fullscreen {
   position: relative;
@@ -2402,33 +2413,6 @@
   height: calc(100svh - 88px);
 }
 
-.reception-edge-tap {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 17%;
-  display: flex;
-  align-items: center;
-  z-index: 1;
-}
-
-.reception-edge-left {
-  left: 0;
-  justify-content: flex-start;
-}
-
-.reception-edge-right {
-  right: 0;
-  justify-content: flex-end;
-}
-
-.reception-edge-icon {
-  width: 30px;
-  height: 30px;
-  margin: 0 8px;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
-}
-
 /* Posição do balão de fala em branco já desenhado na arte de fundo da
    recepção — calibrada visualmente sobre a imagem (guild-reception-bg.png). */
 .reception-dialog-bubble {
@@ -2474,23 +2458,6 @@
   color: var(--text);
   box-shadow: 0 2px 6px rgba(74, 59, 50, 0.25);
   cursor: pointer;
-}
-
-.reception-edge-icon-lofi {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 46px;
-  height: 46px;
-  margin: 0 10px;
-  border-radius: 50%;
-  background: var(--surface);
-  box-shadow: 0 2px 6px rgba(74, 59, 50, 0.25);
-  color: var(--text);
-}
-
-.reception-edge-icon-lofi svg {
-  filter: drop-shadow(0 1px 1.5px rgba(74, 59, 50, 0.3));
 }
 
 .theme-picker {

@@ -1,59 +1,38 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useRef, useState } from "react";
 import ThemesScreen from "../components/ThemesScreen";
 import { playSfx } from "../sound";
-import { pendingSwipeDirection } from "../useSwipeNav";
+import { useVerticalSwipe } from "../useVerticalSwipe";
 import { useSettings, isLofiTheme } from "../contexts/SettingsContext";
-import { DiaryIcon, BookIcon, HourglassIcon } from "../icons";
+import { HourglassIcon } from "../icons";
 import ClockScreen from "../components/ClockScreen";
-import WeatherWidget from "../components/WeatherWidget";
+import WeatherWidget, { type WeatherWidgetHandle } from "../components/WeatherWidget";
+import WeatherScreen from "../components/WeatherScreen";
 
 export default function GuildReception() {
   const [themesOpen, setThemesOpen] = useState(false);
   const [clockOpen, setClockOpen] = useState(false);
+  const [weatherOpen, setWeatherOpen] = useState(false);
+  const weatherWidgetRef = useRef<WeatherWidgetHandle>(null);
   const { theme } = useSettings();
   const isLofi = isLofiTheme(theme);
 
-  return (
-    <div className="page reception-page">
-      <h1 className="sr-only">Recepção da Guilda</h1>
+  // Deslizar pra cima abre o Relógio, pra baixo abre o Clima — o gesto
+  // reverso (fechar) mora em cada tela (ver ClockScreen/WeatherScreen), que
+  // capturam o próprio toque por serem overlays em tela cheia.
+  const verticalSwipe = useVerticalSwipe(
+    () => {
+      playSfx("coin");
+      setClockOpen(true);
+    },
+    () => {
+      playSfx("coin");
+      setWeatherOpen(true);
+    }
+  );
 
-      <Link
-        to="/diario/notas"
-        className="reception-edge-tap reception-edge-left"
-        aria-label="Diário"
-        onClick={() => {
-          playSfx("coin");
-          // Entra deslizando da esquerda — mesmo lado do ícone tocado, e o
-          // reverso de como se sai (arrastando pra esquerda) de volta aqui.
-          pendingSwipeDirection.current = -1;
-        }}
-      >
-        {isLofi ? (
-          <span className="reception-edge-icon-lofi">
-            <DiaryIcon width={26} height={26} />
-          </span>
-        ) : (
-          <img className="reception-edge-icon" src="/icons-nav/icon-diario.png" alt="" />
-        )}
-      </Link>
-      <Link
-        to="/biblioteca"
-        className="reception-edge-tap reception-edge-right"
-        aria-label="Biblioteca"
-        onClick={() => {
-          playSfx("coin");
-          pendingSwipeDirection.current = 1;
-        }}
-      >
-        {isLofi ? (
-          <span className="reception-edge-icon-lofi">
-            <BookIcon width={26} height={26} />
-          </span>
-        ) : (
-          <img className="reception-edge-icon" src="/icons-nav/icon-biblioteca.png" alt="" />
-        )}
-      </Link>
+  return (
+    <div className="page reception-page" {...verticalSwipe}>
+      <h1 className="sr-only">Recepção da Guilda</h1>
 
       {/* Balão de fala em branco já desenhado na arte de fundo — o link mora
           dentro dele. No tema Lo-fi (sem a arte/balão) vira um botão flat
@@ -70,7 +49,13 @@ export default function GuildReception() {
         </button>
       </div>
 
-      <WeatherWidget />
+      <WeatherWidget
+        ref={weatherWidgetRef}
+        onOpen={() => {
+          playSfx("coin");
+          setWeatherOpen(true);
+        }}
+      />
 
       {/* Botão do Relógio — ampulheta centralizada acima da barra de navegação. */}
       <button
@@ -86,6 +71,14 @@ export default function GuildReception() {
 
       <ThemesScreen open={themesOpen} onClose={() => setThemesOpen(false)} />
       <ClockScreen open={clockOpen} onClose={() => setClockOpen(false)} />
+      <WeatherScreen
+        open={weatherOpen}
+        onClose={() => {
+          setWeatherOpen(false);
+          weatherWidgetRef.current?.refresh();
+        }}
+        onPlacesChanged={() => weatherWidgetRef.current?.refresh()}
+      />
     </div>
   );
 }

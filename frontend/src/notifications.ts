@@ -9,6 +9,21 @@ const BILL_ALERT_DAYS = [10, 5, 1];
 
 export const isNativePlatform = () => Capacitor.isNativePlatform();
 
+// Agendar/cancelar notificação é sempre um "extra" por cima de uma mutação
+// que já foi salva com sucesso (lembrete, conta, alarme). Se a ponte nativa
+// falhar ou demorar, isso NUNCA pode travar quem chamou — sem isso, uma
+// falha aqui impedia telas como Contas e o Despertador de atualizar a lista
+// na hora (o dado já tinha sido salvo, só a tela não recarregava, porque o
+// erro interrompia a função antes do refresh/load do chamador rodar).
+async function safely<T>(fn: () => Promise<T>): Promise<T | undefined> {
+  try {
+    return await fn();
+  } catch (err) {
+    console.warn("[notifications] falha ao falar com o plugin nativo de notificações", err);
+    return undefined;
+  }
+}
+
 // Local notifications exigem um id numérico; derivamos um a partir do cuid do lembrete.
 function hashId(id: string): number {
   let hash = 0;
@@ -38,13 +53,15 @@ const NOTIFICATION_ICON_COLOR = "#5fb3e0";
 export async function setupNotificationChannels() {
   if (!isNativePlatform()) return;
   for (const channel of NOTIFICATION_CHANNELS) {
-    await LocalNotifications.createChannel({
-      id: channel.id,
-      name: channel.name,
-      description: channel.description,
-      importance: 4,
-      visibility: 1,
-    });
+    await safely(() =>
+      LocalNotifications.createChannel({
+        id: channel.id,
+        name: channel.name,
+        description: channel.description,
+        importance: 4,
+        visibility: 1,
+      })
+    );
   }
 }
 
@@ -64,23 +81,25 @@ export async function scheduleReminderNotification(reminder: Reminder) {
   if (!isNativePlatform() || !loadNotificationPrefs().agenda) return;
   const fireDate = new Date(reminder.dateTime);
   if (fireDate.getTime() <= Date.now()) return;
-  await LocalNotifications.schedule({
-    notifications: [
-      {
-        id: hashId(reminder.id),
-        title: reminder.title,
-        body: reminder.description || "Lembrete agendado",
-        schedule: { at: fireDate },
-        channelId: "agenda",
-        iconColor: NOTIFICATION_ICON_COLOR,
-      },
-    ],
-  });
+  await safely(() =>
+    LocalNotifications.schedule({
+      notifications: [
+        {
+          id: hashId(reminder.id),
+          title: reminder.title,
+          body: reminder.description || "Lembrete agendado",
+          schedule: { at: fireDate },
+          channelId: "agenda",
+          iconColor: NOTIFICATION_ICON_COLOR,
+        },
+      ],
+    })
+  );
 }
 
 export async function cancelReminderNotification(reminderId: string) {
   if (!isNativePlatform()) return;
-  await LocalNotifications.cancel({ notifications: [{ id: hashId(reminderId) }] });
+  await safely(() => LocalNotifications.cancel({ notifications: [{ id: hashId(reminderId) }] }));
 }
 
 export async function syncAllReminderNotifications(reminders: Reminder[]) {
@@ -110,23 +129,27 @@ export async function scheduleBillNotifications(bill: Bill) {
 
   if (notifications.length === 0) return;
 
-  await LocalNotifications.schedule({
-    notifications: notifications.map(({ days, fireDate }) => ({
-      id: billAlertId(bill.id, days),
-      title: `Conta vence em ${days} dia${days > 1 ? "s" : ""}`,
-      body: `${bill.title} — R$ ${bill.amount.toFixed(2)}`,
-      schedule: { at: fireDate },
-      channelId: "contas",
-      iconColor: NOTIFICATION_ICON_COLOR,
-    })),
-  });
+  await safely(() =>
+    LocalNotifications.schedule({
+      notifications: notifications.map(({ days, fireDate }) => ({
+        id: billAlertId(bill.id, days),
+        title: `Conta vence em ${days} dia${days > 1 ? "s" : ""}`,
+        body: `${bill.title} — R$ ${bill.amount.toFixed(2)}`,
+        schedule: { at: fireDate },
+        channelId: "contas",
+        iconColor: NOTIFICATION_ICON_COLOR,
+      })),
+    })
+  );
 }
 
 export async function cancelBillNotifications(billId: string) {
   if (!isNativePlatform()) return;
-  await LocalNotifications.cancel({
-    notifications: BILL_ALERT_DAYS.map((days) => ({ id: billAlertId(billId, days) })),
-  });
+  await safely(() =>
+    LocalNotifications.cancel({
+      notifications: BILL_ALERT_DAYS.map((days) => ({ id: billAlertId(billId, days) })),
+    })
+  );
 }
 
 export async function syncAllBillNotifications(bills: Bill[]) {
@@ -152,23 +175,25 @@ export async function scheduleHolidayNotification(holiday: Holiday) {
   fireDate.setDate(fireDate.getDate() - 1);
   if (fireDate.getTime() <= Date.now()) return;
 
-  await LocalNotifications.schedule({
-    notifications: [
-      {
-        id: holidayAlertId(holiday),
-        title: "Feriado amanhã",
-        body: holiday.name,
-        schedule: { at: fireDate },
-        channelId: "calendario",
-        iconColor: NOTIFICATION_ICON_COLOR,
-      },
-    ],
-  });
+  await safely(() =>
+    LocalNotifications.schedule({
+      notifications: [
+        {
+          id: holidayAlertId(holiday),
+          title: "Feriado amanhã",
+          body: holiday.name,
+          schedule: { at: fireDate },
+          channelId: "calendario",
+          iconColor: NOTIFICATION_ICON_COLOR,
+        },
+      ],
+    })
+  );
 }
 
 export async function cancelHolidayNotification(holiday: Holiday) {
   if (!isNativePlatform()) return;
-  await LocalNotifications.cancel({ notifications: [{ id: holidayAlertId(holiday) }] });
+  await safely(() => LocalNotifications.cancel({ notifications: [{ id: holidayAlertId(holiday) }] }));
 }
 
 export async function syncAllHolidayNotifications(holidays: Holiday[]) {
@@ -236,9 +261,11 @@ export async function checkOverspendingAndNotify(week: PeriodComparison, month: 
   }
 
   if (notifications.length === 0) return;
-  await LocalNotifications.schedule({
-    notifications: notifications.map((n) => ({ ...n, channelId: "financas", iconColor: NOTIFICATION_ICON_COLOR })),
-  });
+  await safely(() =>
+    LocalNotifications.schedule({
+      notifications: notifications.map((n) => ({ ...n, channelId: "financas", iconColor: NOTIFICATION_ICON_COLOR })),
+    })
+  );
   saveOverspendState(state);
 }
 
@@ -255,21 +282,23 @@ export async function scheduleAlarmNotification(alarmId: string, time: string, l
   if (!isNativePlatform()) return;
   await cancelAlarmNotification(alarmId);
   const [hour, minute] = time.split(":").map(Number);
-  await LocalNotifications.schedule({
-    notifications: [
-      {
-        id: alarmNotificationId(alarmId),
-        title: `Despertador — ${time}`,
-        body: label || "Toque para desligar o alarme.",
-        schedule: { on: { hour, minute }, allowWhileIdle: true },
-        channelId: "relogio",
-        iconColor: NOTIFICATION_ICON_COLOR,
-      },
-    ],
-  });
+  await safely(() =>
+    LocalNotifications.schedule({
+      notifications: [
+        {
+          id: alarmNotificationId(alarmId),
+          title: `Despertador — ${time}`,
+          body: label || "Toque para desligar o alarme.",
+          schedule: { on: { hour, minute }, allowWhileIdle: true },
+          channelId: "relogio",
+          iconColor: NOTIFICATION_ICON_COLOR,
+        },
+      ],
+    })
+  );
 }
 
 export async function cancelAlarmNotification(alarmId: string) {
   if (!isNativePlatform()) return;
-  await LocalNotifications.cancel({ notifications: [{ id: alarmNotificationId(alarmId) }] });
+  await safely(() => LocalNotifications.cancel({ notifications: [{ id: alarmNotificationId(alarmId) }] }));
 }

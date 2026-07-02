@@ -73,6 +73,28 @@ export function TabReceiptIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+// Biblioteca — livro aberto
+export function TabBookIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 5.2c-2.2-1.3-5-1.6-8-0.8v13.5c3-0.8 5.8-0.5 8 0.8Z" fill="var(--accent-2)" />
+      <path d="M12 5.2c2.2-1.3 5-1.6 8-0.8v13.5c-3-0.8-5.8-0.5-8 0.8Z" fill="var(--accent-2)" opacity="0.72" />
+    </svg>
+  );
+}
+
+// Diário — caderno com caneta
+export function TabDiaryIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M5 3.5h11a2 2 0 0 1 2 2v14a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2Z" fill="var(--reuniao)" />
+      <rect x="8" y="8.2" width="6.4" height="1.6" fill="var(--surface)" />
+      <rect x="8" y="11.6" width="6.4" height="1.6" fill="var(--surface)" />
+      <path d="M18.4 5 20.5 2.8" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 // Ajustes — engrenagem sólida
 export function TabGearIcon(props: SVGProps<SVGSVGElement>) {
   return (

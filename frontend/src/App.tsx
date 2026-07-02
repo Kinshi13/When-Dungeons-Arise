@@ -1,6 +1,6 @@
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { motion, MotionConfig } from "framer-motion";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type SVGProps, type ReactElement } from "react";
 import { App as CapApp } from "@capacitor/app";
 import GuildReception from "./pages/GuildReception";
 import MissionBoard from "./pages/MissionBoard";
@@ -18,7 +18,15 @@ import { useSettings, isLofiTheme } from "./contexts/SettingsContext";
 import { useSwipeNav, sectionOf, MAIN_ORDER, pendingSwipeDirection, skipNextEnterAnimation } from "./useSwipeNav";
 import { isNativePlatform } from "./notifications";
 import { playSfx } from "./sound";
-import { TabBellIcon, TabCoinsIcon, TabGuildIcon, TabHomeCalendarIcon, TabGearIcon } from "./icons2";
+import {
+  TabBellIcon,
+  TabCoinsIcon,
+  TabGuildIcon,
+  TabHomeCalendarIcon,
+  TabGearIcon,
+  TabDiaryIcon,
+  TabBookIcon,
+} from "./icons2";
 import "./App.css";
 
 const MotionNavLink = motion.create(NavLink);
@@ -112,10 +120,57 @@ function renderBackgroundContent(bg: { src: string; blurred?: boolean } | undefi
   );
 }
 
+// Transição única (bouncy, tipo "boneco de mola") usada tanto pro toque
+// rápido (whileTap) quanto pro "pop" de destaque da aba ativa (animate) —
+// os dois alvos usam scale/y, então uma mola só já cobre bem as duas.
+const TAB_TRANSITION = { type: "spring" as const, stiffness: 420, damping: 15, mass: 0.7 };
 const tabMotion = {
   whileTap: { scale: 0.85, y: 2 },
-  transition: { type: "spring" as const, stiffness: 500, damping: 20 },
+  transition: TAB_TRANSITION,
 };
+
+// Aba ativa "salta" um pouco pra fora da barra (destaque discreto) — só no
+// tema Lo-fi, onde a barra já é simples/flat o bastante pra isso não ficar
+// poluído visualmente.
+const ACTIVE_TAB_POSE = { scale: 1.16, y: -8 };
+const INACTIVE_TAB_POSE = { scale: 1, y: 0 };
+
+interface TabDef {
+  key: string;
+  to: string;
+  end?: boolean;
+  label: string;
+  legacyClass: string;
+  Icon: (props: SVGProps<SVGSVGElement>) => ReactElement;
+  // Direção de entrada da tela (mesma convenção do arraste horizontal) —
+  // só as abas que não fazem parte da sequência principal da barra
+  // precisam "informar" isso (ver pendingSwipeDirection em useSwipeNav).
+  swipeDir?: number;
+  // Diário/Biblioteca só existem como abas no tema Lo-fi — a barra do tema
+  // "Guilda" (trancado, reservado pra economia futura) usa uma arte pintada
+  // com só 5 posições fixas, sem espaço pras duas nem arte nova desenhada
+  // pra elas ainda.
+  lofiOnly?: boolean;
+}
+
+const TABS: TabDef[] = [
+  { key: "diario", to: "/diario/notas", label: "Diário", legacyClass: "", Icon: TabDiaryIcon, swipeDir: -1, lofiOnly: true },
+  { key: "mural", to: "/missoes", label: "Mural", legacyClass: "tab tab-mural", Icon: TabBellIcon },
+  { key: "tesouraria", to: "/tesouraria", label: "Tesouraria", legacyClass: "tab tab-tesouraria", Icon: TabCoinsIcon },
+  { key: "guilda", to: "/", end: true, label: "Guilda", legacyClass: "tab tab-guilda", Icon: TabGuildIcon },
+  { key: "tempo", to: "/sala-do-tempo", label: "Tempo", legacyClass: "tab tab-tempo", Icon: TabHomeCalendarIcon },
+  { key: "ajustes", to: "/regras", label: "Ajustes", legacyClass: "tab tab-ajustes", Icon: TabGearIcon },
+  { key: "biblioteca", to: "/biblioteca", label: "Biblioteca", legacyClass: "", Icon: TabBookIcon, swipeDir: 1, lofiOnly: true },
+];
+
+// A que aba a rota atual pertence — igual sectionOf, mas cobrindo também
+// Diário/Biblioteca (que agora moram na barra, mas não fazem parte da
+// sequência de arraste horizontal entre as 5 telas principais).
+function activeTabOf(pathname: string): string | null {
+  if (pathname.startsWith("/diario")) return "diario";
+  if (pathname === "/biblioteca") return "biblioteca";
+  return sectionOf(pathname);
+}
 
 const SPARK_COUNT = 6;
 
@@ -193,7 +248,7 @@ function App() {
 
   const isReader = location.pathname.startsWith("/leitor");
   const pageBackground = PAGE_BACKGROUNDS[location.pathname];
-  const isSpecialScreen = location.pathname.startsWith("/diario") || location.pathname === "/biblioteca";
+  const activeTab = activeTabOf(location.pathname);
 
   // Direção do slide, calculada durante o render (não em efeito) pra já estar
   // pronta a tempo do <motion.div> de entrada montar com o "initial" certo.
@@ -279,8 +334,8 @@ function App() {
         <motion.div
           key={slideKey}
           className="page-bg-slide-inner"
-          initial={slideDirection !== 0 ? { x: slideDirection > 0 ? "100%" : "-100%" } : false}
-          animate={{ x: 0 }}
+          initial={slideDirection !== 0 ? { x: slideDirection > 0 ? "100%" : "-100%", opacity: 0.5 } : false}
+          animate={{ x: 0, opacity: 1 }}
           transition={SLIDE_ENTER_TRANSITION}
         >
           {renderBackgroundContent(pageBackground, isLofi, location.pathname)}
@@ -333,58 +388,28 @@ function App() {
         </main>
         <DueBillsPopup />
         <AlarmRinger />
-        <nav className={`tabbar${isLofi ? " tabbar-lofi" : ""}${isSpecialScreen ? " tabbar-tucked" : ""}`}>
-          <MotionNavLink
-            to="/missoes"
-            className={isLofi ? "tab-lofi" : "tab tab-mural"}
-            aria-label="Mural"
-            onClick={() => handleTabTap("mural")}
-            {...tabMotion}
-          >
-            {isLofi && <TabBellIcon />}
-            {tabBurst?.tab === "mural" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
-          </MotionNavLink>
-          <MotionNavLink
-            to="/tesouraria"
-            className={isLofi ? "tab-lofi" : "tab tab-tesouraria"}
-            aria-label="Tesouraria"
-            onClick={() => handleTabTap("tesouraria")}
-            {...tabMotion}
-          >
-            {isLofi && <TabCoinsIcon />}
-            {tabBurst?.tab === "tesouraria" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
-          </MotionNavLink>
-          <MotionNavLink
-            to="/"
-            end
-            className={isLofi ? "tab-lofi" : "tab tab-guilda"}
-            aria-label="Guilda"
-            onClick={() => handleTabTap("guilda")}
-            {...tabMotion}
-          >
-            {isLofi && <TabGuildIcon />}
-            {tabBurst?.tab === "guilda" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
-          </MotionNavLink>
-          <MotionNavLink
-            to="/sala-do-tempo"
-            className={isLofi ? "tab-lofi" : "tab tab-tempo"}
-            aria-label="Tempo"
-            onClick={() => handleTabTap("tempo")}
-            {...tabMotion}
-          >
-            {isLofi && <TabHomeCalendarIcon />}
-            {tabBurst?.tab === "tempo" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
-          </MotionNavLink>
-          <MotionNavLink
-            to="/regras"
-            className={isLofi ? "tab-lofi" : "tab tab-ajustes"}
-            aria-label="Ajustes"
-            onClick={() => handleTabTap("ajustes")}
-            {...tabMotion}
-          >
-            {isLofi && <TabGearIcon />}
-            {tabBurst?.tab === "ajustes" && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
-          </MotionNavLink>
+        <nav className={`tabbar${isLofi ? " tabbar-lofi" : ""}`}>
+          {TABS.filter((tab) => isLofi || !tab.lofiOnly).map((tab) => {
+            const active = isLofi && activeTab === tab.key;
+            return (
+              <MotionNavLink
+                key={tab.key}
+                to={tab.to}
+                end={tab.end}
+                className={isLofi ? "tab-lofi" : tab.legacyClass}
+                aria-label={tab.label}
+                onClick={() => {
+                  handleTabTap(tab.key);
+                  if (tab.swipeDir) pendingSwipeDirection.current = tab.swipeDir;
+                }}
+                animate={isLofi ? (active ? ACTIVE_TAB_POSE : INACTIVE_TAB_POSE) : undefined}
+                {...tabMotion}
+              >
+                {isLofi && <tab.Icon />}
+                {tabBurst?.tab === tab.key && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
+              </MotionNavLink>
+            );
+          })}
         </nav>
       </div>
     </MotionConfig>

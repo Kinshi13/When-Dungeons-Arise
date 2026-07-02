@@ -16,6 +16,7 @@ import {
 import { scheduleAlarmNotification, cancelAlarmNotification } from "../notifications";
 import { ChevronLeftIcon, PlusIcon, TrashIcon } from "../icons";
 import { playSfx } from "../sound";
+import { useVerticalSwipe } from "../useVerticalSwipe";
 
 type Tab = "despertador" | "cronometro" | "temporizador";
 
@@ -337,6 +338,10 @@ interface ClockScreenProps {
 
 export default function ClockScreen({ open, onClose }: ClockScreenProps) {
   const [tab, setTab] = useState<Tab>("despertador");
+  // Reverso do gesto que abre esta tela (deslizar pra cima na Recepção):
+  // deslizar pra baixo aqui fecha de volta. Só no cabeçalho, pra não brigar
+  // com a rolagem da lista de alarmes.
+  const closeSwipe = useVerticalSwipe(undefined, onClose);
 
   return createPortal(
     <AnimatePresence>
@@ -351,7 +356,7 @@ export default function ClockScreen({ open, onClose }: ClockScreenProps) {
           <div className="lofi-scene lofi-scene-tempo" aria-hidden="true" />
 
           <div className="note-fullscreen-content">
-            <div className="note-fullscreen-header">
+            <div className="note-fullscreen-header" {...closeSwipe}>
               <button className="icon-btn" onClick={onClose} aria-label="Voltar">
                 <ChevronLeftIcon width={20} height={20} /> Voltar
               </button>

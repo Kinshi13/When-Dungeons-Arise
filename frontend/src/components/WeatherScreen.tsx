@@ -14,6 +14,7 @@ import {
 } from "../weather";
 import { ChevronLeftIcon, TrashIcon, PlusIcon } from "../icons";
 import { playSfx } from "../sound";
+import { useVerticalSwipe } from "../useVerticalSwipe";
 
 interface WeatherScreenProps {
   open: boolean;
@@ -94,6 +95,11 @@ export default function WeatherScreen({ open, onClose, onPlacesChanged }: Weathe
   const primaryInfo = primary ? infoByPlace[primary.id] : null;
   const others = places.slice(1);
 
+  // Reverso do gesto que abre esta tela (deslizar pra baixo na Recepção):
+  // deslizar pra cima aqui fecha de volta. Só no cabeçalho, pra não brigar
+  // com a rolagem dos cards de outros locais.
+  const closeSwipe = useVerticalSwipe(onClose, undefined);
+
   return createPortal(
     <AnimatePresence>
       {open && (
@@ -107,7 +113,7 @@ export default function WeatherScreen({ open, onClose, onPlacesChanged }: Weathe
           <div className="lofi-scene lofi-scene-tempo" aria-hidden="true" />
 
           <div className="note-fullscreen-content weather-screen-content">
-            <div className="note-fullscreen-header">
+            <div className="note-fullscreen-header" {...closeSwipe}>
               <button className="icon-btn" onClick={onClose} aria-label="Voltar">
                 <ChevronLeftIcon width={20} height={20} /> Voltar
               </button>
