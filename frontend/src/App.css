@@ -472,6 +472,10 @@
   background: var(--accent-2);
 }
 
+.dot-aniversario {
+  background: var(--aniversario);
+}
+
 .calendar-bill-note a {
   display: flex;
   flex-direction: column;

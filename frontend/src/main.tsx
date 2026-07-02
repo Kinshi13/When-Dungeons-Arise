@@ -27,6 +27,7 @@ import {
   syncAllReminderNotifications,
   syncAllBillNotifications,
   syncAllHolidayNotifications,
+  syncAllBirthdayNotifications,
 } from './notifications'
 import { getBrazilianHolidays } from './game/holidays'
 import { syncReminderWidget, syncCalendarWidget, syncCurrencyWidgetPair } from './widgetBridge'
@@ -55,6 +56,7 @@ if (isNativePlatform()) {
       await syncAllReminderNotifications(reminders)
       await syncAllBillNotifications(bills)
       await syncAllHolidayNotifications(holidays)
+      await syncAllBirthdayNotifications(reminders)
     }
   })
 } else {

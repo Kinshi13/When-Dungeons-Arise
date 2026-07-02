@@ -77,7 +77,7 @@ export async function syncCalendarWidget(reminders: Reminder[], bills: Bill[]) {
   const year = now.getFullYear();
   const month = now.getMonth();
   const holidays = getBrazilianHolidays(year);
-  const entries = buildCalendarEntries(reminders, bills, holidays);
+  const entries = buildCalendarEntries(reminders, bills, holidays, year);
   const todayKey = toDateKey(now);
   const firstWeekday = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();

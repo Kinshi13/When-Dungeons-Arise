@@ -8,6 +8,8 @@ import {
   cancelReminderNotification,
   scheduleBillNotifications,
   cancelBillNotifications,
+  scheduleBirthdayNotifications,
+  cancelBirthdayNotifications,
   checkOverspendingAndNotify,
 } from "./notifications";
 import { compareWeek, compareMonth } from "./game/financeAnalysis";
@@ -25,6 +27,11 @@ export interface Reminder {
   priority: Priority;
   done?: boolean;
   fromNote?: boolean;
+  // Aniversário: recorrente todo ano (dia/mês de dateTime), com avisos em
+  // 20/15/10/5 dias e véspera em vez de um único disparo na hora marcada —
+  // ver scheduleBirthdayNotifications em notifications.ts.
+  isBirthday?: boolean;
+  birthYear?: number | null;
 }
 
 export type NoteType = "NOTA" | "LISTA";
@@ -198,9 +205,12 @@ export const api = {
         priority: data.priority ?? "MEDIA",
         done: false,
         fromNote: data.fromNote ?? false,
+        isBirthday: data.isBirthday ?? false,
+        birthYear: data.birthYear ?? null,
       };
       reminderTable.insert(reminder);
-      await scheduleReminderNotification(reminder);
+      if (reminder.isBirthday) await scheduleBirthdayNotifications(reminder);
+      else await scheduleReminderNotification(reminder);
       await syncReminderWidget(reminderTable.list());
       await syncCalendarWidgetFromTables();
       return reminder;
@@ -208,22 +218,27 @@ export const api = {
     update: async (id: string, data: Partial<Reminder>) => {
       const updated = reminderTable.update(id, data);
       if (!updated) throw new Error("Lembrete não encontrado");
-      await scheduleReminderNotification(updated);
+      if (updated.isBirthday) await scheduleBirthdayNotifications(updated);
+      else await scheduleReminderNotification(updated);
       await syncReminderWidget(reminderTable.list());
       await syncCalendarWidgetFromTables();
       return updated;
     },
     complete: async (id: string) => {
+      const existing = reminderTable.get(id);
       const updated = reminderTable.update(id, { done: true });
       if (!updated) throw new Error("Lembrete não encontrado");
-      await cancelReminderNotification(id);
+      if (existing?.isBirthday) await cancelBirthdayNotifications(id);
+      else await cancelReminderNotification(id);
       await syncReminderWidget(reminderTable.list());
       await syncCalendarWidgetFromTables();
       return updated;
     },
     remove: async (id: string) => {
+      const existing = reminderTable.get(id);
       reminderTable.remove(id);
-      await cancelReminderNotification(id);
+      if (existing?.isBirthday) await cancelBirthdayNotifications(id);
+      else await cancelReminderNotification(id);
       await syncReminderWidget(reminderTable.list());
       await syncCalendarWidgetFromTables();
     },

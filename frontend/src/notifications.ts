@@ -6,6 +6,7 @@ import type { PeriodComparison } from "./game/financeAnalysis";
 import { loadNotificationPrefs } from "./notificationPrefs";
 
 const BILL_ALERT_DAYS = [10, 5, 1];
+const BIRTHDAY_ALERT_DAYS = [20, 15, 10, 5, 1];
 
 export const isNativePlatform = () => Capacitor.isNativePlatform();
 
@@ -156,6 +157,87 @@ export async function syncAllBillNotifications(bills: Bill[]) {
   if (!isNativePlatform()) return;
   for (const bill of bills) {
     await scheduleBillNotifications(bill);
+  }
+}
+
+function birthdayAlertId(reminderId: string, year: number, daysBefore: number): number {
+  return hashId(`birthday:${reminderId}:${year}:${daysBefore}`);
+}
+
+function birthdayOccurrence(reminder: Reminder, year: number): Date {
+  const original = new Date(reminder.dateTime);
+  return new Date(year, original.getMonth(), original.getDate(), 9, 0, 0, 0);
+}
+
+// Aniversário não tem um único disparo na hora marcada — avisa com
+// antecedência (20/15/10/5 dias e véspera) igual ao padrão de contas, mas
+// recorrente todo ano (dia/mês fixos de dateTime, sem ano). Como o plugin
+// nativo não agenda "todo ano" direto, calculamos o ano atual e o seguinte
+// a cada chamada — o mesmo truque usado pros feriados — e um resync
+// periódico (boot do app / botão "Ativar notificações") garante que o ano
+// seguinte fique sempre coberto conforme o tempo passa.
+export async function scheduleBirthdayNotifications(reminder: Reminder) {
+  if (!isNativePlatform() || !reminder.isBirthday) return;
+  await cancelBirthdayNotifications(reminder.id);
+  if (!loadNotificationPrefs().agenda) return;
+
+  const currentYear = new Date().getFullYear();
+  const notifications: { id: number; title: string; body: string; fireDate: Date }[] = [];
+
+  for (const year of [currentYear, currentYear + 1]) {
+    const occurrence = birthdayOccurrence(reminder, year);
+    const age = reminder.birthYear ? year - reminder.birthYear : null;
+    const ageLabel = age ? ` — completa ${age} anos` : "";
+    const dateLabel = occurrence.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" });
+
+    for (const days of BIRTHDAY_ALERT_DAYS) {
+      const fireDate = new Date(occurrence);
+      fireDate.setDate(fireDate.getDate() - days);
+      if (fireDate.getTime() <= Date.now()) continue;
+      notifications.push({
+        id: birthdayAlertId(reminder.id, year, days),
+        title:
+          days === 1
+            ? `Aniversário de ${reminder.title} amanhã!`
+            : `Aniversário de ${reminder.title} em ${days} dias`,
+        body: `${dateLabel}${ageLabel}`,
+        fireDate,
+      });
+    }
+  }
+
+  if (notifications.length === 0) return;
+
+  await safely(() =>
+    LocalNotifications.schedule({
+      notifications: notifications.map((n) => ({
+        id: n.id,
+        title: n.title,
+        body: n.body,
+        schedule: { at: n.fireDate },
+        channelId: "agenda",
+        iconColor: NOTIFICATION_ICON_COLOR,
+      })),
+    })
+  );
+}
+
+export async function cancelBirthdayNotifications(reminderId: string) {
+  if (!isNativePlatform()) return;
+  const currentYear = new Date().getFullYear();
+  const ids: { id: number }[] = [];
+  for (const year of [currentYear - 1, currentYear, currentYear + 1]) {
+    for (const days of BIRTHDAY_ALERT_DAYS) {
+      ids.push({ id: birthdayAlertId(reminderId, year, days) });
+    }
+  }
+  await safely(() => LocalNotifications.cancel({ notifications: ids }));
+}
+
+export async function syncAllBirthdayNotifications(reminders: Reminder[]) {
+  if (!isNativePlatform()) return;
+  for (const reminder of reminders) {
+    if (reminder.isBirthday) await scheduleBirthdayNotifications(reminder);
   }
 }
 

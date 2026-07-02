@@ -55,6 +55,8 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
   const [title, setTitle] = useState("");
   const [time, setTime] = useState("09:00");
   const [type, setType] = useState<ReminderType>("OUTRO");
+  const [isBirthday, setIsBirthday] = useState(false);
+  const [birthYear, setBirthYear] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
@@ -73,8 +75,8 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
   const holidays = useMemo(() => (variant === "agenda" ? getBrazilianHolidays(year) : []), [variant, year]);
 
   const entriesByDay = useMemo(
-    () => buildCalendarEntries(reminders, bills, holidays),
-    [reminders, bills, holidays]
+    () => buildCalendarEntries(reminders, bills, holidays, year),
+    [reminders, bills, holidays, year]
   );
 
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month]);
@@ -103,9 +105,17 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
     e.preventDefault();
     setError(null);
     try {
-      const dateTime = new Date(`${selectedDay}T${time}`);
-      await api.reminders.create({ title, dateTime: dateTime.toISOString(), type });
+      const dateTime = new Date(`${selectedDay}T${isBirthday ? "00:00" : time}`);
+      await api.reminders.create({
+        title,
+        dateTime: dateTime.toISOString(),
+        type: isBirthday ? "OUTRO" : type,
+        isBirthday,
+        birthYear: isBirthday && birthYear ? Number(birthYear) : null,
+      });
       setTitle("");
+      setIsBirthday(false);
+      setBirthYear("");
       await load();
     } catch (err: any) {
       setError(err.message);
@@ -185,6 +195,9 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
                       if (entry.kind === "holiday") {
                         return <span key={entry.id} className="dot dot-feriado" />;
                       }
+                      if (entry.kind === "birthday") {
+                        return <span key={entry.id} className="dot dot-aniversario" />;
+                      }
                       return (
                         <span
                           key={entry.id}
@@ -254,6 +267,25 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
                 </li>
               );
             }
+            if (entry.kind === "birthday") {
+              const age = entry.reminder.birthYear ? entry.year - entry.reminder.birthYear : null;
+              return (
+                <li key={entry.id} className="reminder-item">
+                  <div>
+                    <span className="dot dot-aniversario" />
+                    <strong>🎂 {entry.reminder.title}</strong>
+                    <div className="meta">Aniversário{age ? ` · completa ${age} anos` : ""}</div>
+                  </div>
+                  <button
+                    className="icon-btn"
+                    onClick={() => handleDelete(entry.reminder.id)}
+                    aria-label="Excluir aniversário"
+                  >
+                    <TrashIcon width={18} height={18} />
+                  </button>
+                </li>
+              );
+            }
             return (
               <li key={entry.id} className="reminder-item calendar-bill-note">
                 <Link to="/tesouraria/contas">
@@ -271,28 +303,53 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
 
         <form onSubmit={handleSubmit} className="form day-form">
           <input
-            placeholder="Novo lembrete"
+            placeholder={isBirthday ? "Nome do aniversariante" : "Novo lembrete"}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onFocus={() => playSfx("drop")}
             required
           />
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            onFocus={() => playSfx("drop")}
-            required
-          />
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as ReminderType)}
-            onFocus={() => playSfx("drop")}
-          >
-            <option value="REUNIAO">Reunião</option>
-            <option value="TAREFA">Tarefa</option>
-            <option value="OUTRO">Evento</option>
-          </select>
+          {!isBirthday && (
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              onFocus={() => playSfx("drop")}
+              required
+            />
+          )}
+          {isBirthday && (
+            <input
+              type="number"
+              placeholder="Ano de nasc. (opcional)"
+              value={birthYear}
+              onChange={(e) => setBirthYear(e.target.value)}
+              onFocus={() => playSfx("drop")}
+              min={1900}
+              max={selectedDateObj.getFullYear()}
+            />
+          )}
+          {!isBirthday && (
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as ReminderType)}
+              onFocus={() => playSfx("drop")}
+            >
+              <option value="REUNIAO">Reunião</option>
+              <option value="TAREFA">Tarefa</option>
+              <option value="OUTRO">Evento</option>
+            </select>
+          )}
+          {variant === "agenda" && (
+            <label className="recurring-check">
+              <input
+                type="checkbox"
+                checked={isBirthday}
+                onChange={(e) => setIsBirthday(e.target.checked)}
+              />
+              🎂 Marcar como aniversário (avisa 20, 15, 10, 5 dias antes e na véspera, todo ano)
+            </label>
+          )}
           <button type="submit" className="icon-btn primary" aria-label="Adicionar lembrete">
             <PlusIcon />
           </button>

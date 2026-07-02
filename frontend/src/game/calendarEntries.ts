@@ -8,7 +8,8 @@ export function toDateKey(d: Date): string {
 export type CalendarEntry =
   | { kind: "reminder"; id: string; reminder: Reminder }
   | { kind: "bill"; id: string; bill: Bill; marker: "vence" | "paga" | "recebida" }
-  | { kind: "holiday"; id: string; holiday: Holiday };
+  | { kind: "holiday"; id: string; holiday: Holiday }
+  | { kind: "birthday"; id: string; reminder: Reminder; year: number };
 
 // Contas aparecem no dia do vencimento (pendentes) ou no dia em que foram
 // pagas/recebidas — nunca nos dois ao mesmo tempo.
@@ -22,10 +23,19 @@ function billMarkerDate(bill: Bill): { key: string; marker: "vence" | "paga" | "
   return { key: toDateKey(new Date(bill.dueDate)), marker: "vence" };
 }
 
+// Aniversário projetado num ano específico — dia/mês fixos de dateTime,
+// repetindo todo ano (mesmo raciocínio de getBrazilianHolidays), em vez de
+// aparecer só na data exata em que foi cadastrado.
+function birthdayOccurrenceKey(reminder: Reminder, year: number): string {
+  const original = new Date(reminder.dateTime);
+  return toDateKey(new Date(year, original.getMonth(), original.getDate()));
+}
+
 export function buildCalendarEntries(
   reminders: Reminder[],
   bills: Bill[] = [],
-  holidays: Holiday[] = []
+  holidays: Holiday[] = [],
+  year?: number
 ): Map<string, CalendarEntry[]> {
   const map = new Map<string, CalendarEntry[]>();
 
@@ -35,6 +45,7 @@ export function buildCalendarEntries(
   }
 
   for (const reminder of reminders) {
+    if (reminder.isBirthday) continue;
     push(toDateKey(new Date(reminder.dateTime)), { kind: "reminder", id: reminder.id, reminder });
   }
 
@@ -45,6 +56,18 @@ export function buildCalendarEntries(
 
   for (const holiday of holidays) {
     push(holiday.date, { kind: "holiday", id: `holiday-${holiday.date}`, holiday });
+  }
+
+  if (year !== undefined) {
+    for (const reminder of reminders) {
+      if (!reminder.isBirthday) continue;
+      push(birthdayOccurrenceKey(reminder, year), {
+        kind: "birthday",
+        id: `birthday-${reminder.id}-${year}`,
+        reminder,
+        year,
+      });
+    }
   }
 
   return map;

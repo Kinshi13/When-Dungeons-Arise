@@ -8,9 +8,11 @@ import {
   syncAllReminderNotifications,
   syncAllBillNotifications,
   syncAllHolidayNotifications,
+  syncAllBirthdayNotifications,
   cancelReminderNotification,
   cancelBillNotifications,
   cancelHolidayNotification,
+  cancelBirthdayNotifications,
 } from "../notifications";
 import { getBrazilianHolidays } from "../game/holidays";
 import {
@@ -125,6 +127,7 @@ export default function Settings() {
     await syncAllReminderNotifications(reminders);
     await syncAllBillNotifications(bills);
     await syncAllHolidayNotifications(upcomingHolidays());
+    await syncAllBirthdayNotifications(reminders);
     setMessage("Notificações ativadas! Lembretes e contas futuras serão avisados no horário.");
   }
 
@@ -136,8 +139,15 @@ export default function Settings() {
 
     if (screen === "agenda") {
       const reminders = await api.reminders.list();
-      if (enabled) await syncAllReminderNotifications(reminders);
-      else for (const r of reminders) await cancelReminderNotification(r.id);
+      if (enabled) {
+        await syncAllReminderNotifications(reminders);
+        await syncAllBirthdayNotifications(reminders);
+      } else {
+        for (const r of reminders) {
+          if (r.isBirthday) await cancelBirthdayNotifications(r.id);
+          else await cancelReminderNotification(r.id);
+        }
+      }
     } else if (screen === "contas") {
       const bills = await api.bills.list();
       if (enabled) await syncAllBillNotifications(bills);

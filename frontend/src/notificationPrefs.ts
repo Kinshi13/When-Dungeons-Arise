@@ -39,7 +39,7 @@ export const NOTIFICATION_SCREEN_LABEL: Record<NotificationScreen, string> = {
 };
 
 export const NOTIFICATION_SCREEN_HINT: Record<NotificationScreen, string> = {
-  agenda: "Avisa no horário marcado de cada evento, reunião ou tarefa.",
+  agenda: "Avisa no horário marcado de cada evento, reunião ou tarefa, e 20/15/10/5 dias e véspera de aniversários.",
   calendario: "Avisa na véspera dos feriados nacionais.",
   contas: "Avisa 10, 5 e 1 dia antes do vencimento de contas e assinaturas.",
   financas: "Avisa quando os gastos da semana ou do mês ficarem bem acima do normal.",
