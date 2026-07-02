@@ -94,12 +94,22 @@ export default function GuildReception() {
     () => openClock("temporizador")
   );
 
-  // Deslizar pra cima abre o Relógio, pra baixo abre o Clima — o gesto
-  // reverso (fechar) mora em cada tela (ver ClockScreen/WeatherScreen), que
-  // capturam o próprio toque por serem overlays em tela cheia.
+  // Deslizar pra cima abre o Relógio, pra baixo abre o Clima — o gesto de
+  // fechar mora em cada tela (ver ClockScreen/WeatherScreen). Como as duas
+  // são portais (createPortal), o toque nelas ainda "borbulha" por essa
+  // Recepção na ÁRVORE REACT (React segue a árvore de componentes, não o DOM,
+  // pra eventos sintéticos) mesmo saindo visualmente por cima de tudo — sem
+  // essa checagem, um gesto qualquer dentro de uma delas (fora do cabeçalho,
+  // que já intercepta com stopPropagation) acabava sendo lido por esses
+  // callbacks também, abrindo a tela irmã por engano. Só abre uma tela nova
+  // se nenhuma das duas já estiver aberta.
   const verticalSwipe = useVerticalSwipe(
-    () => openClock("despertador"),
     () => {
+      if (clockOpen || weatherOpen) return;
+      openClock("despertador");
+    },
+    () => {
+      if (clockOpen || weatherOpen) return;
       playSfx("coin");
       setWeatherOpen(true);
     }
