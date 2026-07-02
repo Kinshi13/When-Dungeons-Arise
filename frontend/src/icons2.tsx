@@ -83,14 +83,15 @@ export function TabBookIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-// Diário — caderno com caneta
+// Diário — caderno com fita de marcador (em vez da pena antiga, mais
+// combinando com a vibe aconchegante Lo-fi do que um acessório de pena/tinta).
 export function TabDiaryIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>
       <path d="M5 3.5h11a2 2 0 0 1 2 2v14a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2Z" fill="var(--reuniao)" />
       <rect x="8" y="8.2" width="6.4" height="1.6" fill="var(--surface)" />
       <rect x="8" y="11.6" width="6.4" height="1.6" fill="var(--surface)" />
-      <path d="M18.4 5 20.5 2.8" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M10 3.5h3v4.5l-1.5-1.2-1.5 1.2Z" fill="var(--accent)" />
     </svg>
   );
 }
