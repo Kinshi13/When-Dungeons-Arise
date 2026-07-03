@@ -30,6 +30,15 @@ create table if not exists public.reminders (
 create index if not exists reminders_user_updated_idx
   on public.reminders (user_id, updated_at);
 
+-- GRANT é uma camada ANTES da RLS: sem isso o Postgres barra o acesso à
+-- tabela inteira pro papel "authenticated" (o que o PostgREST usa em nome de
+-- qualquer usuário logado), e a RLS abaixo nunca chega a ser avaliada — o
+-- erro nesse caso é "permission denied for table", não algo sobre a policy.
+-- Sem grant de delete (de propósito): exclusão sempre vira update (deleted
+-- = true), pelo motivo do tombstone explicado abaixo.
+grant usage on schema public to authenticated;
+grant select, insert, update on public.reminders to authenticated;
+
 alter table public.reminders enable row level security;
 
 drop policy if exists "reminders_select_own" on public.reminders;
