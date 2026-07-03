@@ -33,20 +33,20 @@ import { getBrazilianHolidays } from './game/holidays'
 import { syncReminderWidget, syncCalendarWidget, syncCurrencyWidgetPair } from './widgetBridge'
 import { getCurrencyWidgetPair } from './currencyWidgetStore'
 import { isSyncAvailable } from './auth'
-import { syncRemindersNow } from './syncReminders'
+import { syncAllNow } from './sync'
 import { SettingsProvider } from './contexts/SettingsContext'
 import './index.css'
 import App from './App.tsx'
 
-// Sincronização entre aparelhos (Fase 1: só Lembretes) — roda em qualquer
-// plataforma (não só nativo), sozinha se não estiver configurada/logada
-// (ver syncRemindersNow em syncReminders.ts). Uma vez ao abrir o app e
-// depois a cada 2min enquanto ficar aberto — não precisa de WebSocket/
-// realtime nessa fase, um intervalo simples já resolve.
+// Sincronização entre aparelhos (Fase 2: Lembretes, Notas, Contas, Despesas,
+// Carteira e Alarmes) — roda em qualquer plataforma (não só nativo), sozinha
+// se não estiver configurada/logada (ver syncAllNow em sync.ts). Uma vez ao
+// abrir o app e depois a cada 2min enquanto ficar aberto — não precisa de
+// WebSocket/realtime nessa fase, um intervalo simples já resolve.
 if (isSyncAvailable()) {
-  syncRemindersNow()
+  syncAllNow()
   setInterval(() => {
-    syncRemindersNow()
+    syncAllNow()
   }, 2 * 60 * 1000)
 }
 

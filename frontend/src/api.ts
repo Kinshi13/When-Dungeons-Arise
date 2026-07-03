@@ -15,6 +15,10 @@ import {
 import { compareWeek, compareMonth } from "./game/financeAnalysis";
 import { syncReminderWidget, syncCalendarWidget } from "./widgetBridge";
 import { syncRemindersNow } from "./syncReminders";
+import { syncNotesNow } from "./syncNotes";
+import { syncExpensesNow } from "./syncExpenses";
+import { syncBillsNow } from "./syncBills";
+import { syncWalletNow } from "./syncWallet";
 
 export type ReminderType = "REUNIAO" | "TAREFA" | "OUTRO";
 export type Priority = "BAIXA" | "MEDIA" | "ALTA";
@@ -58,6 +62,10 @@ export interface Note {
   items?: ChecklistItem[];
   createdAt: string;
   updatedAt: string;
+  // Tombstone de exclusão pra sincronização entre aparelhos — mesmo motivo
+  // do Reminder.deleted (ver comentário lá): apagar de verdade faria a
+  // exclusão "ressuscitar" ao sincronizar antes do outro aparelho puxá-la.
+  deleted?: boolean;
 }
 
 export interface Expense {
@@ -71,6 +79,8 @@ export interface Expense {
   // Marcado na hora do lançamento — gasto supérfluo, candidato a cortar do
   // orçamento. Usado pela aba Análises pra calcular potencial de economia.
   superficial?: boolean;
+  updatedAt?: string;
+  deleted?: boolean;
 }
 
 // Resumo diário de gastos — recalculado automaticamente sempre que um gasto
@@ -121,6 +131,8 @@ export interface Bill {
   paidDate?: string | null;
   recurring: boolean;
   recurrenceId?: string | null;
+  updatedAt?: string;
+  deleted?: boolean;
 }
 
 // Todos os dados ficam salvos no próprio dispositivo (localStorage do WebView).
@@ -131,16 +143,17 @@ const expenseTable = table<Expense>("expenses");
 const billTable = table<Bill>("bills");
 const documentTable = table<DocumentMeta>("documents");
 const readingProgressTable = table<ReadingProgress>("reading-progress");
-const dailySummaryTable = table<DailySummary>("daily-summaries");
 
 // Carteira — não é uma lista, é um único valor base ajustado manualmente pelo
 // usuário (mesmo padrão de storage simples do SettingsContext), então fica
-// fora do helper table().
-const WALLET_KEY = "lembretes-app:wallet";
+// fora do helper table(). Exportado (chave e tipo) pra syncWallet.ts conseguir
+// ler/escrever o mesmo localStorage sem precisar de uma tabela de verdade.
+export const WALLET_KEY = "lembretes-app:wallet";
 
-interface WalletBase {
+export interface WalletBase {
   baseAmount: number;
   baseSetAt: string;
+  updatedAt?: string;
 }
 
 function loadWalletBase(): WalletBase {
@@ -158,58 +171,69 @@ function dateKeyOf(iso: string): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function recomputeDailySummary(dateKey: string) {
-  const dayExpenses = expenseTable.list().filter((e) => dateKeyOf(e.date) === dateKey);
-  if (dayExpenses.length === 0) {
-    dailySummaryTable.remove(dateKey);
-    return;
-  }
-  const superficialItems = dayExpenses.filter((e) => e.superficial);
-  const summary: DailySummary = {
-    id: dateKey,
-    date: dateKey,
-    total: dayExpenses.reduce((sum, e) => sum + e.amount, 0),
-    count: dayExpenses.length,
-    superficialTotal: superficialItems.reduce((sum, e) => sum + e.amount, 0),
-    superficialCount: superficialItems.length,
-    updatedAt: new Date().toISOString(),
-  };
-  if (dailySummaryTable.get(dateKey)) {
-    dailySummaryTable.update(dateKey, summary);
-  } else {
-    dailySummaryTable.insert(summary);
-  }
-}
-
-// Migração de primeira execução — preenche o resumo diário pra quem já tinha
-// gastos lançados antes dessa função existir. Depois disso, os próprios
-// create/remove de despesa mantêm tudo em dia sozinhos.
-function ensureDailySummariesBackfilled() {
-  if (dailySummaryTable.list().length > 0) return;
-  const dateKeys = new Set(expenseTable.list().map((e) => dateKeyOf(e.date)));
-  for (const key of dateKeys) recomputeDailySummary(key);
-}
-ensureDailySummariesBackfilled();
-
-// Lembretes "vivos" — esconde os apagados (tombstone, ver Reminder.deleted
-// em cima) de tudo que não é a própria sincronização: listagem, widgets,
-// resumo da Agenda etc.
+// "Vivos" — esconde os apagados (tombstone, ver *.deleted nas interfaces em
+// cima) de tudo que não é a própria sincronização: listagem, widgets,
+// resumo diário/financeiro etc.
 function activeReminders(): Reminder[] {
   return reminderTable.list().filter((r) => !r.deleted);
+}
+function activeNotes(): Note[] {
+  return noteTable.list().filter((n) => !n.deleted);
+}
+function activeExpenses(): Expense[] {
+  return expenseTable.list().filter((e) => !e.deleted);
+}
+function activeBills(): Bill[] {
+  return billTable.list().filter((b) => !b.deleted);
+}
+
+// DailySummary é só uma projeção de Expense — sempre recalculada na hora a
+// partir das despesas ativas (nunca fica desatualizada, e não precisa
+// existir como tabela própria pra sincronizar entre aparelhos).
+function computeDailySummaries(params?: { from?: string; to?: string }): DailySummary[] {
+  let items = activeExpenses();
+  if (params?.from) items = items.filter((e) => e.date >= params.from!);
+  if (params?.to) items = items.filter((e) => e.date <= params.to!);
+
+  const byDate = new Map<string, Expense[]>();
+  for (const e of items) {
+    const key = dateKeyOf(e.date);
+    if (!byDate.has(key)) byDate.set(key, []);
+    byDate.get(key)!.push(e);
+  }
+
+  return [...byDate.entries()].map(([date, dayExpenses]) => {
+    const superficialItems = dayExpenses.filter((e) => e.superficial);
+    return {
+      id: date,
+      date,
+      total: dayExpenses.reduce((sum, e) => sum + e.amount, 0),
+      count: dayExpenses.length,
+      superficialTotal: superficialItems.reduce((sum, e) => sum + e.amount, 0),
+      superficialCount: superficialItems.length,
+      updatedAt: new Date().toISOString(),
+    };
+  });
 }
 
 // O widget de Calendário combina lembretes + contas, então qualquer mutação
 // em um dos dois precisa recalcular o mini calendário do mês.
 function syncCalendarWidgetFromTables() {
-  return syncCalendarWidget(activeReminders(), billTable.list());
+  return syncCalendarWidget(activeReminders(), activeBills());
 }
 
-// Dispara a sincronização em segundo plano após qualquer mutação de
-// lembrete — sem esperar (não deve travar a UI) e sem quebrar nada se a
-// sincronização não estiver configurada/logada (syncRemindersNow já resolve
-// isso sozinho, ver syncReminders.ts).
-function triggerReminderSync() {
+// Dispara a sincronização em segundo plano após qualquer mutação — sem
+// esperar (não deve travar a UI) e sem quebrar nada se a sincronização não
+// estiver configurada/logada (cada syncXNow resolve isso sozinho, ver
+// syncEngine.ts). Sincroniza tudo (não só a tabela que mudou) porque é
+// barato o bastante nesse volume de dados e mantém só um caminho pra
+// entender, em vez de um gatilho seletivo por tabela.
+function triggerSync() {
   void syncRemindersNow();
+  void syncNotesNow();
+  void syncExpensesNow();
+  void syncBillsNow();
+  void syncWalletNow();
 }
 
 export const api = {
@@ -238,7 +262,7 @@ export const api = {
       else await scheduleReminderNotification(reminder);
       await syncReminderWidget(activeReminders());
       await syncCalendarWidgetFromTables();
-      triggerReminderSync();
+      triggerSync();
       return reminder;
     },
     update: async (id: string, data: Partial<Reminder>) => {
@@ -248,7 +272,7 @@ export const api = {
       else await scheduleReminderNotification(updated);
       await syncReminderWidget(activeReminders());
       await syncCalendarWidgetFromTables();
-      triggerReminderSync();
+      triggerSync();
       return updated;
     },
     complete: async (id: string) => {
@@ -259,7 +283,7 @@ export const api = {
       else await cancelReminderNotification(id);
       await syncReminderWidget(activeReminders());
       await syncCalendarWidgetFromTables();
-      triggerReminderSync();
+      triggerSync();
       return updated;
     },
     remove: async (id: string) => {
@@ -273,13 +297,13 @@ export const api = {
       else await cancelReminderNotification(id);
       await syncReminderWidget(activeReminders());
       await syncCalendarWidgetFromTables();
-      triggerReminderSync();
+      triggerSync();
     },
   },
   notes: {
     list: async (type?: NoteType) => {
       // Notas criadas antes da distinção Nota/Lista não têm "type" salvo — tratamos como NOTA.
-      const items = type ? noteTable.list().filter((n) => (n.type ?? "NOTA") === type) : noteTable.list();
+      const items = type ? activeNotes().filter((n) => (n.type ?? "NOTA") === type) : activeNotes();
       return [...items].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
     },
     create: async (data: { type?: NoteType; title: string; content?: string; items?: ChecklistItem[] }) => {
@@ -292,23 +316,29 @@ export const api = {
         items: data.items ?? (data.type === "LISTA" ? [] : undefined),
         createdAt: now,
         updatedAt: now,
+        deleted: false,
       };
       noteTable.insert(note);
+      triggerSync();
       return note;
     },
     update: async (id: string, data: Partial<Pick<Note, "title" | "content" | "items">>) => {
       const updated = noteTable.update(id, { ...data, updatedAt: new Date().toISOString() });
       if (!updated) throw new Error("Nota não encontrada");
+      triggerSync();
       return updated;
     },
     remove: async (id: string) => {
-      noteTable.remove(id);
+      // Tombstone — mesmo motivo do Reminder.deleted (ver comentário lá).
+      noteTable.update(id, { deleted: true, updatedAt: new Date().toISOString() });
+      triggerSync();
     },
     addItem: async (id: string, text: string) => {
       const note = noteTable.get(id);
       if (!note) throw new Error("Lista não encontrada");
       const items = [...(note.items ?? []), { id: createId(), text, done: false }];
       const updated = noteTable.update(id, { items, updatedAt: new Date().toISOString() });
+      triggerSync();
       return updated!;
     },
     toggleItem: async (id: string, itemId: string) => {
@@ -316,6 +346,7 @@ export const api = {
       if (!note) throw new Error("Lista não encontrada");
       const items = (note.items ?? []).map((item) => (item.id === itemId ? { ...item, done: !item.done } : item));
       const updated = noteTable.update(id, { items, updatedAt: new Date().toISOString() });
+      triggerSync();
       return updated!;
     },
     removeItem: async (id: string, itemId: string) => {
@@ -323,12 +354,13 @@ export const api = {
       if (!note) throw new Error("Lista não encontrada");
       const items = (note.items ?? []).filter((item) => item.id !== itemId);
       const updated = noteTable.update(id, { items, updatedAt: new Date().toISOString() });
+      triggerSync();
       return updated!;
     },
   },
   expenses: {
     list: async (params?: { from?: string; to?: string }) => {
-      let items = expenseTable.list();
+      let items = activeExpenses();
       if (params?.from) items = items.filter((e) => e.date >= params.from!);
       if (params?.to) items = items.filter((e) => e.date <= params.to!);
       return items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -341,6 +373,7 @@ export const api = {
       superficial?: boolean;
     }) => {
       const date = data.date ?? new Date().toISOString();
+      const now = new Date().toISOString();
       let created: Expense[];
 
       if (data.installments && data.installments > 1) {
@@ -348,7 +381,7 @@ export const api = {
           { amount: data.amount, description: data.description, date, superficial: data.superficial },
           data.installments,
           createId
-        );
+        ).map((expense) => ({ ...expense, updatedAt: now, deleted: false }));
         for (const expense of created) expenseTable.insert(expense);
       } else {
         const expense: Expense = {
@@ -357,36 +390,33 @@ export const api = {
           description: data.description,
           date,
           superficial: data.superficial,
+          updatedAt: now,
+          deleted: false,
         };
         expenseTable.insert(expense);
         created = [expense];
       }
 
-      for (const key of new Set(created.map((e) => dateKeyOf(e.date)))) recomputeDailySummary(key);
-
-      const summaries = dailySummaryTable.list();
+      const summaries = computeDailySummaries();
       const today = new Date();
       await checkOverspendingAndNotify(compareWeek(summaries, today), compareMonth(summaries, today));
 
+      triggerSync();
       return created[0];
     },
     remove: async (id: string) => {
-      const expense = expenseTable.get(id);
-      expenseTable.remove(id);
-      if (expense) recomputeDailySummary(dateKeyOf(expense.date));
+      // Tombstone — mesmo motivo do Reminder.deleted (ver comentário lá).
+      expenseTable.update(id, { deleted: true, updatedAt: new Date().toISOString() });
+      triggerSync();
     },
   },
   dailySummaries: {
-    list: async (params?: { from?: string; to?: string }) => {
-      let items = dailySummaryTable.list();
-      if (params?.from) items = items.filter((s) => s.date >= params.from!);
-      if (params?.to) items = items.filter((s) => s.date <= params.to!);
-      return items.sort((a, b) => (a.date < b.date ? 1 : -1));
-    },
+    list: async (params?: { from?: string; to?: string }) =>
+      computeDailySummaries(params).sort((a, b) => (a.date < b.date ? 1 : -1)),
   },
   bills: {
     list: async () =>
-      [...billTable.list()].sort((a, b) => {
+      [...activeBills()].sort((a, b) => {
         const aSettled = a.status !== "PENDENTE";
         const bSettled = b.status !== "PENDENTE";
         if (aSettled !== bSettled) return aSettled ? 1 : -1;
@@ -413,24 +443,28 @@ export const api = {
         paidDate: null,
         recurring: data.recurring ?? false,
         recurrenceId: null,
+        updatedAt: new Date().toISOString(),
+        deleted: false,
       };
       billTable.insert(bill);
       await scheduleBillNotifications(bill);
 
       if (bill.recurring) {
         for (const occurrence of buildRecurringOccurrences(bill, createId)) {
-          billTable.insert(occurrence);
-          await scheduleBillNotifications(occurrence);
+          const stamped = { ...occurrence, updatedAt: new Date().toISOString(), deleted: false };
+          billTable.insert(stamped);
+          await scheduleBillNotifications(stamped);
         }
       }
       await syncCalendarWidgetFromTables();
+      triggerSync();
       return bill;
     },
     update: async (id: string, data: Partial<Bill>) => {
       const existing = billTable.get(id);
       if (!existing) throw new Error("Conta não encontrada");
 
-      const patch: Partial<Bill> = { ...data };
+      const patch: Partial<Bill> = { ...data, updatedAt: new Date().toISOString() };
       if (data.status && data.status !== "PENDENTE" && existing.status === "PENDENTE") {
         patch.paidDate = data.paidDate ?? new Date().toISOString();
       } else if (data.status === "PENDENTE") {
@@ -448,17 +482,21 @@ export const api = {
 
       if (data.recurring && !existing.recurring) {
         for (const occurrence of buildRecurringOccurrences(updated, createId)) {
-          billTable.insert(occurrence);
-          await scheduleBillNotifications(occurrence);
+          const stamped = { ...occurrence, updatedAt: new Date().toISOString(), deleted: false };
+          billTable.insert(stamped);
+          await scheduleBillNotifications(stamped);
         }
       }
       await syncCalendarWidgetFromTables();
+      triggerSync();
       return updated;
     },
     remove: async (id: string) => {
-      billTable.remove(id);
+      // Tombstone — mesmo motivo do Reminder.deleted (ver comentário lá).
+      billTable.update(id, { deleted: true, updatedAt: new Date().toISOString() });
       await cancelBillNotifications(id);
       await syncCalendarWidgetFromTables();
+      triggerSync();
     },
   },
   wallet: {
@@ -469,16 +507,17 @@ export const api = {
     // porque ambos os fluxos já passam por api.expenses.create/api.bills.update.
     getBase: async (): Promise<WalletBase> => loadWalletBase(),
     setBase: async (amount: number): Promise<WalletBase> => {
-      const base: WalletBase = { baseAmount: amount, baseSetAt: new Date().toISOString() };
+      const base: WalletBase = { baseAmount: amount, baseSetAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       localStorage.setItem(WALLET_KEY, JSON.stringify(base));
+      triggerSync();
       return base;
     },
     getBalance: async (): Promise<number> => {
       const base = loadWalletBase();
-      const expensesSince = expenseTable.list().filter((e) => e.date >= base.baseSetAt);
-      const settledBillsSince = billTable
-        .list()
-        .filter((b) => b.status !== "PENDENTE" && b.paidDate && b.paidDate >= base.baseSetAt);
+      const expensesSince = activeExpenses().filter((e) => e.date >= base.baseSetAt);
+      const settledBillsSince = activeBills().filter(
+        (b) => b.status !== "PENDENTE" && b.paidDate && b.paidDate >= base.baseSetAt
+      );
 
       const expenseTotal = expensesSince.reduce((sum, e) => sum + e.amount, 0);
       const billsOut = settledBillsSince

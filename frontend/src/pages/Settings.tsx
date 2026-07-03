@@ -36,7 +36,8 @@ import { CURRENCY_PAIRS, getCurrencyWidgetPair, setCurrencyWidgetPair } from "..
 import { syncCurrencyWidgetPair } from "../widgetBridge";
 import { TrashIcon, PlusIcon, MinusIcon } from "../icons";
 import { isSyncAvailable, getSession, signIn, signUp, signOut, onAuthChanged, type Session } from "../auth";
-import { syncRemindersNow, getLastSyncedAt } from "../syncReminders";
+import { syncAllNow } from "../sync";
+import { getLastSyncedAt } from "../syncEngine";
 
 const PUZZLE_LEVEL_LABEL: Record<PuzzleLevel, string> = {
   "2x2": "Fácil (2x2)",
@@ -138,7 +139,7 @@ export default function Settings() {
   async function handleSyncNow() {
     setSyncBusy(true);
     setSyncStatus(null);
-    const result = await syncRemindersNow();
+    const result = await syncAllNow();
     setSyncBusy(false);
     if (result.status === "ok") {
       setSyncStatus(`Sincronizado: ${result.pushed} enviado(s), ${result.pulled} recebido(s).`);
@@ -268,15 +269,16 @@ export default function Settings() {
             </div>
             {syncStatus && <p className="hint">{syncStatus}</p>}
             <p className="hint">
-              Por enquanto só os Lembretes da Agenda sincronizam entre aparelhos — as outras
-              telas continuam só locais.
+              Sincronizam entre aparelhos: Lembretes da Agenda, Notas/Listas, Contas, Despesas,
+              Carteira e Alarmes. Documentos da Biblioteca e papel de parede ainda ficam só
+              neste aparelho.
             </p>
           </>
         ) : (
           <>
             <p className="hint">
-              Entre com sua conta pra sincronizar seus Lembretes da Agenda entre este aparelho e
-              o app de computador.
+              Entre com sua conta pra sincronizar seus dados entre este aparelho e o app de
+              computador.
             </p>
             <div className="filters">
               <button

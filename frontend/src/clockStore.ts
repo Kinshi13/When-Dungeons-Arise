@@ -1,5 +1,6 @@
 import { table, createId } from "./storage";
 import { saveFile, loadFile, deleteFile } from "./blobStore";
+import { syncAlarmsNow } from "./syncAlarms";
 
 // Relógio — despertadores, cronômetro e temporizador. Tudo local, como o
 // resto do app. O despertador funciona em duas camadas:
@@ -17,6 +18,11 @@ export interface Alarm {
   // Última data (YYYY-MM-DD) em que este alarme tocou e foi desligado (ou
   // marcado como perdido) — evita tocar duas vezes no mesmo dia.
   lastHandledDate?: string | null;
+  // Sincronização entre aparelhos — mesmo padrão de Reminder (ver api.ts):
+  // updatedAt pra "quem mudou por último vence", deleted como tombstone em
+  // vez de apagar de verdade.
+  updatedAt?: string;
+  deleted?: boolean;
 }
 
 const alarmTable = table<Alarm>("alarms");
@@ -30,18 +36,42 @@ function todayKey(now: Date): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
+function activeAlarms(): Alarm[] {
+  return alarmTable.list().filter((a) => !a.deleted);
+}
+
+// Dispara a sincronização em segundo plano — sem esperar, sem quebrar nada
+// se não estiver configurada/logada (ver syncAlarms.ts).
+function triggerAlarmSync() {
+  void syncAlarmsNow();
+}
+
 export const alarms = {
   list(): Alarm[] {
-    return [...alarmTable.list()].sort((a, b) => (a.time < b.time ? -1 : 1));
+    return [...activeAlarms()].sort((a, b) => (a.time < b.time ? -1 : 1));
   },
   create(time: string, label?: string): Alarm {
-    return alarmTable.insert({ id: createId(), time, label, enabled: true, lastHandledDate: null });
+    const created = alarmTable.insert({
+      id: createId(),
+      time,
+      label,
+      enabled: true,
+      lastHandledDate: null,
+      updatedAt: new Date().toISOString(),
+      deleted: false,
+    });
+    triggerAlarmSync();
+    return created;
   },
   update(id: string, patch: Partial<Alarm>): Alarm | undefined {
-    return alarmTable.update(id, patch);
+    const updated = alarmTable.update(id, { ...patch, updatedAt: new Date().toISOString() });
+    triggerAlarmSync();
+    return updated;
   },
   remove(id: string) {
-    alarmTable.remove(id);
+    // Tombstone — mesmo motivo do Reminder.deleted (ver comentário lá).
+    alarmTable.update(id, { deleted: true, updatedAt: new Date().toISOString() });
+    triggerAlarmSync();
   },
 };
 
@@ -49,7 +79,7 @@ export const alarms = {
 // fora da janela são marcados como perdidos de passagem.
 export function getDueAlarm(now: Date): Alarm | null {
   const today = todayKey(now);
-  for (const alarm of alarmTable.list()) {
+  for (const alarm of activeAlarms()) {
     if (!alarm.enabled || alarm.lastHandledDate === today) continue;
     const [h, m] = alarm.time.split(":").map(Number);
     const scheduled = new Date(now);
