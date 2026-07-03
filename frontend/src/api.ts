@@ -14,6 +14,7 @@ import {
 } from "./notifications";
 import { compareWeek, compareMonth } from "./game/financeAnalysis";
 import { syncReminderWidget, syncCalendarWidget } from "./widgetBridge";
+import { syncRemindersNow } from "./syncReminders";
 
 export type ReminderType = "REUNIAO" | "TAREFA" | "OUTRO";
 export type Priority = "BAIXA" | "MEDIA" | "ALTA";
@@ -32,6 +33,13 @@ export interface Reminder {
   // ver scheduleBirthdayNotifications em notifications.ts.
   isBirthday?: boolean;
   birthYear?: number | null;
+  // Usados pela sincronização entre aparelhos (ver syncReminders.ts) —
+  // updatedAt decide qual versão "vence" quando os dois lados mudaram a
+  // mesma linha; deleted é um tombstone (marca como apagado em vez de
+  // remover de verdade), senão um aparelho que ainda não puxou a exclusão
+  // ressuscitaria o lembrete ao empurrar sua própria cópia de volta.
+  updatedAt?: string;
+  deleted?: boolean;
 }
 
 export type NoteType = "NOTA" | "LISTA";
@@ -183,16 +191,31 @@ function ensureDailySummariesBackfilled() {
 }
 ensureDailySummariesBackfilled();
 
+// Lembretes "vivos" — esconde os apagados (tombstone, ver Reminder.deleted
+// em cima) de tudo que não é a própria sincronização: listagem, widgets,
+// resumo da Agenda etc.
+function activeReminders(): Reminder[] {
+  return reminderTable.list().filter((r) => !r.deleted);
+}
+
 // O widget de Calendário combina lembretes + contas, então qualquer mutação
 // em um dos dois precisa recalcular o mini calendário do mês.
 function syncCalendarWidgetFromTables() {
-  return syncCalendarWidget(reminderTable.list(), billTable.list());
+  return syncCalendarWidget(activeReminders(), billTable.list());
+}
+
+// Dispara a sincronização em segundo plano após qualquer mutação de
+// lembrete — sem esperar (não deve travar a UI) e sem quebrar nada se a
+// sincronização não estiver configurada/logada (syncRemindersNow já resolve
+// isso sozinho, ver syncReminders.ts).
+function triggerReminderSync() {
+  void syncRemindersNow();
 }
 
 export const api = {
   reminders: {
     list: async () =>
-      [...reminderTable.list()].sort(
+      [...activeReminders()].sort(
         (a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()
       ),
     create: async (data: Partial<Reminder>) => {
@@ -207,40 +230,50 @@ export const api = {
         fromNote: data.fromNote ?? false,
         isBirthday: data.isBirthday ?? false,
         birthYear: data.birthYear ?? null,
+        updatedAt: new Date().toISOString(),
+        deleted: false,
       };
       reminderTable.insert(reminder);
       if (reminder.isBirthday) await scheduleBirthdayNotifications(reminder);
       else await scheduleReminderNotification(reminder);
-      await syncReminderWidget(reminderTable.list());
+      await syncReminderWidget(activeReminders());
       await syncCalendarWidgetFromTables();
+      triggerReminderSync();
       return reminder;
     },
     update: async (id: string, data: Partial<Reminder>) => {
-      const updated = reminderTable.update(id, data);
+      const updated = reminderTable.update(id, { ...data, updatedAt: new Date().toISOString() });
       if (!updated) throw new Error("Lembrete não encontrado");
       if (updated.isBirthday) await scheduleBirthdayNotifications(updated);
       else await scheduleReminderNotification(updated);
-      await syncReminderWidget(reminderTable.list());
+      await syncReminderWidget(activeReminders());
       await syncCalendarWidgetFromTables();
+      triggerReminderSync();
       return updated;
     },
     complete: async (id: string) => {
       const existing = reminderTable.get(id);
-      const updated = reminderTable.update(id, { done: true });
+      const updated = reminderTable.update(id, { done: true, updatedAt: new Date().toISOString() });
       if (!updated) throw new Error("Lembrete não encontrado");
       if (existing?.isBirthday) await cancelBirthdayNotifications(id);
       else await cancelReminderNotification(id);
-      await syncReminderWidget(reminderTable.list());
+      await syncReminderWidget(activeReminders());
       await syncCalendarWidgetFromTables();
+      triggerReminderSync();
       return updated;
     },
     remove: async (id: string) => {
       const existing = reminderTable.get(id);
-      reminderTable.remove(id);
+      // Tombstone (marca como apagado) em vez de remover a linha de verdade —
+      // é o que permite essa exclusão ser sincronizada pros outros aparelhos
+      // (ver syncReminders.ts). Um hard delete aqui faria a sincronização não
+      // ter nada pra "empurrar", e o lembrete voltaria na próxima sincronização.
+      reminderTable.update(id, { deleted: true, updatedAt: new Date().toISOString() });
       if (existing?.isBirthday) await cancelBirthdayNotifications(id);
       else await cancelReminderNotification(id);
-      await syncReminderWidget(reminderTable.list());
+      await syncReminderWidget(activeReminders());
       await syncCalendarWidgetFromTables();
+      triggerReminderSync();
     },
   },
   notes: {

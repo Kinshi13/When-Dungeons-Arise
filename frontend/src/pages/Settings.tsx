@@ -35,6 +35,8 @@ import {
 import { CURRENCY_PAIRS, getCurrencyWidgetPair, setCurrencyWidgetPair } from "../currencyWidgetStore";
 import { syncCurrencyWidgetPair } from "../widgetBridge";
 import { TrashIcon, PlusIcon, MinusIcon } from "../icons";
+import { isSyncAvailable, getSession, signIn, signUp, signOut, onAuthChanged, type Session } from "../auth";
+import { syncRemindersNow, getLastSyncedAt } from "../syncReminders";
 
 const PUZZLE_LEVEL_LABEL: Record<PuzzleLevel, string> = {
   "2x2": "Fácil (2x2)",
@@ -59,6 +61,14 @@ export default function Settings() {
   const [monitoredApps, setMonitoredApps] = useState<MonitoredApp[]>([]);
   const [newAppName, setNewAppName] = useState("");
   const [newPackageName, setNewPackageName] = useState("");
+  const [session, setSession] = useState<Session | null>(null);
+  const [authMode, setAuthMode] = useState<"entrar" | "criar">("entrar");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [syncBusy, setSyncBusy] = useState(false);
   const {
     sfxVolume,
     setSfxVolume,
@@ -94,6 +104,50 @@ export default function Settings() {
     refreshMonitoredApps();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!isSyncAvailable()) return;
+    getSession().then(setSession);
+    return onAuthChanged(setSession);
+  }, []);
+
+  async function handleAuthSubmit(e: FormEvent) {
+    e.preventDefault();
+    setAuthError(null);
+    setAuthBusy(true);
+    const errorMessage =
+      authMode === "entrar" ? await signIn(authEmail, authPassword) : await signUp(authEmail, authPassword);
+    setAuthBusy(false);
+    if (errorMessage) {
+      setAuthError(errorMessage);
+      return;
+    }
+    setAuthPassword("");
+    if (authMode === "criar") {
+      setSyncStatus("Conta criada! Verifique seu e-mail se pedir confirmação, depois entre normalmente.");
+    } else {
+      handleSyncNow();
+    }
+  }
+
+  async function handleSignOut() {
+    await signOut();
+    setSyncStatus(null);
+  }
+
+  async function handleSyncNow() {
+    setSyncBusy(true);
+    setSyncStatus(null);
+    const result = await syncRemindersNow();
+    setSyncBusy(false);
+    if (result.status === "ok") {
+      setSyncStatus(`Sincronizado: ${result.pushed} enviado(s), ${result.pulled} recebido(s).`);
+    } else if (result.status === "not-signed-in") {
+      setSyncStatus("Entre na sua conta pra sincronizar.");
+    } else if (result.status === "error") {
+      setSyncStatus("Não consegui sincronizar agora — tente de novo em instantes.");
+    }
+  }
 
   function updateApp(app: MonitoredApp, patch: Partial<MonitoredApp>) {
     const updated = { ...app, ...patch };
@@ -189,6 +243,81 @@ export default function Settings() {
           outro dispositivo. Os dados ficam guardados até você desinstalar o app ou limpar os
           dados dele nas configurações do Android.
         </p>
+      </section>
+
+      <section className="settings-section">
+        <h2>Conta e sincronização</h2>
+        {!isSyncAvailable() ? (
+          <p className="hint">
+            Sincronização entre aparelhos ainda não configurada nesta versão — seus dados
+            continuam só neste aparelho, como sempre.
+          </p>
+        ) : session ? (
+          <>
+            <p className="hint">Conectado como {session.user.email}.</p>
+            <p className="hint">
+              {getLastSyncedAt()
+                ? `Última sincronização: ${new Date(getLastSyncedAt()!).toLocaleString("pt-BR")}.`
+                : "Ainda não sincronizou nesta sessão."}
+            </p>
+            <div className="filters">
+              <button onClick={handleSyncNow} disabled={syncBusy}>
+                {syncBusy ? "Sincronizando…" : "Sincronizar agora"}
+              </button>
+              <button onClick={handleSignOut}>Sair da conta</button>
+            </div>
+            {syncStatus && <p className="hint">{syncStatus}</p>}
+            <p className="hint">
+              Por enquanto só os Lembretes da Agenda sincronizam entre aparelhos — as outras
+              telas continuam só locais.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="hint">
+              Entre com sua conta pra sincronizar seus Lembretes da Agenda entre este aparelho e
+              o app de computador.
+            </p>
+            <div className="filters">
+              <button
+                className={authMode === "entrar" ? "filter active" : "filter"}
+                onClick={() => setAuthMode("entrar")}
+              >
+                Entrar
+              </button>
+              <button
+                className={authMode === "criar" ? "filter active" : "filter"}
+                onClick={() => setAuthMode("criar")}
+              >
+                Criar conta
+              </button>
+            </div>
+            <form onSubmit={handleAuthSubmit} className="form">
+              <input
+                type="email"
+                placeholder="E-mail"
+                value={authEmail}
+                onChange={(e) => setAuthEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
+              <input
+                type="password"
+                placeholder="Senha"
+                value={authPassword}
+                onChange={(e) => setAuthPassword(e.target.value)}
+                autoComplete={authMode === "entrar" ? "current-password" : "new-password"}
+                minLength={6}
+                required
+              />
+              <button type="submit" disabled={authBusy}>
+                {authBusy ? "Só um instante…" : authMode === "entrar" ? "Entrar" : "Criar conta"}
+              </button>
+            </form>
+            {authError && <p className="error">{authError}</p>}
+            {syncStatus && <p className="hint">{syncStatus}</p>}
+          </>
+        )}
       </section>
 
       <section className="settings-section">
