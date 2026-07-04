@@ -1,5 +1,7 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage } = require("electron");
+const { app, BrowserWindow, Tray, Menu, nativeImage, protocol, net } = require("electron");
 const path = require("node:path");
+const fs = require("node:fs");
+const { pathToFileURL } = require("node:url");
 
 // Casca fina — só carrega o mesmo build web do app (frontend/dist), sem
 // nenhuma dependência do Capacitor (o pacote comunitário de integração
@@ -17,8 +19,32 @@ const DIST_DIR = app.isPackaged
   : path.join(__dirname, "..", "frontend", "dist");
 const DEV_SERVER_URL = process.env.ELECTRON_DEV_SERVER_URL;
 
+// Um esquema próprio (em vez de carregar o index.html direto via file://)
+// — o Chromium trata o carregamento de <script type="module"> via file://
+// como uma origem "null" e bloqueia por CORS mesmo com caminhos relativos,
+// deixando a janela em branco (só a cor de fundo aparecia). Registrado como
+// "standard" + "secure" pra se comportar como uma origem http normal.
+protocol.registerSchemesAsPrivileged([
+  { scheme: "app", privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } },
+]);
+
 let mainWindow = null;
 let tray = null;
+
+function registerAppProtocol() {
+  protocol.handle("app", (request) => {
+    const url = new URL(request.url);
+    const relativePath = decodeURIComponent(url.pathname);
+    let filePath = path.join(DIST_DIR, relativePath);
+    // Fallback pro index.html em qualquer caminho que não bata com um
+    // arquivo real — cobre um F5 numa rota "funda" do React Router, que
+    // não existe como arquivo (o roteamento é só client-side).
+    if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+      filePath = path.join(DIST_DIR, "index.html");
+    }
+    return net.fetch(pathToFileURL(filePath).toString());
+  });
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -38,7 +64,7 @@ function createWindow() {
   if (DEV_SERVER_URL) {
     mainWindow.loadURL(DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(DIST_DIR, "index.html"));
+    mainWindow.loadURL("app://local/index.html");
   }
 
   // Minimizar pra bandeja em vez de fechar — a "Secretária" fica disponível
@@ -71,6 +97,7 @@ function createTray() {
 }
 
 app.whenReady().then(() => {
+  registerAppProtocol();
   createWindow();
   createTray();
 
