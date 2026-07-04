@@ -34,9 +34,11 @@ import { syncReminderWidget, syncCalendarWidget, syncCurrencyWidgetPair } from '
 import { getCurrencyWidgetPair } from './currencyWidgetStore'
 import { isSyncAvailable } from './auth'
 import { syncAllNow } from './sync'
+import { isElectron } from './platform'
 import { SettingsProvider } from './contexts/SettingsContext'
 import './index.css'
 import App from './App.tsx'
+import DesktopApp from './DesktopApp.tsx'
 
 // Sincronização entre aparelhos (Fase 2: Lembretes, Notas, Contas, Despesas,
 // Carteira e Alarmes) — roda em qualquer plataforma (não só nativo), sozinha
@@ -73,15 +75,22 @@ if (isNativePlatform()) {
       await syncAllBirthdayNotifications(reminders)
     }
   })
-} else {
+} else if (!isElectron()) {
+  // Sem service worker dentro do shell desktop: os arquivos já vêm
+  // empacotados localmente (ver electron/main.js), não tem "site" pra
+  // cachear pra uso offline.
   registerSW({ immediate: true })
 }
+
+// Shell largo (barra lateral + secretária) só dentro do Electron — no
+// Android/PWA continua o mesmo App de sempre, sem nenhuma mudança.
+const RootApp = isElectron() ? DesktopApp : App
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <SettingsProvider>
       <BrowserRouter>
-        <App />
+        <RootApp />
       </BrowserRouter>
     </SettingsProvider>
   </StrictMode>,

@@ -240,9 +240,10 @@ export default function Settings() {
       <section className="settings-section">
         <h2>Seus dados</h2>
         <p className="hint">
-          Tudo é salvo neste aparelho — o app funciona sem internet e sem depender de nenhum
-          outro dispositivo. Os dados ficam guardados até você desinstalar o app ou limpar os
-          dados dele nas configurações do Android.
+          Tudo é salvo neste aparelho primeiro — o app funciona sem internet, com ou sem conta
+          configurada. Os dados ficam guardados até você desinstalar o app ou limpar os dados
+          dele nas configurações do Android. Ative a sincronização abaixo pra também guardar uma
+          cópia na nuvem e usar no app de computador.
         </p>
       </section>
 
