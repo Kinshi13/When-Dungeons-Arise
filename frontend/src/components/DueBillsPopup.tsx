@@ -26,7 +26,7 @@ export default function DueBillsPopup() {
 
     api.bills.list().then((bills) => {
       const upcoming = bills
-        .filter((b) => !b.paid && daysUntil(b.dueDate) <= 10)
+        .filter((b) => b.status === "PENDENTE" && daysUntil(b.dueDate) <= 10)
         .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
       if (upcoming.length > 0) {
         setDueBills(upcoming);

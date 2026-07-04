@@ -1,16 +1,32 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type TouchEvent } from "react";
 import { api, type DocumentMeta, type DocumentType } from "../api";
 import BookCoverSheet from "../components/BookCoverSheet";
-import PixelDialogBox from "../components/game/PixelDialogBox";
-import PixelCharacterIdle from "../components/game/PixelCharacterIdle";
+import LibraryDrawer from "../components/LibraryDrawer";
 import { bookSpriteFor } from "../bookSprites";
-import { TrashIcon, PlusIcon } from "../icons";
+import { PlusIcon, ChevronUpIcon } from "../icons";
 import { playSfx } from "../sound";
+import { useSettings, isLofiTheme } from "../contexts/SettingsContext";
+
+// Regiões das 4 prateleiras utilizáveis (a primeira, decorativa, fica de fora),
+// em % da altura/largura da arte da estante — descobertas inspecionando as
+// faixas de brilho das tábuas na imagem de referência (941x1672).
+const SHELVES = [
+  { top: 22.49, height: 15.25 },
+  { top: 38.34, height: 17.1 },
+  { top: 56.04, height: 16.51 },
+  { top: 73.15, height: 15.37 },
+];
+
+const SWIPE_THRESHOLD = 70;
 
 export default function Library() {
+  const { theme } = useSettings();
+  const isLofi = isLofiTheme(theme);
   const [docs, setDocs] = useState<DocumentMeta[]>([]);
   const [selected, setSelected] = useState<DocumentMeta | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const touchStartY = useRef<number | null>(null);
 
   async function load() {
     setDocs(await api.documents.list());
@@ -30,69 +46,109 @@ export default function Library() {
     await load();
   }
 
-  async function handleDelete(id: string, ev: React.MouseEvent) {
-    ev.stopPropagation();
+  async function handleDelete(id: string) {
     await api.documents.remove(id);
     if (selected?.id === id) setSelected(null);
     await load();
   }
 
+  function openBook(doc: DocumentMeta) {
+    playSfx("drop");
+    setSelected(doc);
+  }
+
+  function handleTouchStart(e: TouchEvent) {
+    touchStartY.current = e.touches[0].clientY;
+  }
+
+  function handleTouchEnd(e: TouchEvent) {
+    if (touchStartY.current === null) return;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    touchStartY.current = null;
+    if (dy < -SWIPE_THRESHOLD) {
+      playSfx("drop");
+      setDrawerOpen(true);
+    } else if (dy > SWIPE_THRESHOLD) {
+      playSfx("coin");
+      fileInputRef.current?.click();
+    }
+  }
+
   return (
-    <div className="shelf-bg library-page">
-      <div className="page" style={{ paddingBottom: 0 }}>
-        <h1>Biblioteca da Guilda</h1>
-        <div className="reception-scene">
-          <PixelCharacterIdle name="Bibliotecária" size={90} color="var(--tarefa)" />
-          <PixelDialogBox speaker="Bibliotecária">
-            Bem-vindo à estante. Importe um PDF ou EPUB e ele ganha um lugar aqui — toque num livro pra continuar de
-            onde parou. Meta de hoje: ler 20 minutos.
-          </PixelDialogBox>
-        </div>
+    <div className="library-fullscreen" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+      <div className="library-shelf-frame">
+        {isLofi ? (
+          <div className="lofi-scene lofi-scene-biblioteca library-shelf-img" aria-hidden="true" />
+        ) : (
+          <img src="/biblioteca-bg.png" alt="Estante da biblioteca" className="library-shelf-img" />
+        )}
 
-        <div className="shelf-header">
-          <h2>Estante</h2>
-          <button
-            className="icon-btn primary"
-            onClick={() => fileInputRef.current?.click()}
-            aria-label="Importar documento"
-          >
-            <PlusIcon width={18} height={18} />
-          </button>
-          <input ref={fileInputRef} type="file" accept=".pdf,.epub" hidden onChange={handleFileChange} />
-        </div>
-      </div>
+        <button
+          className="library-import-zone library-import-top"
+          onClick={() => fileInputRef.current?.click()}
+          aria-label="Importar documento"
+        >
+          <span className="library-import-badge">
+            <PlusIcon width={15} height={15} />
+          </span>
+        </button>
+        <button
+          className="library-import-zone library-import-base"
+          onClick={() => fileInputRef.current?.click()}
+          aria-label="Importar documento"
+        >
+          <span className="library-import-badge">
+            <PlusIcon width={15} height={15} />
+          </span>
+        </button>
 
-      <div className="shelf-content library-shelf-content">
-        {docs.length === 0 && <p className="hint">Importe um PDF ou EPUB para começar.</p>}
-        <div className="shelf-row">
-          {docs.map((doc) => (
-            <button
-              key={doc.id}
-              className="book-spine"
-              onClick={() => {
-                playSfx("drop");
-                setSelected(doc);
-              }}
-              title={doc.title}
+        {SHELVES.map((shelf, i) => {
+          const shelfDocs = docs.filter((_, idx) => idx % SHELVES.length === i);
+          return (
+            <div
+              key={i}
+              className="library-shelf-row"
+              style={{ top: `${shelf.top}%`, height: `${shelf.height}%` }}
             >
-              <img src={bookSpriteFor(doc.id)} alt="" className="book-spine-img" />
-              <span
-                className="book-spine-delete"
-                onClick={(e) => handleDelete(doc.id, e)}
-                role="button"
-                aria-label="Excluir documento"
-              >
-                <TrashIcon width={14} height={14} />
-              </span>
-            </button>
-          ))}
-        </div>
+              {isLofi && <div className="lofi-shelf-line" aria-hidden="true" />}
+              {shelfDocs.map((doc) => (
+                <button
+                  key={doc.id}
+                  className="library-book-cover"
+                  onClick={() => openBook(doc)}
+                  title={doc.title}
+                >
+                  <img src={doc.coverDataUrl || bookSpriteFor(doc.id)} alt="" />
+                </button>
+              ))}
+            </div>
+          );
+        })}
       </div>
+
+      <button className="library-drawer-handle" onClick={() => setDrawerOpen(true)} aria-label="Ver todos os arquivos">
+        <ChevronUpIcon width={14} height={14} />
+        Todos os arquivos
+      </button>
+
+      <input ref={fileInputRef} type="file" accept=".pdf,.epub" hidden onChange={handleFileChange} />
+
+      <LibraryDrawer
+        open={drawerOpen}
+        docs={docs}
+        onClose={() => setDrawerOpen(false)}
+        onSelect={(doc) => {
+          setDrawerOpen(false);
+          openBook(doc);
+        }}
+        onDelete={handleDelete}
+      />
 
       <BookCoverSheet
         doc={selected}
-        spriteUrl={selected ? bookSpriteFor(selected.id) : ""}
+        spriteUrl={selected ? selected.coverDataUrl || bookSpriteFor(selected.id) : ""}
         onClose={() => setSelected(null)}
+        onDelete={handleDelete}
       />
     </div>
   );

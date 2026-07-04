@@ -1,0 +1,1041 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/widget_background"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/widget_calendar_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:textColor="@color/widget_text"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="D"
+            android:textColor="@color/widget_text_muted"
+            android:textSize="10sp" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="S"
+            android:textColor="@color/widget_text_muted"
+            android:textSize="10sp" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="T"
+            android:textColor="@color/widget_text_muted"
+            android:textSize="10sp" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Q"
+            android:textColor="@color/widget_text_muted"
+            android:textSize="10sp" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Q"
+            android:textColor="@color/widget_text_muted"
+            android:textSize="10sp" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="S"
+            android:textColor="@color/widget_text_muted"
+            android:textSize="10sp" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="S"
+            android:textColor="@color/widget_text_muted"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c0_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c0_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c1_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c1_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c2_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c2_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c3_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c3_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c4_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c4_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c5_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c5_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c6_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c6_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c7_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c7_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c8_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c8_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c9_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c9_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c10_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c10_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c11_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c11_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c12_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c12_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c13_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c13_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c14_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c14_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c15_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c15_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c16_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c16_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c17_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c17_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c18_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c18_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c19_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c19_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c20_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c20_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c21_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c21_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c22_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c22_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c23_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c23_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c24_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c24_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c25_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c25_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c26_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c26_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c27_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c27_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c28_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c28_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c29_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c29_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c30_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c30_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c31_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c31_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c32_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c32_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c33_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c33_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c34_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c34_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c35_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c35_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c36_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c36_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c37_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c37_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c38_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c38_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c39_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c39_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c40_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c40_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+            <TextView
+                android:id="@+id/widget_cal_c41_day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/widget_text"
+                android:textSize="12sp" />
+            <View
+                android:id="@+id/widget_cal_c41_dot"
+                android:layout_width="4dp"
+                android:layout_height="4dp"
+                android:layout_marginTop="1dp"
+                android:background="@drawable/widget_dot"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

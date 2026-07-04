@@ -1,8 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { api, type Bill, type BillType } from "../api";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { api, type Bill, type BillKind, type BillType, type Expense } from "../api";
 import { TrashIcon, PlusIcon } from "../icons";
-import { useGame, type RewardPopupData } from "../game/GameContext";
-import RewardPopup from "../components/game/RewardPopup";
 
 const typeLabel: Record<BillType, string> = {
   CARTAO: "Cartão",
@@ -10,6 +8,23 @@ const typeLabel: Record<BillType, string> = {
   ASSINATURA: "Assinatura",
   OUTRO: "Outro",
 };
+
+const kindLabel: Record<BillKind, string> = {
+  PAGAR: "A pagar",
+  RECEBER: "A receber",
+  ASSINATURA: "Assinatura",
+};
+
+type Filter = "vencimentos" | "pagar" | "pagas" | "receber" | "assinaturas" | "recorrentes";
+
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: "vencimentos", label: "Próximos vencimentos" },
+  { key: "pagar", label: "A pagar" },
+  { key: "pagas", label: "Pagas" },
+  { key: "receber", label: "A receber" },
+  { key: "assinaturas", label: "Assinaturas" },
+  { key: "recorrentes", label: "Recorrentes" },
+];
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -32,21 +47,35 @@ function urgencyClass(days: number) {
 
 export default function Bills() {
   const [bills, setBills] = useState<Bill[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [filter, setFilter] = useState<Filter>("vencimentos");
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [type, setType] = useState<BillType>("OUTRO");
+  const [kind, setKind] = useState<BillKind>("PAGAR");
+  const [recurring, setRecurring] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [reward, setReward] = useState<RewardPopupData | null>(null);
-  const { grantReward } = useGame();
 
   async function load() {
-    setBills(await api.bills.list());
+    const [billsData, expensesData] = await Promise.all([api.bills.list(), api.expenses.list()]);
+    setBills(billsData);
+    setExpenses(expensesData);
   }
 
   useEffect(() => {
     load();
   }, []);
+
+  const monthExpensesTotal = useMemo(() => {
+    const now = new Date();
+    return expenses
+      .filter((e) => {
+        const d = new Date(e.date);
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      })
+      .reduce((sum, e) => sum + e.amount, 0);
+  }, [expenses]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -62,21 +91,33 @@ export default function Bills() {
         amount: value,
         dueDate: new Date(dueDate).toISOString(),
         type,
+        kind,
+        recurring,
       });
       setTitle("");
       setAmount("");
       setDueDate("");
       setType("OUTRO");
+      setKind("PAGAR");
+      setRecurring(false);
       await load();
     } catch (err: any) {
       setError(err.message);
     }
   }
 
-  async function handleTogglePaid(bill: Bill) {
-    const wasUnpaid = !bill.paid;
-    await api.bills.update(bill.id, { paid: !bill.paid });
-    if (wasUnpaid) setReward(grantReward("contaPaga"));
+  async function handleToggleSettle(bill: Bill) {
+    const wasPending = bill.status === "PENDENTE";
+    if (wasPending) {
+      await api.bills.update(bill.id, { status: bill.kind === "RECEBER" ? "RECEBIDA" : "PAGA" });
+    } else {
+      await api.bills.update(bill.id, { status: "PENDENTE" });
+    }
+    await load();
+  }
+
+  async function handleToggleRecurring(bill: Bill) {
+    await api.bills.update(bill.id, { recurring: true });
     await load();
   }
 
@@ -90,17 +131,44 @@ export default function Bills() {
     await load();
   }
 
-  const unpaid = bills
-    .filter((b) => !b.paid)
+  const filtered = useMemo(() => {
+    switch (filter) {
+      case "pagar":
+        // Assinaturas também são dinheiro saindo da carteira, então contam
+        // como "a pagar" — a aba "Assinaturas" continua com a visão específica.
+        return bills.filter((b) => b.kind === "PAGAR" || b.kind === "ASSINATURA");
+      case "pagas":
+        return bills.filter((b) => b.status !== "PENDENTE");
+      case "receber":
+        return bills.filter((b) => b.kind === "RECEBER");
+      case "assinaturas":
+        return bills.filter((b) => b.kind === "ASSINATURA");
+      case "recorrentes":
+        return bills.filter((b) => b.recurring);
+      case "vencimentos":
+      default:
+        return bills.filter((b) => b.status === "PENDENTE");
+    }
+  }, [bills, filter]);
+
+  const pending = filtered
+    .filter((b) => b.status === "PENDENTE")
     .sort((a, b) => {
       if (a.priority !== b.priority) return a.priority ? -1 : 1;
       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
     });
-  const paid = bills.filter((b) => b.paid);
+  const settled = filtered.filter((b) => b.status !== "PENDENTE");
 
   return (
     <div className="page">
       <h1>Contas</h1>
+
+      <div className="finance-summary">
+        <div className="summary-card">
+          <span className="summary-label">Gastos este mês</span>
+          <strong className="summary-value">{formatBRL(monthExpensesTotal)}</strong>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="form">
         <input placeholder="Nome da conta" value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -118,14 +186,35 @@ export default function Bills() {
           <option value="ASSINATURA">Assinatura</option>
           <option value="OUTRO">Outro</option>
         </select>
+        <select value={kind} onChange={(e) => setKind(e.target.value as BillKind)}>
+          <option value="PAGAR">A pagar</option>
+          <option value="RECEBER">A receber</option>
+          <option value="ASSINATURA">Assinatura</option>
+        </select>
+        <label className="recurring-check">
+          <input type="checkbox" checked={recurring} onChange={(e) => setRecurring(e.target.checked)} />
+          Recorrente mensal
+        </label>
         <button type="submit" className="icon-btn primary" aria-label="Adicionar conta">
           <PlusIcon />
         </button>
       </form>
       {error && <p className="error">{error}</p>}
 
+      <div className="filters">
+        {FILTERS.map((f) => (
+          <button
+            key={f.key}
+            className={filter === f.key ? "filter active" : "filter"}
+            onClick={() => setFilter(f.key)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       <ul className="list">
-        {unpaid.map((bill) => {
+        {pending.map((bill) => {
           const days = daysUntil(bill.dueDate);
           return (
             <li key={bill.id} className={`bill-item ${urgencyClass(days)}`}>
@@ -139,7 +228,10 @@ export default function Bills() {
               <div className="bill-info">
                 <strong>{bill.title}</strong>
                 <div className="meta">
-                  {typeLabel[bill.type]} · {formatBRL(bill.amount)} ·{" "}
+                  {typeLabel[bill.type]} · {kindLabel[bill.kind]} · {formatBRL(bill.amount)}
+                  {bill.recurring && " · Recorrente"}
+                </div>
+                <div className="meta">
                   {days < 0
                     ? `Venceu há ${Math.abs(days)} dia(s)`
                     : days === 0
@@ -147,8 +239,13 @@ export default function Bills() {
                     : `Vence em ${days} dia(s)`}
                 </div>
               </div>
-              <button className="icon-btn" onClick={() => handleTogglePaid(bill)} aria-label="Marcar como paga">
-                Pago
+              {!bill.recurring && (
+                <button className="icon-btn" onClick={() => handleToggleRecurring(bill)} aria-label="Tornar recorrente mensal">
+                  Recorrente
+                </button>
+              )}
+              <button className="icon-btn" onClick={() => handleToggleSettle(bill)} aria-label="Marcar como paga">
+                {bill.kind === "RECEBER" ? "Recebido" : "Pago"}
               </button>
               <button className="icon-btn" onClick={() => handleDelete(bill.id)} aria-label="Excluir conta">
                 <TrashIcon width={18} height={18} />
@@ -156,22 +253,23 @@ export default function Bills() {
             </li>
           );
         })}
-        {unpaid.length === 0 && <p className="hint">Nenhuma conta pendente.</p>}
+        {pending.length === 0 && <p className="hint">Nenhuma conta pendente neste filtro.</p>}
       </ul>
 
-      {paid.length > 0 && (
+      {settled.length > 0 && (
         <>
-          <h2 className="paid-title">Pagas</h2>
+          <h2 className="paid-title">Resolvidas</h2>
           <ul className="list">
-            {paid.map((bill) => (
+            {settled.map((bill) => (
               <li key={bill.id} className="bill-item paid">
                 <div className="bill-info">
                   <strong>{bill.title}</strong>
                   <div className="meta">
                     {typeLabel[bill.type]} · {formatBRL(bill.amount)}
+                    {bill.paidDate && ` · ${bill.status === "RECEBIDA" ? "Recebida" : "Paga"} em ${new Date(bill.paidDate).toLocaleDateString("pt-BR")}`}
                   </div>
                 </div>
-                <button className="icon-btn" onClick={() => handleTogglePaid(bill)} aria-label="Reabrir conta">
+                <button className="icon-btn" onClick={() => handleToggleSettle(bill)} aria-label="Reabrir conta">
                   Reabrir
                 </button>
                 <button className="icon-btn" onClick={() => handleDelete(bill.id)} aria-label="Excluir conta">
@@ -182,7 +280,6 @@ export default function Bills() {
           </ul>
         </>
       )}
-      <RewardPopup reward={reward} onClose={() => setReward(null)} />
     </div>
   );
 }

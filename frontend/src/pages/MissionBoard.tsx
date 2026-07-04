@@ -1,19 +1,19 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { api, type Reminder, type ReminderType } from "../api";
+import { api, type Priority, type Reminder, type ReminderType } from "../api";
 import { generateMissions, type Mission } from "../game/missionGenerator";
-import { useGame, type RewardPopupData } from "../game/GameContext";
 import PixelMissionCard from "../components/game/PixelMissionCard";
-import RewardPopup from "../components/game/RewardPopup";
-import { PlusIcon } from "../icons";
+import NotificationManagerScreen from "../components/NotificationManagerScreen";
+import { PlusIcon, InboxIcon, ChevronRightIcon } from "../icons";
 import { playSfx } from "../sound";
 
 export default function MissionBoard() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [dateTime, setDateTime] = useState("");
   const [type, setType] = useState<ReminderType>("OUTRO");
-  const [reward, setReward] = useState<RewardPopupData | null>(null);
-  const { grantReward } = useGame();
+  const [priority, setPriority] = useState<Priority>("MEDIA");
+  const [notifOpen, setNotifOpen] = useState(false);
 
   async function load() {
     setReminders(await api.reminders.list());
@@ -26,18 +26,24 @@ export default function MissionBoard() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title || !dateTime) return;
-    await api.reminders.create({ title, dateTime: new Date(dateTime).toISOString(), type });
+    await api.reminders.create({
+      title,
+      description: description || undefined,
+      dateTime: new Date(dateTime).toISOString(),
+      type,
+      priority,
+    });
     setTitle("");
+    setDescription("");
     setDateTime("");
     setType("OUTRO");
+    setPriority("MEDIA");
     await load();
   }
 
   async function handleComplete(mission: Mission) {
     await api.reminders.complete(mission.reminderId);
     playSfx("coin");
-    const result = grantReward(mission.rewardKey);
-    setReward(result);
     await load();
   }
 
@@ -46,7 +52,15 @@ export default function MissionBoard() {
 
   return (
     <div className="page">
-      <h1>Mural de Missões</h1>
+      <div className="mission-board-header">
+        <h1>Mural de Missões</h1>
+      </div>
+
+      <button className="notif-center-entry" onClick={() => setNotifOpen(true)}>
+        <InboxIcon width={20} height={20} />
+        <span>Central de Notificações</span>
+        <ChevronRightIcon width={16} height={16} />
+      </button>
 
       <form onSubmit={handleSubmit} className="form">
         <input
@@ -56,15 +70,26 @@ export default function MissionBoard() {
           onFocus={() => playSfx("drop")}
         />
         <input
+          placeholder="Descrição (opcional)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          onFocus={() => playSfx("drop")}
+        />
+        <input
           type="datetime-local"
           value={dateTime}
           onChange={(e) => setDateTime(e.target.value)}
           onFocus={() => playSfx("drop")}
         />
         <select value={type} onChange={(e) => setType(e.target.value as ReminderType)}>
-          <option value="OUTRO">Simples</option>
-          <option value="TAREFA">Média</option>
-          <option value="REUNIAO">Importante</option>
+          <option value="OUTRO">Evento</option>
+          <option value="TAREFA">Tarefa</option>
+          <option value="REUNIAO">Reunião</option>
+        </select>
+        <select value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
+          <option value="BAIXA">Prioridade baixa</option>
+          <option value="MEDIA">Prioridade média</option>
+          <option value="ALTA">Prioridade alta</option>
         </select>
         <button type="submit" className="icon-btn primary" aria-label="Adicionar missão">
           <PlusIcon width={18} height={18} />
@@ -81,8 +106,8 @@ export default function MissionBoard() {
                 title={m.title}
                 dueLabel={m.dueLabel}
                 category={m.category}
-                rewardXp={m.rewardXp}
-                rewardCoins={m.rewardCoins}
+                priority={m.priority}
+                fromNote={m.fromNote}
                 onComplete={() => handleComplete(m)}
               />
             ))}
@@ -100,8 +125,8 @@ export default function MissionBoard() {
                 title={m.title}
                 dueLabel={m.dueLabel}
                 category={m.category}
-                rewardXp={m.rewardXp}
-                rewardCoins={m.rewardCoins}
+                priority={m.priority}
+                fromNote={m.fromNote}
                 onComplete={() => handleComplete(m)}
               />
             ))}
@@ -119,8 +144,8 @@ export default function MissionBoard() {
                 title={m.title}
                 dueLabel={m.dueLabel}
                 category={m.category}
-                rewardXp={m.rewardXp}
-                rewardCoins={m.rewardCoins}
+                priority={m.priority}
+                fromNote={m.fromNote}
                 onComplete={() => handleComplete(m)}
               />
             ))}
@@ -132,7 +157,13 @@ export default function MissionBoard() {
         <p className="hint">Nenhuma missão pendente. Adicione uma acima!</p>
       )}
 
-      <RewardPopup reward={reward} onClose={() => setReward(null)} />
+      <NotificationManagerScreen
+        open={notifOpen}
+        onClose={() => {
+          setNotifOpen(false);
+          load();
+        }}
+      />
     </div>
   );
 }

@@ -13,6 +13,7 @@
   --reuniao: #6c5ce7;
   --tarefa: #2ecc71;
   --outro: #ffd23f;
+  --aniversario: #ff6fb5;
   --danger: #ff4d6d;
   --success: #2ecc71;
 
@@ -21,14 +22,158 @@
   --pixel-shadow-sm: 2px 2px 0 var(--border);
 
   --font-display: "Press Start 2P", "VT323", monospace;
-  --font-body: "VT323", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Alegreya", "Georgia", serif;
 
-  font: 20px/1.4 var(--font-body);
+  font: 17px/1.5 var(--font-body);
   color-scheme: dark;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Tema "Lo-fi Escuro" — a versão dark do Lo-fi padrão: exatamente a mesma
+   estrutura (fundos flat por área, ícones preenchidos, barra de botões,
+   fonte redonda), só trocando a paleta creme/pastel por tons escuros
+   acinzentados com um leve tom quente. As caixas de texto/superfícies ficam
+   num cinza suave, como pedido. */
+[data-theme="claro"] {
+  --bg: #23242a;
+  --surface: #2e3037;
+  --surface-raised: #3b3e47;
+  --border: #16171b;
+  --text: #e6e3dd;
+  --text-h: #f4f1ea;
+  --text-muted: #a29e96;
+
+  --accent: #cf8a70;
+  --accent-ink: #241a15;
+  --accent-2: #a596bd;
+  --reuniao: #9c88c4;
+  --tarefa: #7fae92;
+  --outro: #cfae74;
+  --aniversario: #c983a3;
+  --danger: #cf7480;
+  --success: #7fae92;
+
+  /* Mesma fonte redonda do Lo-fi padrão. */
+  --font-display: "Quicksand", "Nunito", sans-serif;
+  --font-body: "Quicksand", "Nunito", sans-serif;
+
+  color-scheme: dark;
+
+  /* Gradientes por área — os mesmos matizes do Lo-fi claro, em versão
+     escura e dessaturada (tons de cinza com um sussurro de cor). */
+  --lofi-mural: linear-gradient(165deg, #352e30 0%, #423639 55%, #4d3d41 100%);
+  --lofi-tesouraria: linear-gradient(165deg, #2e332c 0%, #383f35 55%, #42493d 100%);
+  --lofi-guilda: linear-gradient(165deg, #322e38 0%, #3c3644 55%, #463e50 100%);
+  --lofi-tempo: linear-gradient(165deg, #2b3238 0%, #343d45 55%, #3d4852 100%);
+  --lofi-ajustes: linear-gradient(165deg, #33302a 0%, #3e3932 55%, #48423a 100%);
+  --lofi-diario: linear-gradient(165deg, #362e31 0%, #44383c 55%, #503f44 100%);
+  --lofi-biblioteca: linear-gradient(165deg, #34312a 0%, #403b31 55%, #4c4537 100%);
+}
+
+/* Tema "Lo-fi" — visual bem mais aconchegante e diferente do padrão: troca a
+   arte pintada de cada tela por um gradiente flat pastel (ver .lofi-scene-*
+   mais abaixo), a barra de navegação por botões simples e os ícones por
+   versões preenchidas/flat com sombra leve (ver icons.tsx). Como o fundo
+   deixa de ser arte escura em toda tela, o texto pode ficar escuro sempre
+   (sem o conflito que existe no tema Claro).
+
+   "Lo-fi Personalizado" usa exatamente a mesma paleta — a única diferença
+   dele é o fundo, que vira o papel de parede escolhido pelo usuário em vez
+   do gradiente flat (ver wallpaperStore.ts e renderBackgroundContent em
+   App.tsx), então reaproveita todas essas variáveis sem duplicar nada. */
+[data-theme="lofi"],
+[data-theme="personalizado"] {
+  --bg: #f3ead9;
+  --surface: #f6ede0;
+  --surface-raised: #ecdcc4;
+  --border: #4a3b32;
+  --text: #4a3b32;
+  --text-h: #3a2e26;
+  --text-muted: #8a7a68;
+
+  --accent: #d98e73;
+  --accent-ink: #fdf8f0;
+  --accent-2: #b3a0c9;
+  --reuniao: #a68fc9;
+  --tarefa: #8bbf9f;
+  --outro: #e0b878;
+  --aniversario: #e0879f;
+  --danger: #d9707c;
+  --success: #8bbf9f;
+
+  /* Fonte redonda/moderna no lugar da pixel art — só neste tema. */
+  --font-display: "Quicksand", "Nunito", sans-serif;
+  --font-body: "Quicksand", "Nunito", sans-serif;
+
+  color-scheme: light;
+
+  /* Cores/gradientes por área — usados nos fundos flat de cada tela. */
+  --lofi-mural: linear-gradient(165deg, #f6d9d1 0%, #e7b6ad 55%, #d99e91 100%);
+  --lofi-tesouraria: linear-gradient(165deg, #eef2df 0%, #d3e0c2 55%, #b7cca4 100%);
+  --lofi-guilda: linear-gradient(165deg, #efe1f2 0%, #d9c3e0 55%, #c3a6cf 100%);
+  --lofi-tempo: linear-gradient(165deg, #e3eef2 0%, #c2d9e3 55%, #a3c1d1 100%);
+  --lofi-ajustes: linear-gradient(165deg, #efe6d8 0%, #ddcbaf 55%, #c7ad8a 100%);
+  --lofi-diario: linear-gradient(165deg, #f6dde2 0%, #eec2ca 55%, #dda0ac 100%);
+  --lofi-biblioteca: linear-gradient(165deg, #f2e6cc 0%, #e3cd9e 55%, #cbab6e 100%);
+}
+
+[data-theme="lofi"] .lofi-scene,
+[data-theme="claro"] .lofi-scene,
+[data-theme="personalizado"] .lofi-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+[data-theme="lofi"] .lofi-scene::after,
+[data-theme="claro"] .lofi-scene::after,
+[data-theme="personalizado"] .lofi-scene::after {
+  content: "";
+  position: absolute;
+  top: 12%;
+  right: 16%;
+  width: 38%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 250, 240, 0.8), rgba(255, 250, 240, 0) 70%);
+}
+
+/* Na versão escura o "brilho de sol" fica bem mais tímido — vira uma luz de
+   abajur, não um holofote. */
+[data-theme="claro"] .lofi-scene::after {
+  background: radial-gradient(circle, rgba(255, 244, 224, 0.14), rgba(255, 244, 224, 0) 70%);
+}
+
+/* Ilustração da Recepção levemente escurecida na versão dark, pra não
+   estourar contra o resto da paleta. */
+[data-theme="claro"] .lofi-scene-photo-img {
+  filter: brightness(0.72) saturate(0.85);
+}
+
+.lofi-scene-mural { background: var(--lofi-mural); }
+.lofi-scene-tesouraria { background: var(--lofi-tesouraria); }
+.lofi-scene-guilda { background: var(--lofi-guilda); }
+.lofi-scene-tempo { background: var(--lofi-tempo); }
+.lofi-scene-ajustes { background: var(--lofi-ajustes); }
+.lofi-scene-diario { background: var(--lofi-diario); }
+.lofi-scene-biblioteca { background: var(--lofi-biblioteca); }
+
+/* Área com ilustração fixa (hoje só a Guilda) — sem o brilho ::after (a
+   ilustração já tem sua própria luz) e com a foto preenchendo a tela. */
+.lofi-scene-photo::after {
+  content: none;
+}
+
+.lofi-scene-photo-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
 }
 
 * {
@@ -39,8 +184,8 @@ body {
   margin: 0;
   font-family: var(--font-body);
   background:
-    radial-gradient(circle at 20% 10%, rgba(108, 92, 231, 0.25), transparent 40%),
-    radial-gradient(circle at 85% 90%, rgba(79, 214, 232, 0.18), transparent 45%),
+    radial-gradient(circle at 20% 10%, rgba(95, 179, 224, 0.22), transparent 40%),
+    radial-gradient(circle at 85% 90%, rgba(231, 201, 143, 0.28), transparent 45%),
     var(--bg);
   min-height: 100svh;
 }
@@ -58,6 +203,18 @@ h2 {
   color: var(--text-h);
   margin: 0 0 16px;
   text-shadow: var(--pixel-shadow-sm);
+}
+
+/* No Lo-fi (claro e escuro) a sombra "pixelada" (aresta dura) destoa da
+   fonte redonda — troca por peso maior, sem sombra, de acordo com o flat. */
+[data-theme="lofi"] h1,
+[data-theme="lofi"] h2,
+[data-theme="claro"] h1,
+[data-theme="claro"] h2,
+[data-theme="personalizado"] h1,
+[data-theme="personalizado"] h2 {
+  font-weight: 700;
+  text-shadow: none;
 }
 
 h1 {

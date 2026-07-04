@@ -1,0 +1,49 @@
+name: Build Windows desktop app
+
+# Manual por enquanto (workflow_dispatch) — o sandbox de nuvem onde o
+# assistente trabalha não consegue baixar o binário do Electron (bloqueado
+# pela política de rede daquele ambiente), então o build de verdade roda
+# aqui, num runner Windows de verdade do próprio GitHub.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar dependências do frontend
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build do frontend (web)
+        working-directory: frontend
+        env:
+          # Sincronização entre aparelhos — configure em Settings > Secrets
+          # and variables > Actions do repositório (os mesmos valores do
+          # frontend/.env.local). Sem eles o app builda normalmente, só sem
+          # sincronização, como já acontece quando não configurado.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: npm run build
+
+      - name: Instalar dependências do shell desktop
+        working-directory: electron
+        run: npm ci
+
+      - name: Build do instalador Windows
+        working-directory: electron
+        run: npm run build:win:portable
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lembretes-windows
+          path: electron/release/*.exe

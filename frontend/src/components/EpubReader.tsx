@@ -1,27 +1,40 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import ePub, { type Book, type Rendition } from "epubjs";
 import { useReaderGestures } from "../useReaderGestures";
 import { playPageFlip } from "../sound";
+import type { ReaderHandle } from "./PdfReader";
+import { EPUB_FONT_FAMILIES, EPUB_THEMES, type EpubFontFamily, type EpubTheme } from "../epubReaderSettings";
 
 interface EpubReaderProps {
   blob: Blob;
   initialLocation?: string;
+  zoomStep: number;
+  fontFamily: EpubFontFamily;
+  theme: EpubTheme;
   onLocationChange?: (cfi: string) => void;
+  onToggleZoom?: () => void;
 }
 
-export default function EpubReader({ blob, initialLocation, onLocationChange }: EpubReaderProps) {
+const EpubReader = forwardRef<ReaderHandle, EpubReaderProps>(function EpubReader(
+  { blob, initialLocation, zoomStep, fontFamily, theme, onLocationChange, onToggleZoom },
+  ref
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const renditionRef = useRef<Rendition | null>(null);
   const bookRef = useRef<Book | null>(null);
   const isFirstRelocation = useRef(true);
   const [error, setError] = useState<string | null>(null);
-  const [zoomed, setZoomed] = useState(false);
 
   const { handleTap } = useReaderGestures({
     onPrev: () => renditionRef.current?.prev(),
     onNext: () => renditionRef.current?.next(),
-    onDoubleTap: () => setZoomed((z) => !z),
+    onDoubleTap: () => onToggleZoom?.(),
   });
+
+  useImperativeHandle(ref, () => ({
+    next: () => renditionRef.current?.next(),
+    prev: () => renditionRef.current?.prev(),
+  }));
 
   useEffect(() => {
     let cancelled = false;
@@ -36,6 +49,12 @@ export default function EpubReader({ blob, initialLocation, onLocationChange }: 
           spread: "auto",
         });
         renditionRef.current = rendition;
+
+        for (const [name, t] of Object.entries(EPUB_THEMES)) {
+          rendition.themes.register(name, { body: { background: t.background, color: t.color } });
+        }
+        rendition.themes.select(theme);
+        rendition.themes.font(EPUB_FONT_FAMILIES[fontFamily].css);
 
         rendition.on("relocated", (location: { start: { cfi: string } }) => {
           if (isFirstRelocation.current) {
@@ -66,13 +85,28 @@ export default function EpubReader({ blob, initialLocation, onLocationChange }: 
   }, [blob]);
 
   useEffect(() => {
-    renditionRef.current?.themes.fontSize(zoomed ? "150%" : "100%");
-  }, [zoomed]);
+    renditionRef.current?.themes.fontSize(`${100 + zoomStep * 25}%`);
+  }, [zoomStep]);
+
+  useEffect(() => {
+    renditionRef.current?.themes.select(theme);
+  }, [theme]);
+
+  useEffect(() => {
+    renditionRef.current?.themes.font(EPUB_FONT_FAMILIES[fontFamily].css);
+  }, [fontFamily]);
+
+  const themeColors = EPUB_THEMES[theme];
 
   return (
-    <div className="reader-canvas-wrap epub-wrap-outer">
+    <div
+      className="reader-canvas-wrap epub-wrap-outer"
+      style={{ background: themeColors.background }}
+    >
       {error && <p className="error">{error}</p>}
-      <div className="epub-wrap" ref={containerRef} />
+      <div className="epub-wrap" ref={containerRef} style={{ background: themeColors.background }} />
     </div>
   );
-}
+});
+
+export default EpubReader;

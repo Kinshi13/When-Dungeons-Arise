@@ -73,6 +73,29 @@ export function TabReceiptIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+// Biblioteca — livro aberto
+export function TabBookIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 5.2c-2.2-1.3-5-1.6-8-0.8v13.5c3-0.8 5.8-0.5 8 0.8Z" fill="var(--accent-2)" />
+      <path d="M12 5.2c2.2-1.3 5-1.6 8-0.8v13.5c-3-0.8-5.8-0.5-8 0.8Z" fill="var(--accent-2)" opacity="0.72" />
+    </svg>
+  );
+}
+
+// Diário — caderno com fita de marcador (em vez da pena antiga, mais
+// combinando com a vibe aconchegante Lo-fi do que um acessório de pena/tinta).
+export function TabDiaryIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M5 3.5h11a2 2 0 0 1 2 2v14a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2Z" fill="var(--reuniao)" />
+      <rect x="8" y="8.2" width="6.4" height="1.6" fill="var(--surface)" />
+      <rect x="8" y="11.6" width="6.4" height="1.6" fill="var(--surface)" />
+      <path d="M10 3.5h3v4.5l-1.5-1.2-1.5 1.2Z" fill="var(--accent)" />
+    </svg>
+  );
+}
+
 // Ajustes — engrenagem sólida
 export function TabGearIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -82,6 +105,23 @@ export function TabGearIcon(props: SVGProps<SVGSVGElement>) {
         fill="var(--text-muted)"
       />
       <circle cx="12" cy="12" r="3.2" fill="var(--surface)" />
+    </svg>
+  );
+}
+
+// Florzinha decorativa — usada no card de Temas da Recepção (tema Lo-fi),
+// puramente decorativa (não representa nenhuma tela). Pétalas macias em vez
+// do estilo pixel-art dos ícones de aba acima, pra combinar com o resto da
+// vibe Lo-fi.
+export function FlowerDecorIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 40 40" {...props}>
+      <g opacity="0.9">
+        {[0, 72, 144, 216, 288].map((angle) => (
+          <ellipse key={angle} cx="20" cy="11.5" rx="5.2" ry="8.4" fill="var(--accent-2)" transform={`rotate(${angle} 20 20)`} />
+        ))}
+        <circle cx="20" cy="20" r="4.6" fill="var(--accent)" />
+      </g>
     </svg>
   );
 }

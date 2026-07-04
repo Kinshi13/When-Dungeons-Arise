@@ -1,32 +1,43 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { api, type Note } from "../api";
-import { TrashIcon, PlusIcon } from "../icons";
 import { playSfx } from "../sound";
-import { useGame, type RewardPopupData } from "../game/GameContext";
-import RewardPopup from "./game/RewardPopup";
+import { findDateMention } from "../game/dateDetector";
+import NoteEditorScreen from "./NoteEditorScreen";
+
+function previewText(content: string) {
+  const firstLines = content.trim().split("\n").slice(0, 3).join(" ");
+  return firstLines || "Nota vazia.";
+}
 
 export default function Notes() {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [reward, setReward] = useState<RewardPopupData | null>(null);
-  const { grantReward } = useGame();
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
 
   async function load() {
-    setNotes(await api.notes.list());
+    setNotes(await api.notes.list("NOTA"));
   }
 
   useEffect(() => {
     load();
   }, []);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!title.trim() && !content.trim()) return;
-    await api.notes.create({ title: title.trim() || "Sem título", content });
-    setTitle("");
-    setContent("");
-    setReward(grantReward("notaCriada"));
+  async function handleCreate() {
+    const note = await api.notes.create({ type: "NOTA", title: "Nova nota", content: "" });
+    await load();
+    setEditingNote(note);
+  }
+
+  async function handleSave(data: { title: string; content: string }) {
+    if (!editingNote) return;
+    const wasNew = !editingNote.content && editingNote.title === "Nova nota";
+    const isBlank = !data.title.trim() && !data.content.trim();
+
+    if (wasNew && isBlank) {
+      // Nota criada pelo botão flutuante mas fechada sem nenhum conteúdo — descarta.
+      await api.notes.remove(editingNote.id);
+    } else {
+      await api.notes.update(editingNote.id, { title: data.title || "Sem título", content: data.content });
+    }
     await load();
   }
 
@@ -45,43 +56,35 @@ export default function Notes() {
 
   return (
     <div className="notes-panel">
-      <form onSubmit={handleSubmit} className="form notes-form">
-        <input
-          placeholder="Título"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onFocus={() => playSfx("drop")}
-        />
-        <textarea
-          placeholder="Escreva sua nota..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onFocus={() => playSfx("drop")}
-          rows={3}
-        />
-        <button type="submit" className="icon-btn primary" aria-label="Adicionar nota">
-          <PlusIcon width={18} height={18} />
-        </button>
-      </form>
-
-      <ul className="list">
-        {notes.map((note) => (
-          <li key={note.id} className="note-item">
-            <div className="note-item-body">
-              <strong>{note.title}</strong>
-              {note.content && <p>{note.content}</p>}
-              <button className="small" onClick={() => handleTurnIntoTask(note)}>
-                Virar missão
-              </button>
-            </div>
-            <button className="icon-btn" onClick={() => handleDelete(note.id)} aria-label="Excluir nota">
-              <TrashIcon width={16} height={16} />
+      <div className="notes-grid">
+        {notes.map((note) => {
+          const hasDate = !!findDateMention(`${note.title} ${note.content}`);
+          return (
+            <button
+              key={note.id}
+              className="note-card"
+              style={hasDate ? { opacity: 0.85 } : undefined}
+              onClick={() => setEditingNote(note)}
+            >
+              <strong className="note-card-title">{note.title}</strong>
+              <p className="note-card-preview">{previewText(note.content)}</p>
             </button>
-          </li>
-        ))}
-        {notes.length === 0 && <p className="hint">Nenhuma nota ainda.</p>}
-      </ul>
-      <RewardPopup reward={reward} onClose={() => setReward(null)} />
+          );
+        })}
+        {notes.length === 0 && <p className="hint">Nenhuma nota ainda. Toque no + pra criar uma.</p>}
+      </div>
+
+      <button className="fab fab-right" onClick={handleCreate} aria-label="Nova nota">
+        <img src="/icons-nav/icon-add.png" alt="" />
+      </button>
+
+      <NoteEditorScreen
+        note={editingNote}
+        onClose={() => setEditingNote(null)}
+        onSave={handleSave}
+        onDelete={handleDelete}
+        onTurnIntoTask={handleTurnIntoTask}
+      />
     </div>
   );
 }
