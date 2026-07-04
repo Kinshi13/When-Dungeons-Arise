@@ -67,6 +67,18 @@ function createWindow() {
     mainWindow.loadURL("app://local/index.html");
   }
 
+  // Temporário pra diagnosticar a tela em branco relatada mesmo depois do
+  // fix do protocolo app:// — abre o DevTools destacado sempre, pra dar pra
+  // ver no Console/Network o que exatamente está falhando a carregar.
+  // Remover depois de confirmado o que era.
+  mainWindow.webContents.openDevTools({ mode: "detach" });
+  mainWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription, validatedURL) => {
+    console.error("[did-fail-load]", errorCode, errorDescription, validatedURL);
+  });
+  mainWindow.webContents.on("console-message", (_event, level, message, line, sourceId) => {
+    console.log("[renderer console]", level, message, `(${sourceId}:${line})`);
+  });
+
   // Minimizar pra bandeja em vez de fechar — a "Secretária" fica disponível
   // mesmo com a janela fechada (avisos/lembretes continuam rodando).
   mainWindow.on("close", (event) => {
