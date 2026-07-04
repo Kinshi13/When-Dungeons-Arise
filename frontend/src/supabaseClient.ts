@@ -6,8 +6,21 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
+function isValidHttpUrl(value: string): boolean {
+  try {
+    return ["http:", "https:"].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+}
+
 export function isSupabaseConfigured(): boolean {
-  return !!url && !!anonKey;
+  // Valida a URL de verdade (não só "existe") — createClient lança uma
+  // exceção síncrona pra uma URL inválida, e isso já derrubou o app inteiro
+  // uma vez (secret do GitHub Actions configurado com o valor errado). Uma
+  // configuração ruim deve cair pra modo offline, igual não ter configurado
+  // nada, nunca travar o app inteiro.
+  return !!url && !!anonKey && isValidHttpUrl(url);
 }
 
 // Só cria o client de verdade se as duas variáveis existirem — evita o
