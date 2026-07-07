@@ -33,13 +33,18 @@ export function useCalendarData(variant: CalendarVariant, year: number) {
     load();
   }, [load]);
 
+  // Também inclui o ano seguinte (feriados e aniversários recorrentes) —
+  // sem isso, perto do fim do ano a Linha do Tempo (que não navega de ano
+  // como o Mês faz) escondia feriados/aniversários de janeiro seguinte só
+  // porque a busca nunca ia além de 31/12. Mesmo raciocínio já usado em
+  // Settings.tsx's upcomingHolidays().
   const holidays: Holiday[] = useMemo(
-    () => (variant === "financas" ? [] : getBrazilianHolidays(year)),
+    () => (variant === "financas" ? [] : [...getBrazilianHolidays(year), ...getBrazilianHolidays(year + 1)]),
     [variant, year]
   );
 
   const entriesByDay: Map<string, CalendarEntry[]> = useMemo(
-    () => buildCalendarEntries(reminders, bills, holidays, year),
+    () => buildCalendarEntries(reminders, bills, holidays, [year, year + 1]),
     [reminders, bills, holidays, year]
   );
 

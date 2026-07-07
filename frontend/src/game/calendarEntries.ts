@@ -35,7 +35,7 @@ export function buildCalendarEntries(
   reminders: Reminder[],
   bills: Bill[] = [],
   holidays: Holiday[] = [],
-  year?: number
+  years: number[] = []
 ): Map<string, CalendarEntry[]> {
   const map = new Map<string, CalendarEntry[]>();
 
@@ -58,7 +58,7 @@ export function buildCalendarEntries(
     push(holiday.date, { kind: "holiday", id: `holiday-${holiday.date}`, holiday });
   }
 
-  if (year !== undefined) {
+  for (const year of years) {
     for (const reminder of reminders) {
       if (!reminder.isBirthday) continue;
       push(birthdayOccurrenceKey(reminder, year), {
