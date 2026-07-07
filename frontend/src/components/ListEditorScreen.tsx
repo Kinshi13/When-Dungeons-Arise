@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { fullscreenSheetFade } from "../motion";
+import { useDragDismiss } from "../useDragDismiss";
 import type { Note } from "../api";
 import { TrashIcon, PlusIcon, ChevronLeftIcon } from "../icons";
 import { playSfx } from "../sound";
@@ -26,6 +27,7 @@ export default function ListEditorScreen({
   onRemoveItem,
 }: ListEditorScreenProps) {
   const [draft, setDraft] = useState("");
+  const { surface, handle } = useDragDismiss({ direction: "down", onClose });
 
   function handleAddItem(e: FormEvent) {
     e.preventDefault();
@@ -41,13 +43,14 @@ export default function ListEditorScreen({
         <motion.div
           className="note-fullscreen"
           {...fullscreenSheetFade}
+          {...surface}
         >
           <div className="page-bg page-bg-blurred-strong" aria-hidden="true">
             <img src="/diario-listas-bg.png" alt="" />
           </div>
 
           <div className="note-fullscreen-content">
-            <div className="note-fullscreen-header">
+            <div className="note-fullscreen-header" {...handle}>
               <button className="icon-btn" onClick={onClose} aria-label="Voltar">
                 <ChevronLeftIcon width={20} height={20} /> Voltar
               </button>

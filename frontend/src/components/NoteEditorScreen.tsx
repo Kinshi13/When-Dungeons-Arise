@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { fullscreenSheetFade } from "../motion";
+import { useDragDismiss } from "../useDragDismiss";
 import { useNavigate } from "react-router-dom";
 import { api, type Note } from "../api";
 import { TrashIcon, PlusIcon, ChevronLeftIcon } from "../icons";
@@ -38,6 +39,8 @@ export default function NoteEditorScreen({ note, onClose, onSave, onDelete, onTu
     onClose();
   }
 
+  const { surface, handle } = useDragDismiss({ direction: "down", onClose: handleSave });
+
   async function handleCreateReminderFromDate() {
     if (!note || !detectedDate) return;
     await api.reminders.create({
@@ -60,13 +63,14 @@ export default function NoteEditorScreen({ note, onClose, onSave, onDelete, onTu
         <motion.div
           className="note-fullscreen"
           {...fullscreenSheetFade}
+          {...surface}
         >
           <div className="page-bg page-bg-blurred-strong" aria-hidden="true">
             <img src="/diario-notas-bg.png" alt="" />
           </div>
 
           <div className="note-fullscreen-content">
-            <div className="note-fullscreen-header">
+            <div className="note-fullscreen-header" {...handle}>
               <button className="icon-btn" onClick={handleSave} aria-label="Voltar">
                 <ChevronLeftIcon width={20} height={20} /> Voltar
               </button>

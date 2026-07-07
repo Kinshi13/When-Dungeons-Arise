@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { sheetBackdropFade, sheetSlideUp } from "../motion";
+import { useDragDismiss } from "../useDragDismiss";
 import { useNavigate } from "react-router-dom";
 import type { DocumentMeta } from "../api";
 import { TrashIcon } from "../icons";
@@ -20,6 +21,7 @@ function condenseTitle(title: string, maxLen = 28) {
 
 export default function BookCoverSheet({ doc, spriteUrl, onClose, onDelete }: BookCoverSheetProps) {
   const navigate = useNavigate();
+  const { surface, handle, backdropOpacity } = useDragDismiss({ direction: "down", onClose });
 
   function handleOpen() {
     if (!doc) return;
@@ -42,12 +44,15 @@ export default function BookCoverSheet({ doc, spriteUrl, onClose, onDelete }: Bo
         <motion.div
           className="book-sheet-backdrop"
           {...sheetBackdropFade}
+          style={{ opacity: backdropOpacity }}
           onClick={onClose}
         >
           <motion.div
             className="book-sheet"
             onClick={(e) => e.stopPropagation()}
             {...sheetSlideUp}
+            {...surface}
+            {...handle}
           >
             <div className="book-sheet-handle" />
             <button className="book-sheet-delete" onClick={handleDelete} aria-label="Excluir documento">

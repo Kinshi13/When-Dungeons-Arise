@@ -15,7 +15,7 @@ import {
 } from "../weather";
 import { ChevronLeftIcon, TrashIcon, PlusIcon } from "../icons";
 import { playSfx } from "../sound";
-import { useVerticalSwipe } from "../useVerticalSwipe";
+import { useDragDismiss } from "../useDragDismiss";
 
 interface WeatherScreenProps {
   open: boolean;
@@ -97,9 +97,10 @@ export default function WeatherScreen({ open, onClose, onPlacesChanged }: Weathe
   const others = places.slice(1);
 
   // Mesmo gesto que abre esta tela (deslizar pra baixo na Recepção): deslizar
-  // pra baixo de novo aqui fecha de volta (não o reverso). Só no cabeçalho,
-  // pra não brigar com a rolagem dos cards de outros locais.
-  const closeSwipe = useVerticalSwipe(undefined, onClose);
+  // pra baixo de novo aqui fecha de volta (não o reverso). O arrasto começa
+  // só pelo cabeçalho (pra não brigar com a rolagem dos cards de outros
+  // locais), mas a tela inteira acompanha o dedo de verdade enquanto arrasta.
+  const { surface, handle } = useDragDismiss({ direction: "down", onClose });
 
   return createPortal(
     <AnimatePresence>
@@ -107,11 +108,12 @@ export default function WeatherScreen({ open, onClose, onPlacesChanged }: Weathe
         <motion.div
           className="note-fullscreen weather-screen"
           {...fullscreenSheetFade}
+          {...surface}
         >
           <div className="lofi-scene lofi-scene-tempo" aria-hidden="true" />
 
           <div className="note-fullscreen-content weather-screen-content">
-            <div className="note-fullscreen-header" {...closeSwipe}>
+            <div className="note-fullscreen-header" {...handle}>
               <button className="icon-btn" onClick={onClose} aria-label="Voltar">
                 <ChevronLeftIcon width={20} height={20} /> Voltar
               </button>

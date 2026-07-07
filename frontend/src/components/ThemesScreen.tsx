@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { fullscreenSheetFade } from "../motion";
+import { useDragDismiss } from "../useDragDismiss";
 import { ChevronLeftIcon, CheckIcon, ChevronRightIcon } from "../icons";
 import { useSettings, THEME_LABEL, LOCKED_THEMES, isLofiTheme, type ThemeId } from "../contexts/SettingsContext";
 import { playSfx } from "../sound";
@@ -24,6 +25,7 @@ const THEME_SWATCH_COLORS: Record<ThemeId, [string, string, string]> = {
 export default function ThemesScreen({ open, onClose }: ThemesScreenProps) {
   const { theme, setTheme } = useSettings();
   const [wallpaperOpen, setWallpaperOpen] = useState(false);
+  const { surface, handle } = useDragDismiss({ direction: "down", onClose });
 
   return createPortal(
     <>
@@ -32,13 +34,14 @@ export default function ThemesScreen({ open, onClose }: ThemesScreenProps) {
           <motion.div
             className="note-fullscreen"
             {...fullscreenSheetFade}
+            {...surface}
           >
             <div className="page-bg page-bg-blurred-strong" aria-hidden="true">
               <img src={isLofiTheme(theme) ? "/lofi-guilda-bg.jpg" : "/guild-reception-bg.png"} alt="" />
             </div>
 
             <div className="note-fullscreen-content">
-              <div className="note-fullscreen-header">
+              <div className="note-fullscreen-header" {...handle}>
                 <button className="icon-btn" onClick={onClose} aria-label="Voltar">
                   <ChevronLeftIcon width={20} height={20} /> Voltar
                 </button>
