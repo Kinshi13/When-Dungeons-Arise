@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { api, type DailySummary, type Expense } from "../api";
-import { compareWeek, compareMonth, type PeriodComparison } from "../game/financeAnalysis";
+import { api, type Expense } from "../api";
 import { TrashIcon, PlusIcon } from "../icons";
 
 function toDateKey(d: Date) {
@@ -11,24 +10,10 @@ function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function ComparisonBadge({ comparison }: { comparison: PeriodComparison }) {
-  if (comparison.percentChange === null) return null;
-  const rounded = Math.round(comparison.percentChange);
-  if (rounded === 0) return <span className="summary-delta neutral">= que antes</span>;
-  const up = rounded > 0;
-  return (
-    <span className={`summary-delta ${up ? "up" : "down"}`}>
-      {up ? "▲" : "▼"} {Math.abs(rounded)}% {up ? "a mais" : "a menos"}
-    </span>
-  );
-}
-
+// Movimentos: só o registro de gastos (carteira/resumo/previsão moraram pra
+// Visão Geral) — novo gasto e a lista completa agrupada por dia.
 export default function Finance() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [dailySummaries, setDailySummaries] = useState<DailySummary[]>([]);
-  const [walletBalance, setWalletBalance] = useState<number | null>(null);
-  const [editingWallet, setEditingWallet] = useState(false);
-  const [walletInput, setWalletInput] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [installments, setInstallments] = useState("1");
@@ -36,29 +21,12 @@ export default function Finance() {
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
-    const [expenseItems, summaryItems, balance] = await Promise.all([
-      api.expenses.list(),
-      api.dailySummaries.list(),
-      api.wallet.getBalance(),
-    ]);
-    setExpenses(expenseItems);
-    setDailySummaries(summaryItems);
-    setWalletBalance(balance);
+    setExpenses(await api.expenses.list());
   }
 
   useEffect(() => {
     load();
   }, []);
-
-  async function handleSetWalletBase(e: FormEvent) {
-    e.preventDefault();
-    const value = Number(walletInput.replace(",", "."));
-    if (Number.isNaN(value)) return;
-    await api.wallet.setBase(value);
-    setEditingWallet(false);
-    setWalletInput("");
-    await load();
-  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -101,67 +69,9 @@ export default function Finance() {
     return [...map.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
   }, [expenses]);
 
-  const today = new Date();
-  const todayKey = toDateKey(today);
-  const todayTotal = groups.find(([key]) => key === todayKey)?.[1]
-    .reduce((sum, e) => sum + e.amount, 0) ?? 0;
-  const monthTotal = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const weekComparison = useMemo(() => compareWeek(dailySummaries, today), [dailySummaries]);
-  const monthComparison = useMemo(() => compareMonth(dailySummaries, today), [dailySummaries]);
-
   return (
     <div className="page">
-      <h1>Finanças</h1>
-
-      <div className="wallet-card">
-        <div>
-          <span className="summary-label">Carteira</span>
-          <strong className="wallet-balance">{formatBRL(walletBalance ?? 0)}</strong>
-        </div>
-        {!editingWallet && (
-          <button className="small" onClick={() => setEditingWallet(true)}>
-            Ajustar saldo
-          </button>
-        )}
-      </div>
-      {editingWallet && (
-        <form onSubmit={handleSetWalletBase} className="form wallet-adjust-form">
-          <input
-            inputMode="decimal"
-            placeholder="Saldo real atual (R$)"
-            value={walletInput}
-            onChange={(e) => setWalletInput(e.target.value)}
-            autoFocus
-          />
-          <button type="submit" className="icon-btn primary" aria-label="Confirmar saldo">
-            <PlusIcon width={16} height={16} />
-          </button>
-          <button type="button" className="small" onClick={() => setEditingWallet(false)}>
-            Cancelar
-          </button>
-        </form>
-      )}
-
-      <div className="finance-summary">
-        <div className="summary-card">
-          <span className="summary-label">Hoje</span>
-          <strong className="summary-value">{formatBRL(todayTotal)}</strong>
-        </div>
-        <div className="summary-card">
-          <span className="summary-label">Esta semana</span>
-          <strong className="summary-value">{formatBRL(weekComparison.currentTotal)}</strong>
-          <ComparisonBadge comparison={weekComparison} />
-        </div>
-        <div className="summary-card">
-          <span className="summary-label">Este mês</span>
-          <strong className="summary-value">{formatBRL(monthComparison.currentTotal)}</strong>
-          <ComparisonBadge comparison={monthComparison} />
-        </div>
-        <div className="summary-card">
-          <span className="summary-label">Total</span>
-          <strong className="summary-value">{formatBRL(monthTotal)}</strong>
-        </div>
-      </div>
+      <h1>Movimentos</h1>
 
       <form onSubmit={handleSubmit} className="form">
         <input

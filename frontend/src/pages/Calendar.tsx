@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
-import { api, type Bill, type Reminder, type ReminderType } from "../api";
-import { buildCalendarEntries, toDateKey, type CalendarEntry } from "../game/calendarEntries";
-import { getBrazilianHolidays } from "../game/holidays";
+import { api, type ReminderType } from "../api";
+import { toDateKey, type CalendarEntry } from "../game/calendarEntries";
+import { useCalendarData } from "../useCalendarData";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon } from "../icons";
 import { playSfx } from "../sound";
 
@@ -50,8 +50,6 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
   const [selectedDay, setSelectedDay] = useState<string>(toDateKey(today));
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [bills, setBills] = useState<Bill[]>([]);
   const [title, setTitle] = useState("");
   const [time, setTime] = useState("09:00");
   const [type, setType] = useState<ReminderType>("OUTRO");
@@ -59,25 +57,7 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
   const [birthYear, setBirthYear] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  async function load() {
-    const [remindersData, billsData] = await Promise.all([
-      api.reminders.list(),
-      variant === "financas" ? api.bills.list() : Promise.resolve([]),
-    ]);
-    setReminders(remindersData);
-    setBills(billsData);
-  }
-
-  useEffect(() => {
-    load();
-  }, [variant]);
-
-  const holidays = useMemo(() => (variant === "agenda" ? getBrazilianHolidays(year) : []), [variant, year]);
-
-  const entriesByDay = useMemo(
-    () => buildCalendarEntries(reminders, bills, holidays, year),
-    [reminders, bills, holidays, year]
-  );
+  const { entriesByDay, reload: load } = useCalendarData(variant, year);
 
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month]);
   const todayKey = toDateKey(today);

@@ -219,16 +219,20 @@ function DesktopApp() {
             <div className="main desktop-page-frame">
               <Routes>
                 <Route path="/" element={<GuildReception />} />
-                <Route path="/missoes" element={<MissionBoard />} />
+                <Route path="/missoes" element={<Navigate to="/missoes/hoje" replace />} />
+                <Route path="/missoes/hoje" element={<MissionBoard />} />
+                <Route path="/missoes/missoes" element={<MissionBoard />} />
+                <Route path="/missoes/caixa" element={<MissionBoard />} />
                 <Route path="/sala-do-tempo" element={<Navigate to="/sala-do-tempo/calendario" replace />} />
                 <Route path="/sala-do-tempo/calendario" element={<TimeRoom />} />
                 <Route path="/sala-do-tempo/agenda" element={<TimeRoom />} />
-                <Route path="/tesouraria" element={<Navigate to="/tesouraria/financas" replace />} />
-                <Route path="/tesouraria/financas" element={<Treasury />} />
+                <Route path="/sala-do-tempo/linha-do-tempo" element={<TimeRoom />} />
+                <Route path="/tesouraria" element={<Navigate to="/tesouraria/visao-geral" replace />} />
+                <Route path="/tesouraria/visao-geral" element={<Treasury />} />
+                <Route path="/tesouraria/movimentos" element={<Treasury />} />
                 <Route path="/tesouraria/contas" element={<Treasury />} />
                 <Route path="/tesouraria/analises" element={<Treasury />} />
-                <Route path="/tesouraria/calculadora" element={<Treasury />} />
-                <Route path="/tesouraria/porcentagem" element={<Treasury />} />
+                <Route path="/tesouraria/ferramentas" element={<Treasury />} />
                 <Route path="/diario" element={<Navigate to="/diario/notas" replace />} />
                 <Route path="/diario/notas" element={<AdventureDiary />} />
                 <Route path="/diario/listas" element={<AdventureDiary />} />

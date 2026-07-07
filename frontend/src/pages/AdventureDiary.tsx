@@ -11,15 +11,9 @@ function tabFromPath(pathname: string): Tab {
   return pathname.endsWith("/listas") ? "listas" : "notas";
 }
 
-interface AdventureDiaryProps {
-  // Usado só pela prévia de conteúdo durante o arraste (App.tsx): força qual
-  // sub-aba mostrar sem depender da rota real do navegador.
-  forcedPath?: string;
-}
-
-export default function AdventureDiary({ forcedPath }: AdventureDiaryProps = {}) {
+export default function AdventureDiary() {
   const location = useLocation();
-  const tab = tabFromPath(forcedPath ?? location.pathname);
+  const tab = tabFromPath(location.pathname);
   const [notaCount, setNotaCount] = useState(0);
   const [listaCount, setListaCount] = useState(0);
 

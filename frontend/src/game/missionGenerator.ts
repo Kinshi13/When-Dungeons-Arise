@@ -10,6 +10,9 @@ export interface Mission {
   priority: Priority;
   done: boolean;
   fromNote: boolean;
+  // Já passou da data — usado pela aba "Hoje" do Mural pra destacar essas
+  // acima das demais diárias, em vez de misturadas sem hierarquia.
+  overdue: boolean;
 }
 
 function daysUntil(dateStr: string): number {
@@ -50,6 +53,7 @@ export function generateMissions(reminders: Reminder[]): {
       priority: r.priority ?? "MEDIA",
       done: !!r.done,
       fromNote: !!r.fromNote,
+      overdue: days < 0,
     };
   });
 
