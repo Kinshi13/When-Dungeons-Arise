@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { api, type Bill } from "../api";
+import { DURATIONS, SPRINGS } from "../motion";
 
 const DISMISS_KEY = "due-bills-popup-dismissed-on";
 
@@ -40,7 +42,7 @@ export default function DueBillsPopup() {
     setVisible(false);
   }
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {visible && (
         <motion.div
@@ -49,7 +51,7 @@ export default function DueBillsPopup() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
+          transition={{ duration: DURATIONS.fast }}
         >
           <motion.div
             className="popup-card"
@@ -57,7 +59,7 @@ export default function DueBillsPopup() {
             initial={{ opacity: 0, scale: 0.85, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.85, y: 16 }}
-            transition={{ type: "spring", stiffness: 420, damping: 28 }}
+            transition={SPRINGS.pop}
           >
             <h2>Contas próximas do vencimento</h2>
             <ul className="list">
@@ -86,6 +88,7 @@ export default function DueBillsPopup() {
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

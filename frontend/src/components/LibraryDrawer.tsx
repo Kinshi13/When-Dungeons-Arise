@@ -1,6 +1,7 @@
 import { useRef, type TouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { sheetSlideUp } from "../motion";
 import type { DocumentMeta } from "../api";
 import { bookSpriteFor } from "../bookSprites";
 import { ChevronDownIcon, TrashIcon } from "../icons";
@@ -38,10 +39,7 @@ export default function LibraryDrawer({ open, docs, onClose, onSelect, onDelete 
       {open && (
         <motion.div
           className="note-fullscreen library-drawer"
-          initial={{ y: "100%" }}
-          animate={{ y: 0 }}
-          exit={{ y: "100%" }}
-          transition={{ type: "spring", stiffness: 320, damping: 32 }}
+          {...sheetSlideUp}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >

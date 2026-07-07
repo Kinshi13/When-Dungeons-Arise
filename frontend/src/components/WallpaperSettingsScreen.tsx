@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent, type TouchEvent as ReactTouchEvent } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { fullscreenSheetFade } from "../motion";
 import { ChevronLeftIcon, TrashIcon, PlusIcon } from "../icons";
 import { playSfx } from "../sound";
 import {
@@ -203,10 +204,7 @@ export default function WallpaperSettingsScreen({ open, onClose }: WallpaperSett
       {open && (
         <motion.div
           className="note-fullscreen wallpaper-settings-screen"
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 24 }}
-          transition={{ duration: 0.2 }}
+          {...fullscreenSheetFade}
         >
           <div className="lofi-scene lofi-scene-ajustes" aria-hidden="true" />
 

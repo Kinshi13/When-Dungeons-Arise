@@ -24,6 +24,17 @@
   --font-display: "Press Start 2P", "VT323", monospace;
   --font-body: "Alegreya", "Georgia", serif;
 
+  /* Camadas de empilhamento — sem depender de tema (fica no :root base, não
+     repetido em cada [data-theme=...]). Ordem pensada pra prioridade real:
+     um alarme tocando deve sempre vencer qualquer outra coisa na tela. */
+  --z-dock: 20;
+  --z-popup-backdrop: 30;
+  --z-sheet-backdrop: 40;
+  --z-sheet: 41;
+  --z-reader: 50;
+  --z-splash: 60;
+  --z-alarm: 70;
+
   font: 17px/1.5 var(--font-body);
   color-scheme: dark;
   color: var(--text);

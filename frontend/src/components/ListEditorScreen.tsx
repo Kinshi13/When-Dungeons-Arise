@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { fullscreenSheetFade } from "../motion";
 import type { Note } from "../api";
 import { TrashIcon, PlusIcon, ChevronLeftIcon } from "../icons";
 import { playSfx } from "../sound";
@@ -39,10 +40,7 @@ export default function ListEditorScreen({
       {list && (
         <motion.div
           className="note-fullscreen"
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 24 }}
-          transition={{ duration: 0.2 }}
+          {...fullscreenSheetFade}
         >
           <div className="page-bg page-bg-blurred-strong" aria-hidden="true">
             <img src="/diario-listas-bg.png" alt="" />
