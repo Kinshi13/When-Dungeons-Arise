@@ -20,6 +20,7 @@ import { sectionOf } from "./useSwipeNav";
 import { useVerticalSwipe } from "./useVerticalSwipe";
 import { SPRINGS, screenEnter } from "./motion";
 import { isNativePlatform } from "./notifications";
+import { consumeBackPress } from "./useOverlayBackClose";
 import {
   WALLPAPER_SLOT_IDS,
   wallpaperScreenOf,
@@ -283,6 +284,7 @@ function useAndroidBackButton() {
   useEffect(() => {
     if (!isNativePlatform()) return;
     const handle = CapApp.addListener("backButton", ({ canGoBack }) => {
+      if (consumeBackPress()) return;
       if (location.pathname.startsWith("/leitor")) {
         navigate(-1);
       } else if (canGoBack) {

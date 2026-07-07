@@ -10,6 +10,7 @@ import {
 import { fetchPrimaryWeather, getCachedPrimaryWeather, type WeatherInfo } from "../weather";
 import SlidingPuzzle from "./SlidingPuzzle";
 import ChessChallenge from "./ChessChallenge";
+import { useOverlayBackClose } from "../useOverlayBackClose";
 
 const CHECK_INTERVAL_MS = 15000;
 
@@ -128,6 +129,11 @@ export default function AlarmRinger() {
     setSolved(false);
     setWeather(null);
   }
+
+  // O alarme sempre ganha de qualquer overlay comum (seção 36 do spec): Voltar
+  // não pode simplesmente descartar um despertador tocando (o desafio existe
+  // bem pra isso), então consome o toque sem fazer nada em vez de fechar.
+  useOverlayBackClose(!!ringing, () => {});
 
   if (!ringing) return null;
 

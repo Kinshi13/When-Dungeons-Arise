@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { fullscreenSheetFade } from "../motion";
 import { useDragDismiss } from "../useDragDismiss";
+import { useOverlayBackClose } from "../useOverlayBackClose";
 import { useNavigate } from "react-router-dom";
 import { api, type Note } from "../api";
 import { TrashIcon, PlusIcon, ChevronLeftIcon } from "../icons";
@@ -40,6 +41,7 @@ export default function NoteEditorScreen({ note, onClose, onSave, onDelete, onTu
   }
 
   const { surface, handle } = useDragDismiss({ direction: "down", onClose: handleSave });
+  useOverlayBackClose(!!note, handleSave);
 
   async function handleCreateReminderFromDate() {
     if (!note || !detectedDate) return;

@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { sheetBackdropFade, sheetSlideUp } from "../motion";
 import { useDragDismiss } from "../useDragDismiss";
+import { useOverlayBackClose } from "../useOverlayBackClose";
 import { useNavigate } from "react-router-dom";
 import type { DocumentMeta } from "../api";
 import { TrashIcon } from "../icons";
@@ -22,6 +23,7 @@ function condenseTitle(title: string, maxLen = 28) {
 export default function BookCoverSheet({ doc, spriteUrl, onClose, onDelete }: BookCoverSheetProps) {
   const navigate = useNavigate();
   const { surface, handle, backdropOpacity } = useDragDismiss({ direction: "down", onClose });
+  useOverlayBackClose(!!doc, onClose);
 
   function handleOpen() {
     if (!doc) return;
