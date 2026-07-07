@@ -235,368 +235,392 @@ export default function Settings() {
 
   return (
     <div className="page">
-      <section className="settings-section">
-        <h2>Seus dados</h2>
-        <p className="hint">
-          Tudo é salvo neste aparelho primeiro — o app funciona sem internet, com ou sem conta
-          configurada. Os dados ficam guardados até você desinstalar o app ou limpar os dados
-          dele nas configurações do Android. Ative a sincronização abaixo pra também guardar uma
-          cópia na nuvem e usar no app de computador.
-        </p>
-      </section>
+      <div className="settings-group">
+        <h1 className="settings-group-title">Perfil</h1>
 
-      <section className="settings-section">
-        <h2>Conta e sincronização</h2>
-        {!isSyncAvailable() ? (
+        <section className="settings-section">
+          <h2>Seus dados</h2>
           <p className="hint">
-            Sincronização entre aparelhos ainda não configurada nesta versão — seus dados
-            continuam só neste aparelho, como sempre.
+            Tudo é salvo neste aparelho primeiro — o app funciona sem internet, com ou sem conta
+            configurada. Os dados ficam guardados até você desinstalar o app ou limpar os dados
+            dele nas configurações do Android. Ative a sincronização abaixo pra também guardar uma
+            cópia na nuvem e usar no app de computador.
           </p>
-        ) : session ? (
-          <>
-            <p className="hint">Conectado como {session.user.email}.</p>
-            <p className="hint">
-              {getLastSyncedAt()
-                ? `Última sincronização: ${new Date(getLastSyncedAt()!).toLocaleString("pt-BR")}.`
-                : "Ainda não sincronizou nesta sessão."}
-            </p>
-            <div className="filters">
-              <button onClick={handleSyncNow} disabled={syncBusy}>
-                {syncBusy ? "Sincronizando…" : "Sincronizar agora"}
-              </button>
-              <button onClick={handleSignOut}>Sair da conta</button>
-            </div>
-            {syncStatus && <p className="hint">{syncStatus}</p>}
-            <p className="hint">
-              Sincronizam entre aparelhos: Lembretes da Agenda, Notas/Listas, Contas, Despesas,
-              Carteira e Alarmes. Documentos da Biblioteca e papel de parede ainda ficam só
-              neste aparelho.
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="hint">
-              Entre com sua conta pra sincronizar seus dados entre este aparelho e o app de
-              computador.
-            </p>
-            <div className="filters">
-              <button
-                className={authMode === "entrar" ? "filter active" : "filter"}
-                onClick={() => setAuthMode("entrar")}
-              >
-                Entrar
-              </button>
-              <button
-                className={authMode === "criar" ? "filter active" : "filter"}
-                onClick={() => setAuthMode("criar")}
-              >
-                Criar conta
-              </button>
-            </div>
-            <form onSubmit={handleAuthSubmit} className="form">
-              <input
-                type="email"
-                placeholder="E-mail"
-                value={authEmail}
-                onChange={(e) => setAuthEmail(e.target.value)}
-                autoComplete="email"
-                required
-              />
-              <input
-                type="password"
-                placeholder="Senha"
-                value={authPassword}
-                onChange={(e) => setAuthPassword(e.target.value)}
-                autoComplete={authMode === "entrar" ? "current-password" : "new-password"}
-                minLength={6}
-                required
-              />
-              <button type="submit" disabled={authBusy}>
-                {authBusy ? "Só um instante…" : authMode === "entrar" ? "Entrar" : "Criar conta"}
-              </button>
-            </form>
-            {authError && <p className="error">{authError}</p>}
-            {syncStatus && <p className="hint">{syncStatus}</p>}
-          </>
-        )}
-      </section>
+        </section>
 
-      <section className="settings-section">
-        <h2>Notificações</h2>
-        {!isNativePlatform() && (
-          <p className="hint">
-            Notificações funcionam apenas no app instalado no celular (APK). No navegador, esta
-            opção fica indisponível.
-          </p>
-        )}
-        {isNativePlatform() && (
-          <button onClick={handleEnableNotifications} disabled={granted}>
-            {granted ? "Notificações ativadas" : "Ativar notificações"}
-          </button>
-        )}
-        {message && <p className="hint">{message}</p>}
-      </section>
-
-      <section className="settings-section">
-        <h2>Notificações por tela</h2>
-        <p className="hint">
-          Escolha de quais telas você quer receber avisos. Se deixar só a Agenda marcada, por
-          exemplo, só vai receber notificações de eventos e tarefas — nada de contas ou finanças.
-        </p>
-        {NOTIFICATION_SCREENS.map((screen) => (
-          <label key={screen} className="slider-row notif-screen-row">
-            <span>
-              {NOTIFICATION_SCREEN_LABEL[screen]}
-              <span className="notif-screen-hint">{NOTIFICATION_SCREEN_HINT[screen]}</span>
-            </span>
-            <input
-              type="checkbox"
-              checked={notifPrefs[screen]}
-              onChange={(e) => handleToggleScreenNotif(screen, e.target.checked)}
-            />
-          </label>
-        ))}
-      </section>
-
-      <section className="settings-section">
-        <h2>Desafio do despertador</h2>
-        <label className="slider-row">
-          <span>Exigir desafio pra desligar o alarme</span>
-          <input
-            type="checkbox"
-            checked={challenge.enabled}
-            onChange={(e) => updateChallenge({ enabled: e.target.checked })}
-          />
-        </label>
-        {challenge.enabled ? (
-          <>
-            <div className="filters">
-              {(Object.keys(PUZZLE_LEVEL_LABEL) as PuzzleLevel[]).map((level) => (
-                <button
-                  key={level}
-                  className={challenge.level === level ? "filter active" : "filter"}
-                  onClick={() => updateChallenge({ level })}
-                >
-                  {PUZZLE_LEVEL_LABEL[level]}
+        <section className="settings-section">
+          <h2>Conta e sincronização</h2>
+          {!isSyncAvailable() ? (
+            <p className="hint">
+              Sincronização entre aparelhos ainda não configurada nesta versão — seus dados
+              continuam só neste aparelho, como sempre.
+            </p>
+          ) : session ? (
+            <>
+              <p className="hint">Conectado como {session.user.email}.</p>
+              <p className="hint">
+                {getLastSyncedAt()
+                  ? `Última sincronização: ${new Date(getLastSyncedAt()!).toLocaleString("pt-BR")}.`
+                  : "Ainda não sincronizou nesta sessão."}
+              </p>
+              <div className="filters">
+                <button onClick={handleSyncNow} disabled={syncBusy}>
+                  {syncBusy ? "Sincronizando…" : "Sincronizar agora"}
                 </button>
-              ))}
-            </div>
-            <p className="hint">
-              {challenge.level === "hardcore"
-                ? "Hardcore: um lance de xadrez resolve — dê o xeque-mate ou escape dele pra desligar o alarme."
-                : "Quebra-cabeça deslizante: ordene os números pra desligar o alarme."}
-            </p>
-          </>
-        ) : (
-          <p className="hint">Sem desafio, o alarme mostra só um botão de desligar.</p>
-        )}
-      </section>
-
-      <section className="settings-section">
-        <h2>Widget de Câmbio</h2>
-        <p className="hint">
-          Escolha qual moeda o widget de Câmbio da tela inicial mostra em relação ao Real. A
-          cotação atualiza sozinha de tempos em tempos, mesmo com o app fechado.
-        </p>
-        <div className="filters">
-          {CURRENCY_PAIRS.map((option) => (
-            <button
-              key={option.code}
-              className={currencyPair === option.code ? "filter active" : "filter"}
-              onClick={() => handleChangeCurrencyPair(option.code)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="settings-section">
-        <h2>Notificações monitoradas</h2>
-        <p className="hint">
-          Escolha quais apps o gerenciador de notificações do Mural acompanha. Marque como
-          prioridade os bancos e carteiras — são os que valem a pena revisar primeiro e os únicos
-          elegíveis pra lançar gastos automaticamente nas finanças.
-        </p>
-
-        <div className="monitored-app-list">
-          {monitoredApps.map((app) => (
-            <div key={app.packageName} className={`monitored-app-row${app.priority ? " priority" : ""}`}>
-              <div className="monitored-app-row-top">
-                <strong>{app.appName}</strong>
+                <button onClick={handleSignOut}>Sair da conta</button>
+              </div>
+              {syncStatus && <p className="hint">{syncStatus}</p>}
+              <p className="hint">
+                Sincronizam entre aparelhos: Lembretes da Agenda, Notas/Listas, Contas, Despesas,
+                Carteira e Alarmes. Documentos da Biblioteca e papel de parede ainda ficam só
+                neste aparelho.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="hint">
+                Entre com sua conta pra sincronizar seus dados entre este aparelho e o app de
+                computador.
+              </p>
+              <div className="filters">
                 <button
-                  className="icon-btn"
-                  onClick={() => handleRemoveApp(app.packageName)}
-                  aria-label={`Remover ${app.appName}`}
+                  className={authMode === "entrar" ? "filter active" : "filter"}
+                  onClick={() => setAuthMode("entrar")}
                 >
-                  <TrashIcon width={14} height={14} />
+                  Entrar
+                </button>
+                <button
+                  className={authMode === "criar" ? "filter active" : "filter"}
+                  onClick={() => setAuthMode("criar")}
+                >
+                  Criar conta
                 </button>
               </div>
-              <label className="slider-row">
-                <span>Monitorar</span>
+              <form onSubmit={handleAuthSubmit} className="form">
                 <input
-                  type="checkbox"
-                  checked={app.enabled}
-                  onChange={(e) => updateApp(app, { enabled: e.target.checked })}
+                  type="email"
+                  placeholder="E-mail"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  autoComplete="email"
+                  required
                 />
-              </label>
-              <label className="slider-row">
-                <span>Prioridade (banco)</span>
                 <input
-                  type="checkbox"
-                  checked={app.priority}
-                  onChange={(e) =>
-                    updateApp(app, { priority: e.target.checked, autoExpense: e.target.checked && app.autoExpense })
-                  }
+                  type="password"
+                  placeholder="Senha"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  autoComplete={authMode === "entrar" ? "current-password" : "new-password"}
+                  minLength={6}
+                  required
                 />
-              </label>
-              <label className="slider-row">
-                <span>Lançar gastos automaticamente</span>
-                <input
-                  type="checkbox"
-                  checked={app.autoExpense}
-                  disabled={!app.priority}
-                  onChange={(e) => updateApp(app, { autoExpense: e.target.checked })}
-                />
-              </label>
-            </div>
-          ))}
-        </div>
+                <button type="submit" disabled={authBusy}>
+                  {authBusy ? "Só um instante…" : authMode === "entrar" ? "Entrar" : "Criar conta"}
+                </button>
+              </form>
+              {authError && <p className="error">{authError}</p>}
+              {syncStatus && <p className="hint">{syncStatus}</p>}
+            </>
+          )}
+        </section>
+      </div>
 
-        <form onSubmit={handleAddApp} className="form monitored-app-add-form">
-          <input
-            placeholder="Nome do app"
-            value={newAppName}
-            onChange={(e) => setNewAppName(e.target.value)}
-          />
-          <input
-            placeholder="Pacote (ex: com.banco.app)"
-            value={newPackageName}
-            onChange={(e) => setNewPackageName(e.target.value)}
-          />
-          <button type="submit" className="icon-btn primary" aria-label="Adicionar app">
-            <PlusIcon width={16} height={16} />
-          </button>
-        </form>
-      </section>
+      <div className="settings-group">
+        <h1 className="settings-group-title">Aparência</h1>
 
-      <section className="settings-section">
-        <h2>Som</h2>
-        <label className="slider-row">
-          <span>Efeitos sonoros</span>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={Math.round(sfxVolume * 100)}
-            onChange={(e) => setSfxVolume(Number(e.target.value) / 100)}
-          />
-        </label>
-        <label className="slider-row">
-          <span>Música de fundo</span>
-          <input
-            type="checkbox"
-            checked={musicEnabled}
-            onChange={(e) => setMusicEnabled(e.target.checked)}
-          />
-        </label>
-        {musicEnabled && (
+        <section className="settings-section">
+          <h2>Tamanho do texto e das informações</h2>
+          <p className="hint">
+            Ajusta só o texto, os textos e as caixas de informação — o fundo de cada tela continua
+            do mesmo tamanho, sem deixar faixas vazias nas laterais.
+          </p>
+          <div className="ui-scale-bar">
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Diminuir"
+              onClick={() => setUiScale(Math.max(UI_SCALE_MIN, uiScale - UI_SCALE_STEP))}
+              disabled={uiScale <= UI_SCALE_MIN}
+            >
+              <MinusIcon width={16} height={16} />
+            </button>
+            <input
+              type="range"
+              className="ui-scale-slider"
+              min={UI_SCALE_MIN}
+              max={UI_SCALE_MAX}
+              step={UI_SCALE_STEP}
+              value={uiScale}
+              onChange={(e) => setUiScale(Number(e.target.value))}
+              aria-label="Tamanho do texto e das informações"
+            />
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Aumentar"
+              onClick={() => setUiScale(Math.min(UI_SCALE_MAX, uiScale + UI_SCALE_STEP))}
+              disabled={uiScale >= UI_SCALE_MAX}
+            >
+              <PlusIcon width={16} height={16} />
+            </button>
+            <span className="ui-scale-pct">{uiScale}%</span>
+          </div>
+        </section>
+
+        <section className="settings-section">
+          <h2>Animações de navegação</h2>
+          <p className="hint">
+            Controla o fade ao trocar de tela pela dock. Desative se preferir trocas instantâneas,
+            sem nenhuma animação.
+          </p>
           <label className="slider-row">
-            <span>Volume da música</span>
+            <span>Animação de transição entre telas</span>
+            <input
+              type="checkbox"
+              checked={screenTransitionAnimationEnabled}
+              onChange={(e) => setScreenTransitionAnimationEnabled(e.target.checked)}
+            />
+          </label>
+          {theme === "personalizado" && (
+            <>
+              <label className="slider-row">
+                <span>Fixar papel de parede da Recepção em todas as telas</span>
+                <input
+                  type="checkbox"
+                  checked={lockWallpaperToMain}
+                  onChange={(e) => setLockWallpaperToMain(e.target.checked)}
+                />
+              </label>
+              <p className="hint">
+                Usa sempre a mesma imagem da Recepção em qualquer tela, em vez de uma por tela —
+                assim o fundo nunca troca ao navegar.
+              </p>
+            </>
+          )}
+        </section>
+      </div>
+
+      <div className="settings-group">
+        <h1 className="settings-group-title">Notificações</h1>
+
+        <section className="settings-section">
+          <h2>Notificações</h2>
+          {!isNativePlatform() && (
+            <p className="hint">
+              Notificações funcionam apenas no app instalado no celular (APK). No navegador, esta
+              opção fica indisponível.
+            </p>
+          )}
+          {isNativePlatform() && (
+            <button onClick={handleEnableNotifications} disabled={granted}>
+              {granted ? "Notificações ativadas" : "Ativar notificações"}
+            </button>
+          )}
+          {message && <p className="hint">{message}</p>}
+        </section>
+
+        <section className="settings-section">
+          <h2>Notificações por tela</h2>
+          <p className="hint">
+            Escolha de quais telas você quer receber avisos. Se deixar só a Agenda marcada, por
+            exemplo, só vai receber notificações de eventos e tarefas — nada de contas ou finanças.
+          </p>
+          {NOTIFICATION_SCREENS.map((screen) => (
+            <label key={screen} className="slider-row notif-screen-row">
+              <span>
+                {NOTIFICATION_SCREEN_LABEL[screen]}
+                <span className="notif-screen-hint">{NOTIFICATION_SCREEN_HINT[screen]}</span>
+              </span>
+              <input
+                type="checkbox"
+                checked={notifPrefs[screen]}
+                onChange={(e) => handleToggleScreenNotif(screen, e.target.checked)}
+              />
+            </label>
+          ))}
+        </section>
+
+        <section className="settings-section">
+          <h2>Notificações monitoradas</h2>
+          <p className="hint">
+            Escolha quais apps o gerenciador de notificações do Mural acompanha. Marque como
+            prioridade os bancos e carteiras — são os que valem a pena revisar primeiro e os únicos
+            elegíveis pra lançar gastos automaticamente nas finanças.
+          </p>
+
+          <div className="monitored-app-list">
+            {monitoredApps.map((app) => (
+              <div key={app.packageName} className={`monitored-app-row${app.priority ? " priority" : ""}`}>
+                <div className="monitored-app-row-top">
+                  <strong>{app.appName}</strong>
+                  <button
+                    className="icon-btn"
+                    onClick={() => handleRemoveApp(app.packageName)}
+                    aria-label={`Remover ${app.appName}`}
+                  >
+                    <TrashIcon width={14} height={14} />
+                  </button>
+                </div>
+                <label className="slider-row">
+                  <span>Monitorar</span>
+                  <input
+                    type="checkbox"
+                    checked={app.enabled}
+                    onChange={(e) => updateApp(app, { enabled: e.target.checked })}
+                  />
+                </label>
+                <label className="slider-row">
+                  <span>Prioridade (banco)</span>
+                  <input
+                    type="checkbox"
+                    checked={app.priority}
+                    onChange={(e) =>
+                      updateApp(app, { priority: e.target.checked, autoExpense: e.target.checked && app.autoExpense })
+                    }
+                  />
+                </label>
+                <label className="slider-row">
+                  <span>Lançar gastos automaticamente</span>
+                  <input
+                    type="checkbox"
+                    checked={app.autoExpense}
+                    disabled={!app.priority}
+                    onChange={(e) => updateApp(app, { autoExpense: e.target.checked })}
+                  />
+                </label>
+              </div>
+            ))}
+          </div>
+
+          <form onSubmit={handleAddApp} className="form monitored-app-add-form">
+            <input
+              placeholder="Nome do app"
+              value={newAppName}
+              onChange={(e) => setNewAppName(e.target.value)}
+            />
+            <input
+              placeholder="Pacote (ex: com.banco.app)"
+              value={newPackageName}
+              onChange={(e) => setNewPackageName(e.target.value)}
+            />
+            <button type="submit" className="icon-btn primary" aria-label="Adicionar app">
+              <PlusIcon width={16} height={16} />
+            </button>
+          </form>
+        </section>
+      </div>
+
+      <div className="settings-group">
+        <h1 className="settings-group-title">Relógio e alarmes</h1>
+
+        <section className="settings-section">
+          <h2>Desafio do despertador</h2>
+          <label className="slider-row">
+            <span>Exigir desafio pra desligar o alarme</span>
+            <input
+              type="checkbox"
+              checked={challenge.enabled}
+              onChange={(e) => updateChallenge({ enabled: e.target.checked })}
+            />
+          </label>
+          {challenge.enabled ? (
+            <>
+              <div className="filters">
+                {(Object.keys(PUZZLE_LEVEL_LABEL) as PuzzleLevel[]).map((level) => (
+                  <button
+                    key={level}
+                    className={challenge.level === level ? "filter active" : "filter"}
+                    onClick={() => updateChallenge({ level })}
+                  >
+                    {PUZZLE_LEVEL_LABEL[level]}
+                  </button>
+                ))}
+              </div>
+              <p className="hint">
+                {challenge.level === "hardcore"
+                  ? "Hardcore: um lance de xadrez resolve — dê o xeque-mate ou escape dele pra desligar o alarme."
+                  : "Quebra-cabeça deslizante: ordene os números pra desligar o alarme."}
+              </p>
+            </>
+          ) : (
+            <p className="hint">Sem desafio, o alarme mostra só um botão de desligar.</p>
+          )}
+        </section>
+
+        <section className="settings-section">
+          <h2>Som</h2>
+          <label className="slider-row">
+            <span>Efeitos sonoros</span>
             <input
               type="range"
               min={0}
               max={100}
-              value={Math.round(musicVolume * 100)}
-              onChange={(e) => setMusicVolume(Number(e.target.value) / 100)}
+              value={Math.round(sfxVolume * 100)}
+              onChange={(e) => setSfxVolume(Number(e.target.value) / 100)}
             />
           </label>
-        )}
-      </section>
-
-      <section className="settings-section">
-        <h2>Tamanho do texto e das informações</h2>
-        <p className="hint">
-          Ajusta só o texto, os textos e as caixas de informação — o fundo de cada tela continua
-          do mesmo tamanho, sem deixar faixas vazias nas laterais.
-        </p>
-        <div className="ui-scale-bar">
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="Diminuir"
-            onClick={() => setUiScale(Math.max(UI_SCALE_MIN, uiScale - UI_SCALE_STEP))}
-            disabled={uiScale <= UI_SCALE_MIN}
-          >
-            <MinusIcon width={16} height={16} />
-          </button>
-          <input
-            type="range"
-            className="ui-scale-slider"
-            min={UI_SCALE_MIN}
-            max={UI_SCALE_MAX}
-            step={UI_SCALE_STEP}
-            value={uiScale}
-            onChange={(e) => setUiScale(Number(e.target.value))}
-            aria-label="Tamanho do texto e das informações"
-          />
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="Aumentar"
-            onClick={() => setUiScale(Math.min(UI_SCALE_MAX, uiScale + UI_SCALE_STEP))}
-            disabled={uiScale >= UI_SCALE_MAX}
-          >
-            <PlusIcon width={16} height={16} />
-          </button>
-          <span className="ui-scale-pct">{uiScale}%</span>
-        </div>
-      </section>
-
-      <section className="settings-section">
-        <h2>Desempenho</h2>
-        <label className="slider-row">
-          <span>Animações</span>
-          <input
-            type="checkbox"
-            checked={animationsEnabled}
-            onChange={(e) => setAnimationsEnabled(e.target.checked)}
-          />
-        </label>
-        <p className="hint">Desative para um app mais leve em aparelhos mais fracos.</p>
-      </section>
-
-      <section className="settings-section">
-        <h2>Animações de navegação</h2>
-        <p className="hint">
-          Controla o fade ao trocar de tela pela dock. Desative se preferir trocas instantâneas,
-          sem nenhuma animação.
-        </p>
-        <label className="slider-row">
-          <span>Animação de transição entre telas</span>
-          <input
-            type="checkbox"
-            checked={screenTransitionAnimationEnabled}
-            onChange={(e) => setScreenTransitionAnimationEnabled(e.target.checked)}
-          />
-        </label>
-        {theme === "personalizado" && (
-          <>
+          <label className="slider-row">
+            <span>Música de fundo</span>
+            <input
+              type="checkbox"
+              checked={musicEnabled}
+              onChange={(e) => setMusicEnabled(e.target.checked)}
+            />
+          </label>
+          {musicEnabled && (
             <label className="slider-row">
-              <span>Fixar papel de parede da Recepção em todas as telas</span>
+              <span>Volume da música</span>
               <input
-                type="checkbox"
-                checked={lockWallpaperToMain}
-                onChange={(e) => setLockWallpaperToMain(e.target.checked)}
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(musicVolume * 100)}
+                onChange={(e) => setMusicVolume(Number(e.target.value) / 100)}
               />
             </label>
-            <p className="hint">
-              Usa sempre a mesma imagem da Recepção em qualquer tela, em vez de uma por tela —
-              assim o fundo nunca troca ao navegar.
-            </p>
-          </>
-        )}
-      </section>
+          )}
+        </section>
+      </div>
+
+      <div className="settings-group">
+        <h1 className="settings-group-title">Integrações</h1>
+
+        <section className="settings-section">
+          <h2>Widget de Câmbio</h2>
+          <p className="hint">
+            Escolha qual moeda o widget de Câmbio da tela inicial mostra em relação ao Real. A
+            cotação atualiza sozinha de tempos em tempos, mesmo com o app fechado.
+          </p>
+          <div className="filters">
+            {CURRENCY_PAIRS.map((option) => (
+              <button
+                key={option.code}
+                className={currencyPair === option.code ? "filter active" : "filter"}
+                onClick={() => handleChangeCurrencyPair(option.code)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <div className="settings-group">
+        <h1 className="settings-group-title">Sistema</h1>
+
+        <section className="settings-section">
+          <h2>Desempenho</h2>
+          <label className="slider-row">
+            <span>Animações</span>
+            <input
+              type="checkbox"
+              checked={animationsEnabled}
+              onChange={(e) => setAnimationsEnabled(e.target.checked)}
+            />
+          </label>
+          <p className="hint">Desative para um app mais leve em aparelhos mais fracos.</p>
+        </section>
+      </div>
     </div>
   );
 }

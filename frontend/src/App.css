@@ -544,7 +544,27 @@
   color: var(--text);
 }
 
-/* Ajustes */
+/* Ajustes — reorganizados em grupos visuais (Perfil, Aparência, Notificações,
+   Relógio e alarmes, Integrações, Sistema): mesma página rolável de sempre,
+   sem abas novas — só divisores de seção deixando claro onde cada grupo
+   começa, sem esconder nada atrás de navegação extra. */
+
+.settings-group {
+  margin-top: 22px;
+}
+
+.settings-group:first-child {
+  margin-top: 0;
+}
+
+.settings-group-title {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 10px 4px;
+}
 
 .settings-section {
   background: var(--surface);
