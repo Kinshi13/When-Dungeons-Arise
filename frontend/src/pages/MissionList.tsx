@@ -1,9 +1,10 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api, type Priority, type Reminder, type ReminderType } from "../api";
 import { generateMissions, type Mission } from "../game/missionGenerator";
 import PixelMissionCard from "../components/game/PixelMissionCard";
 import { PlusIcon } from "../icons";
 import { playSfx } from "../sound";
+import { useQuickAction } from "../useQuickAction";
 
 type Filter = "todas" | "diarias" | "semanais" | "especiais" | "concluidas";
 
@@ -25,6 +26,7 @@ export default function MissionList() {
   const [dateTime, setDateTime] = useState("");
   const [type, setType] = useState<ReminderType>("OUTRO");
   const [priority, setPriority] = useState<Priority>("MEDIA");
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     setReminders(await api.reminders.list());
@@ -33,6 +35,8 @@ export default function MissionList() {
   useEffect(() => {
     load();
   }, []);
+
+  useQuickAction("nova-missao", () => titleInputRef.current?.focus());
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -83,6 +87,7 @@ export default function MissionList() {
     <div className="page">
       <form onSubmit={handleSubmit} className="form">
         <input
+          ref={titleInputRef}
           placeholder="Nova missão"
           value={title}
           onChange={(e) => setTitle(e.target.value)}

@@ -13,9 +13,11 @@ import Bolsa from "./pages/Bolsa";
 import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
 import AlarmRinger from "./components/AlarmRinger";
+import QuickPanel from "./components/QuickPanel";
 import Splash from "./components/Splash";
 import { useSettings, isLofiTheme } from "./contexts/SettingsContext";
 import { sectionOf } from "./useSwipeNav";
+import { useVerticalSwipe } from "./useVerticalSwipe";
 import { SPRINGS, screenEnter } from "./motion";
 import { isNativePlatform } from "./notifications";
 import {
@@ -312,6 +314,13 @@ function App() {
     setTabBurst({ tab, id: Date.now() });
   }
 
+  const [quickPanelOpen, setQuickPanelOpen] = useState(false);
+  function openQuickPanel() {
+    playSfx("coin");
+    setQuickPanelOpen(true);
+  }
+  const quickPanelSwipe = useVerticalSwipe(openQuickPanel, undefined);
+
   const isReader = location.pathname.startsWith("/leitor");
   const pageBackground = PAGE_BACKGROUNDS[location.pathname];
   const activeTab = activeTabOf(location.pathname);
@@ -375,6 +384,17 @@ function App() {
         </main>
         <DueBillsPopup />
         <AlarmRinger />
+        {isLofi && (
+          <>
+            <button
+              className="dock-handle"
+              aria-label="Painel rápido"
+              onClick={openQuickPanel}
+              {...quickPanelSwipe}
+            />
+            <QuickPanel open={quickPanelOpen} onClose={() => setQuickPanelOpen(false)} />
+          </>
+        )}
         {isLofi ? (
           <nav className="dock">
             {DOCK_ITEMS.map((item) => {
