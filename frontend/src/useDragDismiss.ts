@@ -10,6 +10,8 @@ interface DragDismissOptions {
 
 export interface DragDismissHandle {
   onPointerDown: (e: React.PointerEvent) => void;
+  onTouchMove: (e: React.TouchEvent) => void;
+  onTouchEnd: (e: React.TouchEvent) => void;
 }
 
 export interface DragDismissSurface {
@@ -70,8 +72,22 @@ export function useDragDismiss({ direction, onClose }: DragDismissOptions) {
     style: { y },
   };
 
+  // Telas como GuildReception continuam com o próprio gesto vertical pra
+  // ABRIR Relógio/Clima (useVerticalSwipe, escutando touchmove/touchend via
+  // eventos sintéticos do React) — e como esses componentes são portais
+  // (createPortal), o toque aqui dentro ainda "borbulha" por elas na ÁRVORE
+  // REACT, mesmo saindo visualmente por cima de tudo. Sem stopPropagation
+  // aqui, o MESMO arrasto que está FECHANDO esta tela também é visto pelo
+  // gesto de ABRIR do pai, que pode reagir (reabrindo) bem na hora em que
+  // o estado local ainda não recebeu o fechamento.
+  function stopPropagation(e: React.TouchEvent) {
+    e.stopPropagation();
+  }
+
   const handle: DragDismissHandle = {
     onPointerDown: (e) => dragControls.start(e),
+    onTouchMove: stopPropagation,
+    onTouchEnd: stopPropagation,
   };
 
   return { surface, handle, backdropOpacity };

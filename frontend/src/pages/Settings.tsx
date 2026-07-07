@@ -385,9 +385,16 @@ export default function Settings() {
             <input
               type="checkbox"
               checked={screenTransitionAnimationEnabled}
+              disabled={animationLevel === "reduzidas"}
               onChange={(e) => setScreenTransitionAnimationEnabled(e.target.checked)}
             />
           </label>
+          {animationLevel === "reduzidas" && (
+            <p className="hint">
+              Desligado agora por causa do nível "Reduzidas" em Desempenho, que já desliga toda
+              animação de UI.
+            </p>
+          )}
           {theme === "personalizado" && (
             <>
               <label className="slider-row">

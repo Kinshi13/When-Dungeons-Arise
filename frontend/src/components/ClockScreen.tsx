@@ -384,9 +384,13 @@ interface ClockScreenProps {
 export default function ClockScreen({ open, onClose, initialTab = "despertador" }: ClockScreenProps) {
   const [tab, setTab] = useState<Tab>(initialTab);
   useEffect(() => {
+    // Depende também de initialTab (não só open): o Painel Rápido pode pedir
+    // pra trocar de aba (ex. "Novo temporizador") com a tela JÁ aberta — só
+    // em "open" o efeito não re-rodava e a troca era ignorada. Não conflita
+    // com o usuário clicando manualmente numa aba (abaixo): isso só muda o
+    // estado local `tab`, nunca o `initialTab` vindo do pai.
     if (open) setTab(initialTab);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, initialTab]);
   // Mesmo gesto que abre esta tela (deslizar pra cima na Recepção): deslizar
   // pra cima de novo aqui fecha de volta (não o reverso — "puxa pra cima pra
   // ver o Relógio, puxa pra cima de novo pra voltar"). O arrasto começa só

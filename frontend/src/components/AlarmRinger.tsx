@@ -131,9 +131,10 @@ export default function AlarmRinger() {
   }
 
   // O alarme sempre ganha de qualquer overlay comum (seção 36 do spec): Voltar
-  // não pode simplesmente descartar um despertador tocando (o desafio existe
-  // bem pra isso), então consome o toque sem fazer nada em vez de fechar.
-  useOverlayBackClose(!!ringing, () => {});
+  // não pode simplesmente descartar um despertador TOCANDO (o desafio existe
+  // bem pra isso) — mas depois de resolvido, a tela "Bom dia!" é só uma
+  // confirmação com botão Fechar, então Voltar já pode fechar normalmente.
+  useOverlayBackClose(!!ringing, solved ? handleClose : () => {});
 
   if (!ringing) return null;
 
