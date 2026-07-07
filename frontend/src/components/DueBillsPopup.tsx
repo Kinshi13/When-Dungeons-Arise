@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { api, type Bill } from "../api";
 import { DURATIONS, SPRINGS } from "../motion";
+import { useOverlayBackClose } from "../useOverlayBackClose";
 
 const DISMISS_KEY = "due-bills-popup-dismissed-on";
 
@@ -41,6 +42,8 @@ export default function DueBillsPopup() {
     localStorage.setItem(DISMISS_KEY, new Date().toDateString());
     setVisible(false);
   }
+
+  useOverlayBackClose(visible, handleDismiss);
 
   return createPortal(
     <AnimatePresence>

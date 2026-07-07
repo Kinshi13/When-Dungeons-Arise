@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { sheetSlideUp } from "../motion";
 import { useDragDismiss } from "../useDragDismiss";
+import { useOverlayBackClose } from "../useOverlayBackClose";
 import type { DocumentMeta } from "../api";
 import { bookSpriteFor } from "../bookSprites";
 import { ChevronDownIcon, TrashIcon } from "../icons";
@@ -23,6 +24,7 @@ export default function LibraryDrawer({ open, docs, onClose, onSelect, onDelete 
       onClose();
     },
   });
+  useOverlayBackClose(open, onClose);
 
   return createPortal(
     <AnimatePresence>

@@ -16,6 +16,7 @@ import {
 import { ChevronLeftIcon, TrashIcon, PlusIcon } from "../icons";
 import { playSfx } from "../sound";
 import { useDragDismiss } from "../useDragDismiss";
+import { useOverlayBackClose } from "../useOverlayBackClose";
 
 interface WeatherScreenProps {
   open: boolean;
@@ -101,6 +102,7 @@ export default function WeatherScreen({ open, onClose, onPlacesChanged }: Weathe
   // só pelo cabeçalho (pra não brigar com a rolagem dos cards de outros
   // locais), mas a tela inteira acompanha o dedo de verdade enquanto arrasta.
   const { surface, handle } = useDragDismiss({ direction: "down", onClose });
+  useOverlayBackClose(open, onClose);
 
   return createPortal(
     <AnimatePresence>

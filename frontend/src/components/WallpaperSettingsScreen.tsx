@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { fullscreenSheetFade } from "../motion";
 import { useDragDismiss } from "../useDragDismiss";
+import { useOverlayBackClose } from "../useOverlayBackClose";
 import { ChevronLeftIcon, TrashIcon, PlusIcon } from "../icons";
 import { playSfx } from "../sound";
 import {
@@ -200,6 +201,8 @@ export default function WallpaperSettingsScreen({ open, onClose }: WallpaperSett
 
   const uploadedSlots = WALLPAPER_SLOT_IDS.filter((id) => slotUrls[id]);
   const { surface, handle } = useDragDismiss({ direction: "down", onClose });
+  useOverlayBackClose(open, onClose);
+  useOverlayBackClose(!!adjustingSlot, () => setAdjustingSlot(null));
 
   return createPortal(
     <AnimatePresence>

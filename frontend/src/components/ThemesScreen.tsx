@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { fullscreenSheetFade } from "../motion";
 import { useDragDismiss } from "../useDragDismiss";
+import { useOverlayBackClose } from "../useOverlayBackClose";
 import { ChevronLeftIcon, CheckIcon, ChevronRightIcon } from "../icons";
 import { useSettings, THEME_LABEL, LOCKED_THEMES, isLofiTheme, type ThemeId } from "../contexts/SettingsContext";
 import { playSfx } from "../sound";
@@ -26,6 +27,7 @@ export default function ThemesScreen({ open, onClose }: ThemesScreenProps) {
   const { theme, setTheme } = useSettings();
   const [wallpaperOpen, setWallpaperOpen] = useState(false);
   const { surface, handle } = useDragDismiss({ direction: "down", onClose });
+  useOverlayBackClose(open, onClose);
 
   return createPortal(
     <>

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { sheetBackdropFade, sheetSlideUp } from "../motion";
 import { useDragDismiss } from "../useDragDismiss";
+import { useOverlayBackClose } from "../useOverlayBackClose";
 import { navigateToQuickAction, type QuickActionId } from "../useQuickAction";
 import { api, type Bill, type Reminder } from "../api";
 import { nextAlarm } from "../clockStore";
@@ -42,6 +43,7 @@ export default function QuickPanel({ open, onClose }: QuickPanelProps) {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const { surface, handle, backdropOpacity } = useDragDismiss({ direction: "down", onClose });
+  useOverlayBackClose(open, onClose);
 
   useEffect(() => {
     if (!open) return;

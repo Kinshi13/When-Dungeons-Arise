@@ -18,6 +18,7 @@ import { scheduleAlarmNotification, cancelAlarmNotification } from "../notificat
 import { ChevronLeftIcon, PlusIcon, TrashIcon } from "../icons";
 import { playSfx } from "../sound";
 import { useDragDismiss } from "../useDragDismiss";
+import { useOverlayBackClose } from "../useOverlayBackClose";
 import { api } from "../api";
 
 type Tab = "despertador" | "cronometro" | "temporizador";
@@ -392,6 +393,7 @@ export default function ClockScreen({ open, onClose, initialTab = "despertador" 
   // pelo cabeçalho (pra não brigar com a rolagem da lista de alarmes), mas a
   // tela inteira acompanha o dedo de verdade enquanto arrasta.
   const { surface, handle } = useDragDismiss({ direction: "up", onClose });
+  useOverlayBackClose(open, onClose);
 
   return createPortal(
     <AnimatePresence>
