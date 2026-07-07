@@ -12,6 +12,7 @@ import { nextAlarm, type Alarm } from "../clockStore";
 import { api, type Bill, type Reminder } from "../api";
 import { getCachedPrimaryWeather, fetchPrimaryWeather, type WeatherInfo } from "../weather";
 import { buildHomeSummary } from "../game/homeSummary";
+import { useQuickAction } from "../useQuickAction";
 
 type ClockTab = "despertador" | "cronometro" | "temporizador";
 
@@ -120,6 +121,9 @@ export default function GuildReception() {
     setClockTab(tab);
     setClockOpen(true);
   }
+
+  useQuickAction("novo-alarme", () => openClock("despertador"));
+  useQuickAction("novo-temporizador", () => openClock("temporizador"));
 
   const clockCardSwipe = useClockCardSwipe(
     () => openClock("cronometro"),

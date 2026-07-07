@@ -1906,8 +1906,14 @@
 .book-sheet-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(8, 5, 16, 0.7);
   z-index: var(--z-sheet-backdrop);
+}
+
+.book-sheet-backdrop-fill {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 5, 16, 0.7);
+  pointer-events: none;
 }
 
 .book-sheet {
@@ -3206,4 +3212,119 @@
 .weather-add-form input {
   border: none;
   background: var(--surface);
+}
+
+/* Alça do Painel Rápido — pill discreta acima da dock flutuante. Toque abre;
+   arrastar pra cima a partir dela também abre (useVerticalSwipe), sem
+   competir com gesto nenhum de dentro das telas (a área de toque é só a
+   própria alça, não a tela inteira). */
+.dock-handle {
+  position: fixed;
+  z-index: var(--z-dock);
+  left: 50%;
+  bottom: max(58px, calc(env(safe-area-inset-bottom) + 54px));
+  transform: translateX(-50%);
+  width: 44px;
+  height: 14px;
+  border-radius: 10px;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
+.dock-handle::before {
+  content: "";
+  width: 28px;
+  height: 4px;
+  border-radius: 10px;
+  background: var(--text-muted);
+}
+
+/* Painel Rápido — bottom sheet global (portal), aberto pela alça acima da
+   dock. Mesma arquitetura de sheet+backdrop sincronizado de BookCoverSheet. */
+.quick-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-sheet-backdrop);
+}
+
+.quick-panel-backdrop-fill {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 5, 16, 0.55);
+  pointer-events: none;
+}
+
+.quick-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--surface);
+  border-top: var(--pixel-border);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.25);
+  z-index: var(--z-sheet);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
+  gap: 14px;
+}
+
+.quick-panel-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--text-muted);
+  border-radius: 10px;
+}
+
+.quick-panel-summary {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+
+.quick-panel-summary-row {
+  font-size: 0.8rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.quick-panel-summary-highlight {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.quick-panel-actions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.quick-panel-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 6px;
+  background: var(--surface-raised);
+  border: var(--pixel-border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 0.72rem;
+  text-align: center;
 }

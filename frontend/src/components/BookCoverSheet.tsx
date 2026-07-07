@@ -41,12 +41,15 @@ export default function BookCoverSheet({ doc, spriteUrl, onClose, onDelete }: Bo
   return createPortal(
     <AnimatePresence>
       {doc && (
-        <motion.div
-          className="book-sheet-backdrop"
-          {...sheetBackdropFade}
-          style={{ opacity: backdropOpacity }}
-          onClick={onClose}
-        >
+        <motion.div className="book-sheet-backdrop" {...sheetBackdropFade} onClick={onClose}>
+          {/* Camada própria pro esmaecimento ligado ao arraste: se o mesmo
+              elemento tivesse `animate` (fade de entrada/saída) E `style` com
+              essa MotionValue de arraste na MESMA propriedade, os dois
+              disputariam o valor e o resultado ficava travado no `initial`
+              (opacity 0, backdrop invisível em repouso). Como opacidade de
+              elementos aninhados se multiplica na composição, a de fora cuida
+              só do fade de entrada/saída e esta cuida só do arraste. */}
+          <motion.div className="book-sheet-backdrop-fill" style={{ opacity: backdropOpacity }} />
           <motion.div
             className="book-sheet"
             onClick={(e) => e.stopPropagation()}

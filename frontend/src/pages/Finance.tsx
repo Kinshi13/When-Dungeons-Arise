@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { api, type Expense } from "../api";
 import { TrashIcon, PlusIcon } from "../icons";
+import { useQuickAction } from "../useQuickAction";
 
 function toDateKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -19,6 +20,7 @@ export default function Finance() {
   const [installments, setInstallments] = useState("1");
   const [superficial, setSuperficial] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const amountInputRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     setExpenses(await api.expenses.list());
@@ -27,6 +29,8 @@ export default function Finance() {
   useEffect(() => {
     load();
   }, []);
+
+  useQuickAction("novo-gasto", () => amountInputRef.current?.focus());
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -75,6 +79,7 @@ export default function Finance() {
 
       <form onSubmit={handleSubmit} className="form">
         <input
+          ref={amountInputRef}
           inputMode="decimal"
           placeholder="Valor (R$)"
           value={amount}

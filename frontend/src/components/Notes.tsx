@@ -3,6 +3,7 @@ import { api, type Note } from "../api";
 import { playSfx } from "../sound";
 import { findDateMention } from "../game/dateDetector";
 import NoteEditorScreen from "./NoteEditorScreen";
+import { useQuickAction } from "../useQuickAction";
 
 function previewText(content: string) {
   const firstLines = content.trim().split("\n").slice(0, 3).join(" ");
@@ -26,6 +27,8 @@ export default function Notes() {
     await load();
     setEditingNote(note);
   }
+
+  useQuickAction("nova-nota", handleCreate);
 
   async function handleSave(data: { title: string; content: string }) {
     if (!editingNote) return;

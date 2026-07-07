@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { api, type ReminderType } from "../api";
@@ -6,6 +6,7 @@ import { toDateKey, type CalendarEntry } from "../game/calendarEntries";
 import { useCalendarData } from "../useCalendarData";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon } from "../icons";
 import { playSfx } from "../sound";
+import { useQuickAction } from "../useQuickAction";
 
 interface CalendarProps {
   variant?: "financas" | "agenda";
@@ -56,8 +57,11 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
   const [isBirthday, setIsBirthday] = useState(false);
   const [birthYear, setBirthYear] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const { entriesByDay, reload: load } = useCalendarData(variant, year);
+
+  useQuickAction("novo-evento", () => titleInputRef.current?.focus());
 
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month]);
   const todayKey = toDateKey(today);
@@ -283,6 +287,7 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
 
         <form onSubmit={handleSubmit} className="form day-form">
           <input
+            ref={titleInputRef}
             placeholder={isBirthday ? "Nome do aniversariante" : "Novo lembrete"}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
