@@ -187,6 +187,80 @@
   object-position: top center;
 }
 
+/* Partículas ambiente opcionais (seção 27 do spec) — poeira nas áreas em
+   geral, chuva só na Sala do Tempo. Só transform/opacity via @keyframes
+   (nenhum JS por frame); a quantidade e o nível (Reduzidas/Padrão/Completas)
+   são controlados em Ajustes → Sistema (ver SettingsContext.tsx). */
+.ambient-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient-particle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+.ambient-particles-dust .ambient-particle {
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.4);
+  animation-name: ambient-dust-drift;
+}
+
+.ambient-particles-rain .ambient-particle {
+  width: 2px;
+  height: 16px;
+  border-radius: 2px;
+  background: linear-gradient(rgba(210, 226, 238, 0), rgba(210, 226, 238, 0.55));
+  animation-name: ambient-rain-fall;
+}
+
+@keyframes ambient-dust-drift {
+  0% { transform: translate(0, -10%); opacity: 0; }
+  15% { opacity: 0.55; }
+  85% { opacity: 0.55; }
+  100% { transform: translate(5%, 110%); opacity: 0; }
+}
+
+@keyframes ambient-rain-fall {
+  0% { transform: translateY(-10%); opacity: 0; }
+  10% { opacity: 0.6; }
+  100% { transform: translateY(115%); opacity: 0.15; }
+}
+
+/* Padrão mostra 2 a cada 3 partículas (mais sutil); Completas mostra todas.
+   Reduzidas some com a camada inteira — junto de prefers-reduced-motion do
+   sistema e de "app em segundo plano", que não devem depender da escolha
+   salva no app pra também pausarem/sumirem. */
+.ambient-particles .ambient-particle:nth-child(3n) {
+  display: none;
+}
+
+:root[data-animation-level="completas"] .ambient-particles .ambient-particle:nth-child(3n) {
+  display: block;
+}
+
+:root[data-animation-level="reduzidas"] .ambient-particles {
+  display: none;
+}
+
+.app-hidden .ambient-particle {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-particles {
+    display: none;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

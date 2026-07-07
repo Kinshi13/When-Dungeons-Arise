@@ -12,6 +12,17 @@ export const UI_SCALE_MIN = 50;
 export const UI_SCALE_MAX = 125;
 export const UI_SCALE_STEP = 5;
 
+// Reduzidas: sem animação de UI nenhuma (framer-motion em reducedMotion
+// "always") e sem partículas ambiente. Padrão/Completas mantêm a UI igual —
+// só mudam a quantidade de partículas ambiente (ver AmbientParticles.tsx).
+export type AnimationLevel = "reduzidas" | "padrao" | "completas";
+
+export const ANIMATION_LEVEL_LABEL: Record<AnimationLevel, string> = {
+  reduzidas: "Reduzidas",
+  padrao: "Padrão",
+  completas: "Completas",
+};
+
 export type ThemeId = "escuro" | "claro" | "lofi" | "personalizado";
 
 // Ordem daqui é a ordem de exibição na tela de Temas.
@@ -41,7 +52,7 @@ interface SettingsState {
   musicEnabled: boolean;
   musicVolume: number;
   uiScale: UiScale;
-  animationsEnabled: boolean;
+  animationLevel: AnimationLevel;
   theme: ThemeId;
   // Animação de entrada/saída ao trocar de tela (fade + leve translateY) —
   // vale tanto pra navegação por gesto quanto por toque na barra/links.
@@ -58,7 +69,7 @@ const DEFAULTS: SettingsState = {
   musicEnabled: false,
   musicVolume: 0.35,
   uiScale: 100,
-  animationsEnabled: true,
+  animationLevel: "padrao",
   theme: "lofi",
   screenTransitionAnimationEnabled: true,
   lockWallpaperToMain: false,
@@ -77,11 +88,17 @@ function loadSettings(): SettingsState {
     // Quem tinha um tema hoje bloqueado salvo (ex.: o antigo padrão "Guilda")
     // volta pro padrão atual — o tema bloqueado não é acessível por enquanto.
     const theme: ThemeId = LOCKED_THEMES.includes(parsed.theme) ? DEFAULTS.theme : parsed.theme ?? DEFAULTS.theme;
+    // Quem salvou o antigo toggle booleano (ligado/desligado) antes deste
+    // nível de 3 opções existir: false vira "reduzidas" (preserva a escolha
+    // de desligar), true ou ausente vira o padrão "padrao".
+    const animationLevel: AnimationLevel =
+      parsed.animationLevel ?? (parsed.animationsEnabled === false ? "reduzidas" : DEFAULTS.animationLevel);
     return {
       ...DEFAULTS,
       ...parsed,
       uiScale: Number.isFinite(uiScale) && uiScale > 0 ? uiScale : DEFAULTS.uiScale,
       theme,
+      animationLevel,
     };
   } catch {
     return DEFAULTS;
@@ -93,7 +110,7 @@ interface SettingsContextValue extends SettingsState {
   setMusicEnabled: (v: boolean) => void;
   setMusicVolume: (v: number) => void;
   setUiScale: (v: UiScale) => void;
-  setAnimationsEnabled: (v: boolean) => void;
+  setAnimationLevel: (v: AnimationLevel) => void;
   setTheme: (v: ThemeId) => void;
   setScreenTransitionAnimationEnabled: (v: boolean) => void;
   setLockWallpaperToMain: (v: boolean) => void;
@@ -109,8 +126,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [state]);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("no-animations", !state.animationsEnabled);
-  }, [state.animationsEnabled]);
+    document.documentElement.classList.toggle("no-animations", state.animationLevel === "reduzidas");
+    document.documentElement.dataset.animationLevel = state.animationLevel;
+  }, [state.animationLevel]);
 
   // Escala só o texto/informações (font-size da raiz, de onde todo `rem` do
   // app deriva) — fundos de tela cheia usam px/vw/vh/%, então não são afetados.
@@ -144,7 +162,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setMusicEnabled: (v) => setState((s) => ({ ...s, musicEnabled: v })),
     setMusicVolume: (v) => setState((s) => ({ ...s, musicVolume: v })),
     setUiScale: (v) => setState((s) => ({ ...s, uiScale: v })),
-    setAnimationsEnabled: (v) => setState((s) => ({ ...s, animationsEnabled: v })),
+    setAnimationLevel: (v) => setState((s) => ({ ...s, animationLevel: v })),
     // Temas bloqueados não são aplicáveis nem por chamada direta.
     setTheme: (v) => setState((s) => (LOCKED_THEMES.includes(v) ? s : { ...s, theme: v })),
     setScreenTransitionAnimationEnabled: (v) => setState((s) => ({ ...s, screenTransitionAnimationEnabled: v })),

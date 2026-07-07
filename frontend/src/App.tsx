@@ -14,6 +14,7 @@ import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
 import AlarmRinger from "./components/AlarmRinger";
 import QuickPanel from "./components/QuickPanel";
+import AmbientParticles from "./components/AmbientParticles";
 import Splash from "./components/Splash";
 import { useSettings, isLofiTheme } from "./contexts/SettingsContext";
 import { sectionOf } from "./useSwipeNav";
@@ -117,17 +118,22 @@ function renderBackgroundContent(
     // Suprime o brilho ::after quando tem papel de parede por cima — ele é
     // pensado pra iluminar o gradiente flat, não faz sentido sobre uma foto.
     const hasWallpaperClass = customWallpaper ? " lofi-scene-has-wallpaper" : "";
+    // Chuva só combina com o tema noturno/lavanda da Sala do Tempo; as
+    // demais áreas ganham a poeira flutuante genérica (seção 27 do spec).
+    const particleKind = sceneClass === "lofi-scene-tempo" ? "rain" : "dust";
     if (image) {
       return (
         <div className={`lofi-scene ${sceneClass} lofi-scene-photo${hasWallpaperClass}`} aria-hidden="true">
           <img src={image} alt="" className="lofi-scene-photo-img" />
           {renderWallpaperOverlay(customWallpaper)}
+          <AmbientParticles kind={particleKind} />
         </div>
       );
     }
     return (
       <div className={`lofi-scene ${sceneClass}${hasWallpaperClass}`} aria-hidden="true">
         {renderWallpaperOverlay(customWallpaper)}
+        <AmbientParticles kind={particleKind} />
       </div>
     );
   }
@@ -277,6 +283,21 @@ function useWallpaperState() {
   return resolve;
 }
 
+// Partículas ambiente (poeira/chuva) pausam quando o app sai de foco — sem
+// custo nenhum enquanto o usuário está noutro app/tela bloqueada. Só a
+// classe CSS muda; a animação em si continua 100% CSS (ver .ambient-particles
+// em index.css), nada de rAF/timer pra pausar/retomar manualmente.
+function useAmbientParticlesPause() {
+  useEffect(() => {
+    function sync() {
+      document.documentElement.classList.toggle("app-hidden", document.hidden);
+    }
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, []);
+}
+
 function useAndroidBackButton() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -300,10 +321,12 @@ function useAndroidBackButton() {
 }
 
 function App() {
-  const { animationsEnabled, theme, screenTransitionAnimationEnabled, lockWallpaperToMain } = useSettings();
+  const { animationLevel, theme, screenTransitionAnimationEnabled, lockWallpaperToMain } = useSettings();
+  const animationsEnabled = animationLevel !== "reduzidas";
   const isLofi = isLofiTheme(theme);
   const location = useLocation();
   useAndroidBackButton();
+  useAmbientParticlesPause();
   const resolveCustomWallpaper = useWallpaperState();
   // Com "Fixar papel de parede da Recepção em todas as telas" ligado, toda
   // tela resolve a mesma imagem da Guilda (mainSlot), então o fundo nunca
