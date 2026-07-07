@@ -109,6 +109,31 @@ export function TabGearIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+// Bolsa — alforje/bolsa de couro com alça, pra abrigar as ferramentas
+// pessoais (Diário, Biblioteca, Relógio, Clima, Ajustes) num destino só.
+export function TabBagIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M9 8V6.5a3 3 0 0 1 6 0V8" fill="none" stroke="var(--border)" strokeWidth="1.4" />
+      <path d="M6.4 8h11.2l1.2 10.6a1.6 1.6 0 0 1-1.6 1.9H6.8a1.6 1.6 0 0 1-1.6-1.9Z" fill="var(--reuniao)" />
+      <rect x="9" y="10.6" width="6" height="2" fill="var(--accent)" />
+    </svg>
+  );
+}
+
+// Clima — sol atrás de uma nuvem
+export function TabWeatherIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="15.5" cy="8" r="4" fill="var(--outro)" />
+      <path
+        d="M6.5 10.5a4 4 0 0 1 7.6-1.7A4.6 4.6 0 0 1 19 13a4.2 4.2 0 0 1-.5 8.4H6.5a4.5 4.5 0 0 1 0-9Z"
+        fill="var(--accent-2)"
+      />
+    </svg>
+  );
+}
+
 // Florzinha decorativa — usada no card de Temas da Recepção (tema Lo-fi),
 // puramente decorativa (não representa nenhuma tela). Pétalas macias em vez
 // do estilo pixel-art dos ícones de aba acima, pra combinar com o resto da

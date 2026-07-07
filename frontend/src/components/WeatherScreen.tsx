@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { fullscreenSheetFade } from "../motion";
 import {
   listPlaces,
   addPlace,
@@ -105,10 +106,7 @@ export default function WeatherScreen({ open, onClose, onPlacesChanged }: Weathe
       {open && (
         <motion.div
           className="note-fullscreen weather-screen"
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 24 }}
-          transition={{ duration: 0.2 }}
+          {...fullscreenSheetFade}
         >
           <div className="lofi-scene lofi-scene-tempo" aria-hidden="true" />
 

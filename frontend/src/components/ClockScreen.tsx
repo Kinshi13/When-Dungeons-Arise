@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { fullscreenSheetFade } from "../motion";
 import {
   alarms,
   saveAlarmSound,
@@ -396,10 +397,7 @@ export default function ClockScreen({ open, onClose, initialTab = "despertador" 
       {open && (
         <motion.div
           className="note-fullscreen clock-screen"
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 24 }}
-          transition={{ duration: 0.2 }}
+          {...fullscreenSheetFade}
         >
           <div className="lofi-scene lofi-scene-tempo" aria-hidden="true" />
 

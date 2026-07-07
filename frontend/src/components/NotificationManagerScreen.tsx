@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { fullscreenSheetFade } from "../motion";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import {
@@ -106,10 +107,7 @@ export default function NotificationManagerScreen({ open, onClose }: Notificatio
       {open && (
         <motion.div
           className="note-fullscreen"
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 24 }}
-          transition={{ duration: 0.2 }}
+          {...fullscreenSheetFade}
         >
           <div className="page-bg page-bg-blurred-strong" aria-hidden="true">
             <img src="/ambient-bg.gif" alt="" />

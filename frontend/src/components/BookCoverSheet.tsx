@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { sheetBackdropFade, sheetSlideUp } from "../motion";
 import { useNavigate } from "react-router-dom";
 import type { DocumentMeta } from "../api";
 import { TrashIcon } from "../icons";
@@ -40,18 +41,13 @@ export default function BookCoverSheet({ doc, spriteUrl, onClose, onDelete }: Bo
       {doc && (
         <motion.div
           className="book-sheet-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          {...sheetBackdropFade}
           onClick={onClose}
         >
           <motion.div
             className="book-sheet"
             onClick={(e) => e.stopPropagation()}
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", stiffness: 360, damping: 34 }}
+            {...sheetSlideUp}
           >
             <div className="book-sheet-handle" />
             <button className="book-sheet-delete" onClick={handleDelete} aria-label="Excluir documento">

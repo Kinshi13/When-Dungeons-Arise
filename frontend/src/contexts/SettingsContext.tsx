@@ -43,14 +43,7 @@ interface SettingsState {
   uiScale: UiScale;
   animationsEnabled: boolean;
   theme: ThemeId;
-  // Efeito de arrastar (prévia acompanhando o dedo + gaveta) ao deslizar
-  // entre telas/sub-abas — desligar isso NÃO desliga o gesto de deslizar em
-  // si (continua navegando), só a animação: a troca vira instantânea. Existe
-  // separado do "animationsEnabled" porque é especificamente esse mecanismo
-  // (não as animações em geral) que pode piscar a sub-aba errada por um
-  // instante em alguns aparelhos.
-  dragSlideAnimationEnabled: boolean;
-  // Animação de entrada (deslizar da lateral) ao assentar numa tela nova —
+  // Animação de entrada/saída ao trocar de tela (fade + leve translateY) —
   // vale tanto pra navegação por gesto quanto por toque na barra/links.
   screenTransitionAnimationEnabled: boolean;
   // Tema "Lo-fi Personalizado": usa sempre o papel de parede da Recepção em
@@ -67,7 +60,6 @@ const DEFAULTS: SettingsState = {
   uiScale: 100,
   animationsEnabled: true,
   theme: "lofi",
-  dragSlideAnimationEnabled: true,
   screenTransitionAnimationEnabled: true,
   lockWallpaperToMain: false,
 };
@@ -103,7 +95,6 @@ interface SettingsContextValue extends SettingsState {
   setUiScale: (v: UiScale) => void;
   setAnimationsEnabled: (v: boolean) => void;
   setTheme: (v: ThemeId) => void;
-  setDragSlideAnimationEnabled: (v: boolean) => void;
   setScreenTransitionAnimationEnabled: (v: boolean) => void;
   setLockWallpaperToMain: (v: boolean) => void;
 }
@@ -156,7 +147,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setAnimationsEnabled: (v) => setState((s) => ({ ...s, animationsEnabled: v })),
     // Temas bloqueados não são aplicáveis nem por chamada direta.
     setTheme: (v) => setState((s) => (LOCKED_THEMES.includes(v) ? s : { ...s, theme: v })),
-    setDragSlideAnimationEnabled: (v) => setState((s) => ({ ...s, dragSlideAnimationEnabled: v })),
     setScreenTransitionAnimationEnabled: (v) => setState((s) => ({ ...s, screenTransitionAnimationEnabled: v })),
     setLockWallpaperToMain: (v) => setState((s) => ({ ...s, lockWallpaperToMain: v })),
   };

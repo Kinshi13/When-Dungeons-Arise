@@ -81,8 +81,6 @@ export default function Settings() {
     setUiScale,
     animationsEnabled,
     setAnimationsEnabled,
-    dragSlideAnimationEnabled,
-    setDragSlideAnimationEnabled,
     screenTransitionAnimationEnabled,
     setScreenTransitionAnimationEnabled,
     lockWallpaperToMain,
@@ -571,18 +569,9 @@ export default function Settings() {
       <section className="settings-section">
         <h2>Animações de navegação</h2>
         <p className="hint">
-          Em alguns aparelhos, a animação de deslizar entre telas pode piscar rapidamente a
-          tela vizinha antes de assentar na certa. Se você notar isso, desative as opções abaixo
-          — deslizar continua funcionando pra navegar, só sem o efeito visual.
+          Controla o fade ao trocar de tela pela dock. Desative se preferir trocas instantâneas,
+          sem nenhuma animação.
         </p>
-        <label className="slider-row">
-          <span>Efeito de arrastar ao deslizar</span>
-          <input
-            type="checkbox"
-            checked={dragSlideAnimationEnabled}
-            onChange={(e) => setDragSlideAnimationEnabled(e.target.checked)}
-          />
-        </label>
         <label className="slider-row">
           <span>Animação de transição entre telas</span>
           <input

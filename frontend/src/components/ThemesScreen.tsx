@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { fullscreenSheetFade } from "../motion";
 import { ChevronLeftIcon, CheckIcon, ChevronRightIcon } from "../icons";
 import { useSettings, THEME_LABEL, LOCKED_THEMES, isLofiTheme, type ThemeId } from "../contexts/SettingsContext";
 import { playSfx } from "../sound";
@@ -30,10 +31,7 @@ export default function ThemesScreen({ open, onClose }: ThemesScreenProps) {
         {open && (
           <motion.div
             className="note-fullscreen"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 24 }}
-            transition={{ duration: 0.2 }}
+            {...fullscreenSheetFade}
           >
             <div className="page-bg page-bg-blurred-strong" aria-hidden="true">
               <img src={isLofiTheme(theme) ? "/lofi-guilda-bg.jpg" : "/guild-reception-bg.png"} alt="" />
