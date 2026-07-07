@@ -23,7 +23,14 @@ import {
   type NotificationPrefs,
   type NotificationScreen,
 } from "../notificationPrefs";
-import { useSettings, UI_SCALE_MIN, UI_SCALE_MAX, UI_SCALE_STEP } from "../contexts/SettingsContext";
+import {
+  useSettings,
+  UI_SCALE_MIN,
+  UI_SCALE_MAX,
+  UI_SCALE_STEP,
+  ANIMATION_LEVEL_LABEL,
+  type AnimationLevel,
+} from "../contexts/SettingsContext";
 import { listMonitoredApps, upsertMonitoredApp, removeMonitoredApp, type MonitoredApp } from "../notificationAppPrefs";
 import { syncMonitoredPackages } from "../notificationBridge";
 import {
@@ -79,8 +86,8 @@ export default function Settings() {
     setMusicVolume,
     uiScale,
     setUiScale,
-    animationsEnabled,
-    setAnimationsEnabled,
+    animationLevel,
+    setAnimationLevel,
     screenTransitionAnimationEnabled,
     setScreenTransitionAnimationEnabled,
     lockWallpaperToMain,
@@ -610,15 +617,21 @@ export default function Settings() {
 
         <section className="settings-section">
           <h2>Desempenho</h2>
-          <label className="slider-row">
-            <span>Animações</span>
-            <input
-              type="checkbox"
-              checked={animationsEnabled}
-              onChange={(e) => setAnimationsEnabled(e.target.checked)}
-            />
-          </label>
-          <p className="hint">Desative para um app mais leve em aparelhos mais fracos.</p>
+          <p className="hint">
+            Reduzidas desliga toda animação de UI e as partículas ambiente (poeira, chuva) — o
+            app fica mais leve em aparelhos mais fracos. Completas mostra mais partículas.
+          </p>
+          <div className="filters">
+            {(Object.keys(ANIMATION_LEVEL_LABEL) as AnimationLevel[]).map((level) => (
+              <button
+                key={level}
+                className={animationLevel === level ? "filter active" : "filter"}
+                onClick={() => setAnimationLevel(level)}
+              >
+                {ANIMATION_LEVEL_LABEL[level]}
+              </button>
+            ))}
+          </div>
         </section>
       </div>
     </div>
