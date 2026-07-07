@@ -1,4 +1,5 @@
 import { useEffect, useImperativeHandle, useState, forwardRef } from "react";
+import { motion } from "framer-motion";
 import { fetchPrimaryWeather, getCachedPrimaryWeather, listPlaces, type WeatherInfo } from "../weather";
 import { playSfx } from "../sound";
 
@@ -33,13 +34,17 @@ const WeatherWidget = forwardRef<WeatherWidgetHandle, WeatherWidgetProps>(functi
   }, []);
 
   return (
-    <button
+    <motion.button
       className="reception-card reception-card-clima"
       onClick={() => {
         playSfx("coin");
         onOpen();
       }}
       aria-label="Clima"
+      initial={{ opacity: 0, y: 18, scale: 0.94 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 380, damping: 26, delay: 5 * 0.05 }}
+      whileTap={{ scale: 0.94 }}
     >
       {info ? (
         <>
@@ -57,7 +62,7 @@ const WeatherWidget = forwardRef<WeatherWidgetHandle, WeatherWidgetProps>(functi
       ) : (
         <span className="reception-card-clima-desc">🌤️ Toque para configurar o clima</span>
       )}
-    </button>
+    </motion.button>
   );
 });
 

@@ -72,6 +72,18 @@ function lofiSceneClass(pathname: string): string {
   return (section && LOFI_SECTION_CLASS[section]) || "lofi-scene-guilda";
 }
 
+// Chave da tela PRINCIPAL atual, agrupando sub-rotas da mesma área (ex.:
+// /missoes/hoje e /missoes/missoes) num valor só — usada como key do
+// AnimatePresence externo (fundo + screenEnter) pra essa transição mais forte
+// disparar só ao trocar de área pela dock, não a cada troca de sub-aba
+// (que já tem sua própria transição mais leve, ver tabContentEnter).
+function mainScreenKeyOf(pathname: string): string {
+  if (pathname.startsWith("/diario")) return "diario";
+  if (pathname === "/biblioteca") return "biblioteca";
+  if (pathname.startsWith("/bolsa")) return "bolsa";
+  return sectionOf(pathname) ?? pathname;
+}
+
 // Ilustração fixa por área no Lo-fi (em vez do gradiente flat) — hoje só a
 // Guilda tem uma, mas o mapa já fica pronto pra receber mais no futuro.
 const LOFI_SECTION_IMAGE: Record<string, string> = {
@@ -374,13 +386,13 @@ function App() {
             nenhum mecanismo extra de acompanhamento de gesto (que existia só
             por causa do arraste, removido junto com o swipe global). */}
         <AnimatePresence mode="sync" initial={false}>
-          <motion.div key={location.pathname} className="page-bg-layer" aria-hidden="true" {...transitionProps}>
+          <motion.div key={mainScreenKeyOf(location.pathname)} className="page-bg-layer" aria-hidden="true" {...transitionProps}>
             {renderBackgroundContent(pageBackground, isLofi, location.pathname, customWallpaper)}
           </motion.div>
         </AnimatePresence>
         <main className="main">
           <AnimatePresence mode="sync" initial={false}>
-            <motion.div key={location.pathname} className="screen-transition" {...transitionProps}>
+            <motion.div key={mainScreenKeyOf(location.pathname)} className="screen-transition" {...transitionProps}>
               <Routes location={location}>
                 <Route path="/" element={<GuildReception />} />
                 <Route path="/missoes" element={<Navigate to="/missoes/hoje" replace />} />

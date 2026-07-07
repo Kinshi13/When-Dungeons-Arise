@@ -1,4 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { tabContentEnter } from "../motion";
 import TreasuryOverview from "./TreasuryOverview";
 import Finance from "./Finance";
 import FinanceAnalysis from "./FinanceAnalysis";
@@ -47,11 +49,15 @@ export default function Treasury() {
         </div>
       </div>
 
-      {tab === "visao-geral" && <TreasuryOverview />}
-      {tab === "movimentos" && <Finance />}
-      {tab === "contas" && <Bills />}
-      {tab === "analises" && <FinanceAnalysis />}
-      {tab === "ferramentas" && <TreasuryTools />}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key={tab} {...tabContentEnter}>
+          {tab === "visao-geral" && <TreasuryOverview />}
+          {tab === "movimentos" && <Finance />}
+          {tab === "contas" && <Bills />}
+          {tab === "analises" && <FinanceAnalysis />}
+          {tab === "ferramentas" && <TreasuryTools />}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

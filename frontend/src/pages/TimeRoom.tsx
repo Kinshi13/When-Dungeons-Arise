@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { tabContentEnter } from "../motion";
 import Calendar from "./Calendar";
 import LinhaDoTempo from "./LinhaDoTempo";
 import PixelDialogBox from "../components/game/PixelDialogBox";
@@ -88,9 +90,13 @@ export default function TimeRoom() {
           </Link>
         </div>
       </div>
-      {tab === "calendario" && <Calendar variant="financas" />}
-      {tab === "agenda" && <Calendar variant="agenda" />}
-      {tab === "linha-do-tempo" && <LinhaDoTempo />}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key={tab} {...tabContentEnter}>
+          {tab === "calendario" && <Calendar variant="financas" />}
+          {tab === "agenda" && <Calendar variant="agenda" />}
+          {tab === "linha-do-tempo" && <LinhaDoTempo />}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

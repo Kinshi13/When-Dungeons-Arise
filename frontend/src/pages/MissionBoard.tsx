@@ -1,4 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { tabContentEnter } from "../motion";
 import MissionToday from "./MissionToday";
 import MissionList from "./MissionList";
 import NotificationInbox from "../components/NotificationInbox";
@@ -32,9 +34,13 @@ export default function MissionBoard() {
         </div>
       </div>
 
-      {tab === "hoje" && <MissionToday />}
-      {tab === "missoes" && <MissionList />}
-      {tab === "caixa" && <NotificationInbox />}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key={tab} {...tabContentEnter}>
+          {tab === "hoje" && <MissionToday />}
+          {tab === "missoes" && <MissionList />}
+          {tab === "caixa" && <NotificationInbox />}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

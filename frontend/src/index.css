@@ -263,6 +263,16 @@
 
 * {
   box-sizing: border-box;
+  /* Remove o retângulo azul padrão do Android/Chrome ao tocar em qualquer
+     elemento clicável — o app já tem seu próprio feedback de toque (escala,
+     "afundar" de botão, etc.), então esse destaque nativo só brigava com ele. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 body {

@@ -54,8 +54,21 @@ export const sheetSlideUp = {
 // scale quase imperceptível) em vez de um slide completo de tela: a troca
 // deve parecer "o ambiente mudou", não "uma página deslizou pela tela".
 export const screenEnter = {
-  initial: { opacity: 0, y: 8, scale: 0.995 },
+  initial: { opacity: 0, y: 18, scale: 0.97 },
   animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, y: -4, scale: 0.995 },
-  transition: { duration: 0.22, ease: [0.32, 0.72, 0, 1] },
+  exit: { opacity: 0, y: -10, scale: 0.97 },
+  transition: { duration: 0.3, ease: [0.32, 0.72, 0, 1] },
+} as const;
+
+// Sub-abas dentro de uma mesma tela principal (Mural, Tesouraria, Sala do
+// Tempo, Diário) — deliberadamente mais rápido e só com fade (sem y/scale):
+// o conteúdo inteiro re-monta a cada troca (cada aba é um componente
+// diferente), então um deslocamento vertical em cima disso parecia uma
+// gaveta abrindo, não uma troca de aba. Só o fade já deixa a troca visível
+// sem esse efeito colateral.
+export const tabContentEnter = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: { duration: 0.15 },
 } as const;

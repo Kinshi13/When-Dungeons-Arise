@@ -466,12 +466,20 @@
   border-radius: 10px;
   font-size: 0.95rem;
   cursor: pointer;
+  /* Descansa "elevado" — o estado .active abaixo afunda a partir daqui,
+     igual ao :active transiente, em vez de subir ainda mais. */
+  box-shadow: var(--pixel-shadow-sm);
 }
 
+/* Selecionado/ativo permanente: precisa parecer PRESSIONADO (afundado),
+   não flutuando mais alto — mesmo deslocamento+achatamento de sombra do
+   :active transiente logo acima, só que fixo enquanto o filtro estiver
+   escolhido. */
 .filter.active {
   background: var(--accent);
   color: var(--accent-ink);
-  box-shadow: var(--pixel-shadow-sm);
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--border);
 }
 
 /* Planejamentos */
@@ -784,6 +792,7 @@
   border-radius: 10px;
   font-size: 0.9rem;
   cursor: pointer;
+  box-shadow: var(--pixel-shadow-sm);
   text-transform: capitalize;
 }
 
@@ -791,7 +800,8 @@
   background: var(--accent);
   border-color: var(--border);
   color: var(--accent-ink);
-  box-shadow: var(--pixel-shadow-sm);
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--border);
 }
 
 .weekday-row {
@@ -2677,25 +2687,23 @@
   color: var(--text-muted);
 }
 
-/* Cards flutuantes da Recepção (tema Lo-fi): Temas (4:3) em cima à esquerda,
-   Clima (retangular, mais largo) e Relógio (4:3) lado a lado embaixo dele —
-   a coluna do Clima é mais larga que a do Relógio, então na mesma altura de
-   linha o card de Clima fica mais "deitado" (retangular) e o do Relógio mais
-   quadrado, sem precisar de aspect-ratio diferente forçado nos dois. */
+/* Dashboard de cards flutuantes da Recepção (tema Lo-fi): Resumo ocupa a
+   linha inteira no topo; embaixo, um card por função do app (Mural, Sala do
+   Tempo, Tesouraria, Temas, Clima, Relógio) em grid uniforme 2 colunas — cada
+   card entra com uma pequena animação escalonada (ver cardEnter em
+   GuildReception.tsx) e "afunda" ao toque (whileTap), reforçando a sensação
+   de elemento físico e interativo, não só um botão plano. */
 .reception-cards {
   /* Alinhado com a barra de navegação inferior, não mais colado no topo. */
   position: absolute;
   left: 16px;
+  right: 16px;
   bottom: -8px;
   z-index: 2;
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  grid-template-areas:
-    "resumo resumo"
-    "temas ."
-    "clima relogio";
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
-  max-width: 320px;
+  max-width: 340px;
 }
 
 .reception-card {
@@ -2703,7 +2711,7 @@
   border-radius: 20px;
   background: var(--surface);
   color: var(--text);
-  box-shadow: 0 3px 10px rgba(20, 16, 12, 0.22);
+  box-shadow: 0 4px 14px rgba(20, 16, 12, 0.25);
   cursor: pointer;
   text-align: left;
   padding: 12px 14px;
@@ -2711,14 +2719,34 @@
   flex-direction: column;
 }
 
-.reception-card-temas {
-  grid-area: temas;
-  aspect-ratio: 4 / 3;
+/* Cards de função (Mural, Sala do Tempo, Tesouraria, Temas, Clima, Relógio):
+   mesmo formato quadrado, ícone + nome + uma linha de dado rápido — repetido
+   pra cada área do app em vez de só 3 telas terem destaque na Recepção. */
+.reception-card-mural,
+.reception-card-tempo,
+.reception-card-tesouraria,
+.reception-card-temas,
+.reception-cards .reception-card-clima,
+.reception-card-relogio {
+  aspect-ratio: 1;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
+  text-align: center;
   position: relative;
   overflow: hidden;
+}
+
+.reception-card-fn-label {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--text-h);
+}
+
+.reception-card-fn-hint {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  line-height: 1.2;
 }
 
 .reception-card-temas-flower {
@@ -2732,74 +2760,61 @@
 
 .reception-card-temas-label {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-h);
   z-index: 1;
 }
 
 .reception-cards .reception-card-clima {
-  grid-area: clima;
-  position: static;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
   z-index: auto;
 }
 
 .reception-card-clima-emoji {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   line-height: 1;
 }
 
 .reception-card-clima-info {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1px;
 }
 
 .reception-card-clima-now {
   font-family: var(--font-display);
-  font-size: 1.15rem;
-  color: var(--text-h);
-}
-
-.reception-card-clima-desc {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-}
-
-.reception-card-clima-minmax {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
-.reception-card-relogio {
-  grid-area: relogio;
-  aspect-ratio: 4 / 3;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  text-align: center;
-}
-
-.reception-card-relogio-label {
-  font-family: var(--font-display);
   font-size: 0.95rem;
   color: var(--text-h);
 }
 
-.reception-card-relogio-hint {
+.reception-card-clima-desc {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.reception-card-clima-minmax {
   font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.reception-card-relogio-label {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--text-h);
+}
+
+.reception-card-relogio-hint {
+  font-size: 0.6rem;
   color: var(--text-muted);
   line-height: 1.2;
 }
 
-/* Card de resumo — centralizado e por cima dos outros três, com as
+/* Card de resumo — ocupa a linha inteira no topo do dashboard, com as
    informações mais importantes de relance: clima atual, próximo alarme e o
    compromisso mais urgente (lembrete, conta ou aniversário mais próximo). */
 .reception-card-resumo {
-  grid-area: resumo;
+  grid-column: 1 / -1;
   align-items: center;
   text-align: center;
   gap: 3px;

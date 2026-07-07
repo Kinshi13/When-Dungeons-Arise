@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import ThemesScreen from "../components/ThemesScreen";
 import { playSfx } from "../sound";
 import { useVerticalSwipe } from "../useVerticalSwipe";
 import { useSettings, isLofiTheme } from "../contexts/SettingsContext";
 import { HourglassIcon } from "../icons";
-import { FlowerDecorIcon } from "../icons2";
+import { FlowerDecorIcon, TabBellIcon, TabHomeCalendarIcon, TabCoinsIcon } from "../icons2";
 import ClockScreen from "../components/ClockScreen";
 import WeatherWidget, { type WeatherWidgetHandle } from "../components/WeatherWidget";
 import WeatherScreen from "../components/WeatherScreen";
@@ -77,6 +79,21 @@ function nextAlarmLabel(alarm: Alarm | null): string {
   return alarm.label ? `${alarm.time} · ${alarm.label}` : alarm.time;
 }
 
+function formatBRL(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+// Entrada escalonada dos cards flutuantes — cada um "flutua" pro lugar com um
+// pequeno atraso em relação ao anterior, em vez de todos aparecerem juntos.
+function cardEnter(index: number) {
+  return {
+    initial: { opacity: 0, y: 18, scale: 0.94 },
+    animate: { opacity: 1, y: 0, scale: 1 },
+    transition: { type: "spring", stiffness: 380, damping: 26, delay: index * 0.05 },
+    whileTap: { scale: 0.94 },
+  } as const;
+}
+
 export default function GuildReception() {
   const [themesOpen, setThemesOpen] = useState(false);
   const [clockOpen, setClockOpen] = useState(false);
@@ -89,6 +106,16 @@ export default function GuildReception() {
   const weatherWidgetRef = useRef<WeatherWidgetHandle>(null);
   const { theme } = useSettings();
   const isLofi = isLofiTheme(theme);
+  const navigate = useNavigate();
+
+  // Derivados só pra exibição rápida nos cards de Mural/Tesouraria — reaproveita
+  // reminders/bills já buscados acima pro resumo, sem nenhuma lógica nova de
+  // negócio (a real fica em MissionList/TreasuryOverview).
+  const pendingMissionsCount = reminders.filter((r) => !r.done && !r.isBirthday).length;
+  const pendingBillsCount = bills.filter((b) => b.status === "PENDENTE").length;
+  const pendingBillsTotal = bills
+    .filter((b) => b.status === "PENDENTE")
+    .reduce((sum, b) => sum + b.amount, 0);
 
   // Card de resumo no topo: dados carregados uma vez ao entrar na Recepção
   // (lembretes/contas não mudam por gesto aqui, só em Agenda/Contas — ao
@@ -157,7 +184,7 @@ export default function GuildReception() {
 
       {isLofi ? (
         <div className="reception-cards">
-          <div className="reception-card reception-card-resumo" aria-live="polite">
+          <motion.div className="reception-card reception-card-resumo" aria-live="polite" {...cardEnter(0)}>
             <span className="reception-summary-title">Resumo</span>
             {homeSummary.weather && (
               <span className="reception-summary-row">
@@ -176,18 +203,64 @@ export default function GuildReception() {
             ) : (
               <span className="reception-summary-row reception-summary-empty">Nada urgente por perto.</span>
             )}
-          </div>
+          </motion.div>
 
-          <button
+          <motion.button
+            className="reception-card reception-card-mural"
+            onClick={() => {
+              playSfx("coin");
+              navigate("/missoes");
+            }}
+            {...cardEnter(1)}
+          >
+            <TabBellIcon width={22} height={22} />
+            <span className="reception-card-fn-label">Mural</span>
+            <span className="reception-card-fn-hint">
+              {pendingMissionsCount === 0 ? "Tudo em dia" : `${pendingMissionsCount} pendente${pendingMissionsCount > 1 ? "s" : ""}`}
+            </span>
+          </motion.button>
+
+          <motion.button
+            className="reception-card reception-card-tempo"
+            onClick={() => {
+              playSfx("coin");
+              navigate("/sala-do-tempo");
+            }}
+            {...cardEnter(2)}
+          >
+            <TabHomeCalendarIcon width={22} height={22} />
+            <span className="reception-card-fn-label">Sala do Tempo</span>
+            <span className="reception-card-fn-hint">
+              {homeSummary.highlight ? homeSummary.highlight.text : "Nada urgente"}
+            </span>
+          </motion.button>
+
+          <motion.button
+            className="reception-card reception-card-tesouraria"
+            onClick={() => {
+              playSfx("coin");
+              navigate("/tesouraria");
+            }}
+            {...cardEnter(3)}
+          >
+            <TabCoinsIcon width={22} height={22} />
+            <span className="reception-card-fn-label">Tesouraria</span>
+            <span className="reception-card-fn-hint">
+              {pendingBillsCount === 0 ? "Sem contas à vista" : `${pendingBillsCount} conta${pendingBillsCount > 1 ? "s" : ""} · ${formatBRL(pendingBillsTotal)}`}
+            </span>
+          </motion.button>
+
+          <motion.button
             className="reception-card reception-card-temas"
             onClick={() => {
               playSfx("coin");
               setThemesOpen(true);
             }}
+            {...cardEnter(4)}
           >
             <FlowerDecorIcon className="reception-card-temas-flower" aria-hidden="true" />
             <span className="reception-card-temas-label">Temas</span>
-          </button>
+          </motion.button>
 
           <WeatherWidget
             ref={weatherWidgetRef}
@@ -197,16 +270,17 @@ export default function GuildReception() {
             }}
           />
 
-          <button
+          <motion.button
             className="reception-card reception-card-relogio"
             aria-label="Relógio — deslize para cronômetro ou temporizador"
             onClick={() => openClock("despertador")}
             {...clockCardSwipe}
+            {...cardEnter(6)}
           >
             <HourglassIcon width={24} height={24} />
             <span className="reception-card-relogio-label">{nextAlarmLabel(nextAlarmInfo)}</span>
             <span className="reception-card-relogio-hint">Deslize p/ cronômetro/temporizador</span>
-          </button>
+          </motion.button>
         </div>
       ) : (
         <>

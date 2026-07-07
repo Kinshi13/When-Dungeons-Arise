@@ -31,8 +31,7 @@ import {
   ANIMATION_LEVEL_LABEL,
   type AnimationLevel,
 } from "../contexts/SettingsContext";
-import { listMonitoredApps, upsertMonitoredApp, removeMonitoredApp, type MonitoredApp } from "../notificationAppPrefs";
-import { syncMonitoredPackages } from "../notificationBridge";
+import { listMonitoredApps } from "../notificationAppPrefs";
 import {
   loadAlarmChallengePrefs,
   saveAlarmChallengePrefs,
@@ -41,8 +40,9 @@ import {
 } from "../clockStore";
 import { CURRENCY_PAIRS, getCurrencyWidgetPair, setCurrencyWidgetPair } from "../currencyWidgetStore";
 import { syncCurrencyWidgetPair } from "../widgetBridge";
-import { TrashIcon, PlusIcon, MinusIcon } from "../icons";
+import { PlusIcon, MinusIcon, ChevronRightIcon } from "../icons";
 import { isSyncAvailable, getSession, signIn, signUp, signOut, onAuthChanged, type Session } from "../auth";
+import MonitoredAppsScreen from "../components/MonitoredAppsScreen";
 import { syncAllNow } from "../sync";
 import { getLastSyncedAt } from "../syncEngine";
 
@@ -66,9 +66,8 @@ export default function Settings() {
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => loadNotificationPrefs());
   const [challenge, setChallenge] = useState<AlarmChallengePrefs>(() => loadAlarmChallengePrefs());
   const [currencyPair, setCurrencyPair] = useState<string>(() => getCurrencyWidgetPair());
-  const [monitoredApps, setMonitoredApps] = useState<MonitoredApp[]>([]);
-  const [newAppName, setNewAppName] = useState("");
-  const [newPackageName, setNewPackageName] = useState("");
+  const [monitoredAppsOpen, setMonitoredAppsOpen] = useState(false);
+  const [monitoredAppsCount, setMonitoredAppsCount] = useState(() => listMonitoredApps().length);
   const [session, setSession] = useState<Session | null>(null);
   const [authMode, setAuthMode] = useState<"entrar" | "criar">("entrar");
   const [authEmail, setAuthEmail] = useState("");
@@ -95,20 +94,10 @@ export default function Settings() {
     theme,
   } = useSettings();
 
-  // Sempre que a lista muda, avisa o serviço nativo quais pacotes ficam liberados
-  // pra guardar conteúdo de notificação — todo o resto continua só com nome/pacote.
-  function refreshMonitoredApps() {
-    const apps = listMonitoredApps();
-    setMonitoredApps(apps);
-    syncMonitoredPackages(apps.filter((a) => a.enabled).map((a) => a.packageName));
-  }
-
   useEffect(() => {
     if (isNativePlatform()) {
       hasNotificationPermission().then(setGranted);
     }
-    refreshMonitoredApps();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -153,32 +142,6 @@ export default function Settings() {
     } else if (result.status === "error") {
       setSyncStatus("Não consegui sincronizar agora — tente de novo em instantes.");
     }
-  }
-
-  function updateApp(app: MonitoredApp, patch: Partial<MonitoredApp>) {
-    const updated = { ...app, ...patch };
-    upsertMonitoredApp(updated);
-    refreshMonitoredApps();
-  }
-
-  function handleRemoveApp(packageName: string) {
-    removeMonitoredApp(packageName);
-    refreshMonitoredApps();
-  }
-
-  function handleAddApp(e: FormEvent) {
-    e.preventDefault();
-    if (!newAppName.trim() || !newPackageName.trim()) return;
-    upsertMonitoredApp({
-      packageName: newPackageName.trim(),
-      appName: newAppName.trim(),
-      enabled: true,
-      priority: false,
-      autoExpense: false,
-    });
-    refreshMonitoredApps();
-    setNewAppName("");
-    setNewPackageName("");
   }
 
   async function handleEnableNotifications() {
@@ -456,73 +419,30 @@ export default function Settings() {
 
         <section className="settings-section">
           <h2>Notificações monitoradas</h2>
-          <p className="hint">
-            Escolha quais apps o gerenciador de notificações do Mural acompanha. Marque como
-            prioridade os bancos e carteiras — são os que valem a pena revisar primeiro e os únicos
-            elegíveis pra lançar gastos automaticamente nas finanças.
-          </p>
-
-          <div className="monitored-app-list">
-            {monitoredApps.map((app) => (
-              <div key={app.packageName} className={`monitored-app-row${app.priority ? " priority" : ""}`}>
-                <div className="monitored-app-row-top">
-                  <strong>{app.appName}</strong>
-                  <button
-                    className="icon-btn"
-                    onClick={() => handleRemoveApp(app.packageName)}
-                    aria-label={`Remover ${app.appName}`}
-                  >
-                    <TrashIcon width={14} height={14} />
-                  </button>
-                </div>
-                <label className="slider-row">
-                  <span>Monitorar</span>
-                  <input
-                    type="checkbox"
-                    checked={app.enabled}
-                    onChange={(e) => updateApp(app, { enabled: e.target.checked })}
-                  />
-                </label>
-                <label className="slider-row">
-                  <span>Prioridade (banco)</span>
-                  <input
-                    type="checkbox"
-                    checked={app.priority}
-                    onChange={(e) =>
-                      updateApp(app, { priority: e.target.checked, autoExpense: e.target.checked && app.autoExpense })
-                    }
-                  />
-                </label>
-                <label className="slider-row">
-                  <span>Lançar gastos automaticamente</span>
-                  <input
-                    type="checkbox"
-                    checked={app.autoExpense}
-                    disabled={!app.priority}
-                    onChange={(e) => updateApp(app, { autoExpense: e.target.checked })}
-                  />
-                </label>
-              </div>
-            ))}
-          </div>
-
-          <form onSubmit={handleAddApp} className="form monitored-app-add-form">
-            <input
-              placeholder="Nome do app"
-              value={newAppName}
-              onChange={(e) => setNewAppName(e.target.value)}
-            />
-            <input
-              placeholder="Pacote (ex: com.banco.app)"
-              value={newPackageName}
-              onChange={(e) => setNewPackageName(e.target.value)}
-            />
-            <button type="submit" className="icon-btn primary" aria-label="Adicionar app">
-              <PlusIcon width={16} height={16} />
-            </button>
-          </form>
+          <button
+            className="settings-section bolsa-card"
+            onClick={() => setMonitoredAppsOpen(true)}
+          >
+            <span className="bolsa-card-text">
+              <strong>Apps monitorados</strong>
+              <span className="hint">
+                {monitoredAppsCount === 0
+                  ? "Nenhum app monitorado ainda"
+                  : `${monitoredAppsCount} app${monitoredAppsCount > 1 ? "s" : ""} monitorado${monitoredAppsCount > 1 ? "s" : ""}`}
+              </span>
+            </span>
+            <ChevronRightIcon width={18} height={18} />
+          </button>
         </section>
       </div>
+
+      <MonitoredAppsScreen
+        open={monitoredAppsOpen}
+        onClose={() => {
+          setMonitoredAppsOpen(false);
+          setMonitoredAppsCount(listMonitoredApps().length);
+        }}
+      />
 
       <div className="settings-group">
         <h1 className="settings-group-title">Relógio e alarmes</h1>

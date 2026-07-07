@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { tabContentEnter } from "../motion";
 import Notes from "../components/Notes";
 import Lists from "../components/Lists";
 import PixelDialogBox from "../components/game/PixelDialogBox";
@@ -41,7 +43,13 @@ export default function AdventureDiary() {
         </div>
       </div>
 
-      <div className="page">{tab === "notas" ? <Notes /> : <Lists />}</div>
+      <div className="page">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={tab} {...tabContentEnter}>
+            {tab === "notas" ? <Notes /> : <Lists />}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
