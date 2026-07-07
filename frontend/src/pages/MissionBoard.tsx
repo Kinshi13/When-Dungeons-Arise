@@ -1,169 +1,40 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { api, type Priority, type Reminder, type ReminderType } from "../api";
-import { generateMissions, type Mission } from "../game/missionGenerator";
-import PixelMissionCard from "../components/game/PixelMissionCard";
-import NotificationManagerScreen from "../components/NotificationManagerScreen";
-import { PlusIcon, InboxIcon, ChevronRightIcon } from "../icons";
-import { playSfx } from "../sound";
+import { Link, useLocation } from "react-router-dom";
+import MissionToday from "./MissionToday";
+import MissionList from "./MissionList";
+import NotificationInbox from "../components/NotificationInbox";
+
+type Tab = "hoje" | "missoes" | "caixa";
+
+function tabFromPath(pathname: string): Tab {
+  if (pathname.endsWith("/missoes")) return "missoes";
+  if (pathname.endsWith("/caixa")) return "caixa";
+  return "hoje";
+}
 
 export default function MissionBoard() {
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [dateTime, setDateTime] = useState("");
-  const [type, setType] = useState<ReminderType>("OUTRO");
-  const [priority, setPriority] = useState<Priority>("MEDIA");
-  const [notifOpen, setNotifOpen] = useState(false);
-
-  async function load() {
-    setReminders(await api.reminders.list());
-  }
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!title || !dateTime) return;
-    await api.reminders.create({
-      title,
-      description: description || undefined,
-      dateTime: new Date(dateTime).toISOString(),
-      type,
-      priority,
-    });
-    setTitle("");
-    setDescription("");
-    setDateTime("");
-    setType("OUTRO");
-    setPriority("MEDIA");
-    await load();
-  }
-
-  async function handleComplete(mission: Mission) {
-    await api.reminders.complete(mission.reminderId);
-    playSfx("coin");
-    await load();
-  }
-
-  const pending = reminders.filter((r) => !r.done);
-  const { daily, weekly, special } = generateMissions(pending);
+  const location = useLocation();
+  const tab = tabFromPath(location.pathname);
 
   return (
-    <div className="page">
-      <div className="mission-board-header">
-        <h1>Mural de Missões</h1>
+    <div>
+      <div className="page" style={{ paddingBottom: 0 }}>
+        <h1>Mural</h1>
+        <div className="drawer-tabs">
+          <Link to="/missoes/hoje" className={tab === "hoje" ? "drawer-tab active" : "drawer-tab"}>
+            Hoje
+          </Link>
+          <Link to="/missoes/missoes" className={tab === "missoes" ? "drawer-tab active" : "drawer-tab"}>
+            Missões
+          </Link>
+          <Link to="/missoes/caixa" className={tab === "caixa" ? "drawer-tab active" : "drawer-tab"}>
+            Caixa de Entrada
+          </Link>
+        </div>
       </div>
 
-      <button className="notif-center-entry" onClick={() => setNotifOpen(true)}>
-        <InboxIcon width={20} height={20} />
-        <span>Central de Notificações</span>
-        <ChevronRightIcon width={16} height={16} />
-      </button>
-
-      <form onSubmit={handleSubmit} className="form">
-        <input
-          placeholder="Nova missão"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onFocus={() => playSfx("drop")}
-        />
-        <input
-          placeholder="Descrição (opcional)"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          onFocus={() => playSfx("drop")}
-        />
-        <input
-          type="datetime-local"
-          value={dateTime}
-          onChange={(e) => setDateTime(e.target.value)}
-          onFocus={() => playSfx("drop")}
-        />
-        <select value={type} onChange={(e) => setType(e.target.value as ReminderType)}>
-          <option value="OUTRO">Evento</option>
-          <option value="TAREFA">Tarefa</option>
-          <option value="REUNIAO">Reunião</option>
-        </select>
-        <select value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
-          <option value="BAIXA">Prioridade baixa</option>
-          <option value="MEDIA">Prioridade média</option>
-          <option value="ALTA">Prioridade alta</option>
-        </select>
-        <button type="submit" className="icon-btn primary" aria-label="Adicionar missão">
-          <PlusIcon width={18} height={18} />
-        </button>
-      </form>
-
-      {daily.length > 0 && (
-        <section className="mission-section">
-          <h2>Missões diárias</h2>
-          <div className="list">
-            {daily.map((m) => (
-              <PixelMissionCard
-                key={m.id}
-                title={m.title}
-                dueLabel={m.dueLabel}
-                category={m.category}
-                priority={m.priority}
-                fromNote={m.fromNote}
-                onComplete={() => handleComplete(m)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {weekly.length > 0 && (
-        <section className="mission-section">
-          <h2>Missões semanais</h2>
-          <div className="list">
-            {weekly.map((m) => (
-              <PixelMissionCard
-                key={m.id}
-                title={m.title}
-                dueLabel={m.dueLabel}
-                category={m.category}
-                priority={m.priority}
-                fromNote={m.fromNote}
-                onComplete={() => handleComplete(m)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {special.length > 0 && (
-        <section className="mission-section">
-          <h2>Missões especiais</h2>
-          <div className="list">
-            {special.map((m) => (
-              <PixelMissionCard
-                key={m.id}
-                title={m.title}
-                dueLabel={m.dueLabel}
-                category={m.category}
-                priority={m.priority}
-                fromNote={m.fromNote}
-                onComplete={() => handleComplete(m)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {daily.length === 0 && weekly.length === 0 && special.length === 0 && (
-        <p className="hint">Nenhuma missão pendente. Adicione uma acima!</p>
-      )}
-
-      <NotificationManagerScreen
-        open={notifOpen}
-        onClose={() => {
-          setNotifOpen(false);
-          load();
-        }}
-      />
+      {tab === "hoje" && <MissionToday />}
+      {tab === "missoes" && <MissionList />}
+      {tab === "caixa" && <NotificationInbox />}
     </div>
   );
 }

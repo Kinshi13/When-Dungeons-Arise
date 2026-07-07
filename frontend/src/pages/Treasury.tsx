@@ -1,37 +1,36 @@
 import { Link, useLocation } from "react-router-dom";
+import TreasuryOverview from "./TreasuryOverview";
 import Finance from "./Finance";
 import FinanceAnalysis from "./FinanceAnalysis";
 import Bills from "./Bills";
-import Calculator from "../components/Calculator";
-import PercentageCalculator from "../components/PercentageCalculator";
+import TreasuryTools from "./TreasuryTools";
 
-type Tab = "financas" | "contas" | "analises" | "calculadora" | "porcentagem";
+type Tab = "visao-geral" | "movimentos" | "contas" | "analises" | "ferramentas";
 
 function tabFromPath(pathname: string): Tab {
+  if (pathname.endsWith("/movimentos")) return "movimentos";
   if (pathname.endsWith("/contas")) return "contas";
   if (pathname.endsWith("/analises")) return "analises";
-  if (pathname.endsWith("/calculadora")) return "calculadora";
-  if (pathname.endsWith("/porcentagem")) return "porcentagem";
-  return "financas";
+  if (pathname.endsWith("/ferramentas")) return "ferramentas";
+  return "visao-geral";
 }
 
-interface TreasuryProps {
-  // Usado só pela prévia de conteúdo durante o arraste (App.tsx): força qual
-  // sub-aba mostrar sem depender da rota real do navegador.
-  forcedPath?: string;
-}
-
-export default function Treasury({ forcedPath }: TreasuryProps = {}) {
+export default function Treasury() {
   const location = useLocation();
-  const tab = tabFromPath(forcedPath ?? location.pathname);
+  const tab = tabFromPath(location.pathname);
 
   return (
     <div>
       <div className="page" style={{ paddingBottom: 0 }}>
-        <h1>Tesouraria</h1>
         <div className="drawer-tabs treasury-tabs">
-          <Link to="/tesouraria/financas" className={tab === "financas" ? "drawer-tab active" : "drawer-tab"}>
-            Finanças
+          <Link
+            to="/tesouraria/visao-geral"
+            className={tab === "visao-geral" ? "drawer-tab active" : "drawer-tab"}
+          >
+            Visão Geral
+          </Link>
+          <Link to="/tesouraria/movimentos" className={tab === "movimentos" ? "drawer-tab active" : "drawer-tab"}>
+            Movimentos
           </Link>
           <Link to="/tesouraria/contas" className={tab === "contas" ? "drawer-tab active" : "drawer-tab"}>
             Contas
@@ -40,34 +39,19 @@ export default function Treasury({ forcedPath }: TreasuryProps = {}) {
             Análises
           </Link>
           <Link
-            to="/tesouraria/calculadora"
-            className={tab === "calculadora" ? "drawer-tab active" : "drawer-tab"}
+            to="/tesouraria/ferramentas"
+            className={tab === "ferramentas" ? "drawer-tab active" : "drawer-tab"}
           >
-            Calculadora
-          </Link>
-          <Link
-            to="/tesouraria/porcentagem"
-            className={tab === "porcentagem" ? "drawer-tab active" : "drawer-tab"}
-            aria-label="Porcentagem"
-          >
-            %
+            Ferramentas
           </Link>
         </div>
       </div>
 
-      {tab === "financas" && <Finance />}
+      {tab === "visao-geral" && <TreasuryOverview />}
+      {tab === "movimentos" && <Finance />}
       {tab === "contas" && <Bills />}
       {tab === "analises" && <FinanceAnalysis />}
-      {tab === "calculadora" && (
-        <div className="page">
-          <Calculator />
-        </div>
-      )}
-      {tab === "porcentagem" && (
-        <div className="page">
-          <PercentageCalculator />
-        </div>
-      )}
+      {tab === "ferramentas" && <TreasuryTools />}
     </div>
   );
 }

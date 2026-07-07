@@ -839,6 +839,57 @@
   padding: 14px;
 }
 
+/* Linha do Tempo (Sala do Tempo) — lista vertical corrida a partir de hoje,
+   com uma linha guia à esquerda ligando os dias, no lugar da grade mensal. */
+.timeline {
+  position: relative;
+  padding-left: 18px;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--border);
+  opacity: 0.3;
+}
+
+.timeline-now {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.timeline-day {
+  margin-bottom: 16px;
+}
+
+.timeline-day-label {
+  font-weight: 700;
+  color: var(--text-h);
+  margin-bottom: 6px;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.timeline-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .day-panel h2 {
   margin-bottom: 10px;
 }
@@ -2097,15 +2148,10 @@
   margin-bottom: 18px;
 }
 
-.mission-board-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.mission-board-header h1 {
-  margin: 0;
+/* Aba "Hoje" do Mural: atrasadas ficam com um destaque mais forte que as
+   demais seções, sem precisar de nenhum texto extra explicando por quê. */
+.mission-section-overdue h2 {
+  color: var(--danger);
 }
 
 /* Botão bem visível — nada de ícone sozinho aqui, que já se confundia com o
@@ -2132,7 +2178,14 @@
   font-size: 0.65rem;
 }
 
-/* Gerenciador de notificações (tela cheia, aberta a partir do Mural) */
+/* Caixa de Entrada (sub-aba do Mural) */
+
+.notif-inbox-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
 
 .notif-access-card {
   background: var(--surface-raised);

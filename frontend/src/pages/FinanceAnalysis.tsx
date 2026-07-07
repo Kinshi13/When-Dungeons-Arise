@@ -104,7 +104,7 @@ export default function FinanceAnalysis() {
           <p className="hint">
             {savingsPotential > 0
               ? "É quanto você economizaria este mês cortando os gastos marcados como supérfluos."
-              : "Marque um gasto como \"Superficial\" na aba Finanças pra começar a acompanhar seu potencial de economia."}
+              : "Marque um gasto como \"Superficial\" na aba Movimentos pra começar a acompanhar seu potencial de economia."}
           </p>
         </div>
       </section>
