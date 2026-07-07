@@ -17,7 +17,7 @@ import {
 import { scheduleAlarmNotification, cancelAlarmNotification } from "../notifications";
 import { ChevronLeftIcon, PlusIcon, TrashIcon } from "../icons";
 import { playSfx } from "../sound";
-import { useVerticalSwipe } from "../useVerticalSwipe";
+import { useDragDismiss } from "../useDragDismiss";
 import { api } from "../api";
 
 type Tab = "despertador" | "cronometro" | "temporizador";
@@ -388,9 +388,10 @@ export default function ClockScreen({ open, onClose, initialTab = "despertador" 
   }, [open]);
   // Mesmo gesto que abre esta tela (deslizar pra cima na Recepção): deslizar
   // pra cima de novo aqui fecha de volta (não o reverso — "puxa pra cima pra
-  // ver o Relógio, puxa pra cima de novo pra voltar"). Só no cabeçalho, pra
-  // não brigar com a rolagem da lista de alarmes.
-  const closeSwipe = useVerticalSwipe(onClose, undefined);
+  // ver o Relógio, puxa pra cima de novo pra voltar"). O arrasto começa só
+  // pelo cabeçalho (pra não brigar com a rolagem da lista de alarmes), mas a
+  // tela inteira acompanha o dedo de verdade enquanto arrasta.
+  const { surface, handle } = useDragDismiss({ direction: "up", onClose });
 
   return createPortal(
     <AnimatePresence>
@@ -398,11 +399,12 @@ export default function ClockScreen({ open, onClose, initialTab = "despertador" 
         <motion.div
           className="note-fullscreen clock-screen"
           {...fullscreenSheetFade}
+          {...surface}
         >
           <div className="lofi-scene lofi-scene-tempo" aria-hidden="true" />
 
           <div className="note-fullscreen-content">
-            <div className="note-fullscreen-header" {...closeSwipe}>
+            <div className="note-fullscreen-header" {...handle}>
               <button className="icon-btn" onClick={onClose} aria-label="Voltar">
                 <ChevronLeftIcon width={20} height={20} /> Voltar
               </button>

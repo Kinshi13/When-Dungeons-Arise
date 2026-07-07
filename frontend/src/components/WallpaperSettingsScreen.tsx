@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type TouchEvent as React
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { fullscreenSheetFade } from "../motion";
+import { useDragDismiss } from "../useDragDismiss";
 import { ChevronLeftIcon, TrashIcon, PlusIcon } from "../icons";
 import { playSfx } from "../sound";
 import {
@@ -198,6 +199,7 @@ export default function WallpaperSettingsScreen({ open, onClose }: WallpaperSett
   }
 
   const uploadedSlots = WALLPAPER_SLOT_IDS.filter((id) => slotUrls[id]);
+  const { surface, handle } = useDragDismiss({ direction: "down", onClose });
 
   return createPortal(
     <AnimatePresence>
@@ -205,11 +207,12 @@ export default function WallpaperSettingsScreen({ open, onClose }: WallpaperSett
         <motion.div
           className="note-fullscreen wallpaper-settings-screen"
           {...fullscreenSheetFade}
+          {...surface}
         >
           <div className="lofi-scene lofi-scene-ajustes" aria-hidden="true" />
 
           <div className="note-fullscreen-content">
-            <div className="note-fullscreen-header">
+            <div className="note-fullscreen-header" {...handle}>
               <button className="icon-btn" onClick={onClose} aria-label="Voltar">
                 <ChevronLeftIcon width={20} height={20} /> Voltar
               </button>
