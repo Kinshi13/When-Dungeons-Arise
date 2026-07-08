@@ -17,6 +17,8 @@ import { api, type Bill, type Reminder } from "../api";
 import { getCachedPrimaryWeather, fetchPrimaryWeather, type WeatherInfo } from "../weather";
 import { buildHomeSummary } from "../core/domain/homeSummary";
 import { toDateKey } from "../core/domain/calendarEntries";
+import { parallaxOffsetFor } from "../core/domain/receptionLayers";
+import { useReceptionParallax } from "../useReceptionParallax";
 import { greeting } from "../greeting";
 import { useQuickAction } from "../useQuickAction";
 
@@ -52,12 +54,21 @@ export default function GuildReception() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [summaryWeather, setSummaryWeather] = useState<WeatherInfo | null>(() => getCachedPrimaryWeather());
   const weatherWidgetRef = useRef<WeatherWidgetHandle>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
   const { theme, animationLevel } = useSettings();
   const isLofi = isLofiTheme(theme);
   // Mesma regra da poeira/chuva CSS (index.css) — "Reduzidas" desliga o
   // canvas do Phaser por completo, não só as animações dentro dele.
   const showPhaserScene = isLofi && animationLevel !== "reduzidas";
   const navigate = useNavigate();
+
+  // Parallax leve (Fase 7, etapa H) — mesma condição do Phaser: "Animações
+  // reduzidas" desliga o rastreamento de ponteiro inteiro (nem escuta), não
+  // só zera o deslocamento. Sky e constellations são as únicas camadas com
+  // elemento visual de verdade hoje (ver core/domain/receptionLayers.ts).
+  const parallaxPointer = useReceptionParallax(pageRef, showPhaserScene);
+  const skyParallax = parallaxOffsetFor("sky", parallaxPointer);
+  const constellationsParallax = parallaxOffsetFor("constellations", parallaxPointer);
 
   useOverlayBackClose(moreOpen, () => setMoreOpen(false));
 
@@ -153,18 +164,21 @@ export default function GuildReception() {
   );
 
   return (
-    <div className="page reception-page" {...verticalSwipe}>
+    <div className="page reception-page" ref={pageRef} {...verticalSwipe}>
       <h1 className="sr-only">Recepção da Guilda</h1>
 
       {/* Camadas explícitas (Fase 7, etapa G): fundo, Phaser, cards/UI — nessa
           ordem de empilhamento (ver --stella-reception-z-* em tokens.css).
           Dock/Stella Core ficam acima de tudo isso por serem irmãos desta
-          página (renderizados por App.tsx), usando --z-dock. */}
-      {isLofi && <ReceptionBackground mode="gradient-fallback" />}
+          página (renderizados por App.tsx), usando --z-dock. Parallax leve
+          (etapa H) aplicado só nas 2 camadas com elemento visual de verdade
+          hoje — sky (o próprio gradiente) e constellations (o Phaser). */}
+      {isLofi && <ReceptionBackground mode="gradient-fallback" parallax={skyParallax} />}
 
       {showPhaserScene && (
         <Suspense fallback={null}>
           <ReceptionCanvas
+            style={{ transform: `translate3d(${constellationsParallax.x}px, ${constellationsParallax.y}px, 0)` }}
             onHotspotTap={() => {
               playSfx("coin");
               setWeatherOpen(true);

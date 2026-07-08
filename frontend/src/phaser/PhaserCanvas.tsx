@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import Phaser from "phaser";
 
 interface PhaserCanvasProps {
   scene: typeof Phaser.Scene;
   className: string;
+  style?: CSSProperties;
   // Chamado logo após o Phaser.Game ser criado — devolve a função de limpeza
   // (ex.: desinscrever de um evento da cena), chamada antes de game.destroy().
   onGameCreated?: (game: Phaser.Game) => (() => void) | void;
@@ -14,7 +15,7 @@ interface PhaserCanvasProps {
 // mount/unmount do componente. Usado por ReceptionCanvas e LibraryCanvas;
 // os dois só diferem na Scene (e a Recepção também tem um hotspot tocável
 // por cima, ver onGameCreated).
-export default function PhaserCanvas({ scene, className, onGameCreated }: PhaserCanvasProps) {
+export default function PhaserCanvas({ scene, className, style, onGameCreated }: PhaserCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,5 +44,5 @@ export default function PhaserCanvas({ scene, className, onGameCreated }: Phaser
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <div ref={containerRef} className={className} aria-hidden="true" />;
+  return <div ref={containerRef} className={className} style={style} aria-hidden="true" />;
 }
