@@ -6,6 +6,7 @@ import 'data/auth/auth_repository.dart';
 import 'data/repositories/local_settings_repository.dart';
 import 'data/sync/sync_engine.dart';
 import 'screens/splash/splash_screen.dart';
+import 'screens/sync/adoption_dialog.dart';
 import 'state/app_state.dart';
 import 'state/auth_state.dart';
 import 'state/sync_coordinator.dart';
@@ -20,14 +21,14 @@ class BakaStudioApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AppState()),
         ChangeNotifierProvider(create: (_) => AuthState(AuthRepository())),
         Provider<SyncEngine>(lazy: false, create: (context) => SyncEngine(context.read<AppState>().db)),
-        Provider<SyncCoordinator>(
+        ChangeNotifierProvider<SyncCoordinator>(
           lazy: false,
           create: (context) => SyncCoordinator(
             context.read<AuthState>(),
+            context.read<AppState>().db,
             LocalSettingsRepository(context.read<AppState>().db),
             context.read<SyncEngine>(),
           ),
-          dispose: (_, coordinator) => coordinator.dispose(),
         ),
       ],
       child: MaterialApp(
@@ -36,7 +37,7 @@ class BakaStudioApp extends StatelessWidget {
         theme: BakaTheme.dark,
         darkTheme: BakaTheme.dark,
         themeMode: ThemeMode.dark,
-        home: const SplashScreen(),
+        home: const AdoptionDialogListener(child: SplashScreen()),
       ),
     );
   }
