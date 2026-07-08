@@ -2809,16 +2809,21 @@
 }
 
 .reception-cards {
-  /* Alinhado com a barra de navegação inferior, não mais colado no topo. */
+  /* Alinhado com a barra de navegação inferior, não mais colado no topo.
+     margin:0 auto é o que efetivamente centraliza: sem isso, o max-width
+     mais estreito que o espaço left→right deixava a sobra inteira do lado
+     direito, "puxando" o grid pra esquerda (ajuste fino pós-etapa-G). */
   position: absolute;
   left: 16px;
   right: 16px;
   bottom: -8px;
   z-index: var(--stella-reception-z-cards);
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   max-width: 340px;
+  margin: 0 auto;
+  justify-content: center;
 }
 
 .reception-card {

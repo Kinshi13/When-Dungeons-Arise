@@ -22,6 +22,11 @@
   --stella-lavender: #7b61a8;
   --stella-coral: #e45d4e;
   --stella-graphite: #3a3f4b;
+  /* Azul-acinzentado/lavanda bem sutil — ponte de transição entre o céu e o
+     cream no gradiente da Recepção (Fase 7, ajuste fino pós-etapa-G). Não
+     vem do concept pack (não tinha essa cor de transição); escolhido pra
+     ficar entre --stella-sky e --stella-lavender em tom, bem dessaturado. */
+  --stella-dusk: #aeb4d1;
 
   /* Tokens semânticos — o que os componentes devem consumir de fato */
   --stella-bg-primary: var(--stella-cream);
@@ -73,12 +78,36 @@
   --stella-elevation-2: 0 8px 24px rgba(58, 63, 75, 0.32);
   --stella-glow-blue: 0 0 24px rgba(127, 174, 230, 0.35);
 
-  /* Gradiente atmosférico compartilhado (Fase 7, etapa G) — usado pelo
-     fundo "gradient-fallback" da Recepção (ver components/ReceptionBackground)
-     e pelo backdrop desfocado da tela de Temas (mesma identidade visual nos
-     dois lugares, um token só em vez de duas regras CSS iguais). */
-  --stella-reception-gradient: radial-gradient(120% 60% at 15% 100%, rgba(123, 97, 168, 0.18), transparent 60%),
-    linear-gradient(180deg, var(--stella-sky) 0%, var(--stella-cream) 55%, var(--stella-ivory) 100%);
+  /* Gradiente atmosférico compartilhado (Fase 7, etapa G, ajustado depois
+     pra "céu estrelado suave" — mais contraste no topo, ponte lavanda
+     dessaturada no meio, pontinhos de estrela fixos pra funcionar mesmo com
+     "Animações reduzidas" — quando o Phaser desliga e sobrava só um
+     gradiente liso sem nenhuma estrela). Usado pelo fundo "gradient-fallback"
+     da Recepção (ver components/ReceptionBackground) e pelo backdrop
+     desfocado da tela de Temas (mesma identidade visual nos dois lugares,
+     um token só em vez de duas regras CSS iguais). */
+  --stella-reception-gradient:
+    radial-gradient(1.6px 1.6px at 8% 8%, rgba(247, 229, 201, 0.85), transparent 100%),
+    radial-gradient(1.2px 1.2px at 22% 5%, rgba(216, 166, 106, 0.8), transparent 100%),
+    radial-gradient(1.4px 1.4px at 35% 14%, rgba(247, 229, 201, 0.7), transparent 100%),
+    radial-gradient(1px 1px at 48% 4%, rgba(216, 166, 106, 0.75), transparent 100%),
+    radial-gradient(1.6px 1.6px at 60% 10%, rgba(247, 229, 201, 0.8), transparent 100%),
+    radial-gradient(1px 1px at 72% 6%, rgba(216, 166, 106, 0.7), transparent 100%),
+    radial-gradient(1.8px 1.8px at 85% 15%, rgba(247, 229, 201, 0.85), transparent 100%),
+    radial-gradient(1.2px 1.2px at 15% 23%, rgba(216, 166, 106, 0.6), transparent 100%),
+    radial-gradient(1px 1px at 40% 21%, rgba(247, 229, 201, 0.6), transparent 100%),
+    radial-gradient(1.4px 1.4px at 65% 25%, rgba(216, 166, 106, 0.65), transparent 100%),
+    radial-gradient(1px 1px at 90% 9%, rgba(247, 229, 201, 0.7), transparent 100%),
+    radial-gradient(1.2px 1.2px at 28% 17%, rgba(216, 166, 106, 0.55), transparent 100%),
+    radial-gradient(120% 60% at 15% 100%, rgba(123, 97, 168, 0.14), transparent 60%),
+    linear-gradient(
+      180deg,
+      var(--stella-blue) 0%,
+      var(--stella-sky) 32%,
+      var(--stella-dusk) 55%,
+      var(--stella-cream) 80%,
+      var(--stella-ivory) 100%
+    );
 
   /* Motion — espelha DURATIONS de motion.ts (fast/standard) pra CSS puro
      (hover, focus) ficar no mesmo ritmo das transições em JS/framer-motion */
