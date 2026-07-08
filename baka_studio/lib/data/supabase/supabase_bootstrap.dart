@@ -29,6 +29,6 @@ Future<void> bootstrapSupabase() async {
 
 /// `null` quando a sincronização não está configurada ou a inicialização
 /// falhou — todo código que depende do Supabase deve tratar esse caso
-/// explicitamente (ver [RemoteDataSource]), nunca assumir que o client
+/// explicitamente (ver [RemoteTableClient]), nunca assumir que o client
 /// sempre existe.
 SupabaseClient? get supabaseClientOrNull => _initialized ? Supabase.instance.client : null;

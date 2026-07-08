@@ -11,8 +11,8 @@ Workspace _toDomain(WorkspaceEntry row) => Workspace(
 );
 
 /// UI never touches [AppDatabase] directly — it goes through repositories
-/// like this one. Local-only today; see [RemoteDataSource] for how a future
-/// Supabase sync would plug in without changing this contract.
+/// like this one. See `RemoteTableClient` (data/sync) for how the sync
+/// engine talks to the Supabase side without this contract changing.
 class WorkspaceRepository {
   WorkspaceRepository(this._db);
 
