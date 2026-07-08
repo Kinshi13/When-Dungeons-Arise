@@ -93,7 +93,7 @@ const PdfReader = forwardRef<ReaderHandle, PdfReaderProps>(function PdfReader(
   }, [page, numPages, landscape, zoomStep]);
 
   function goTo(next: number) {
-    if (next < 1 || next > numPages) return;
+    if (Number.isNaN(next) || next < 1 || next > numPages) return;
     setPage(next);
     onPageChange?.(next, numPages);
     playPageFlip();

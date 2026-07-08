@@ -26,13 +26,11 @@ export default function ReaderScreen() {
   const [dim, setDim] = useState(false);
   const [pageInfo, setPageInfo] = useState<{ page: number; numPages: number } | null>(null);
   const [epubSettings, setEpubSettings] = useState(() => loadEpubReaderSettings());
-  const [epubSettingsOpen, setEpubSettingsOpen] = useState(false);
+  const [openPanel, setOpenPanel] = useState<"toc" | "annotations" | "epubSettings" | null>(null);
   const [currentLocation, setCurrentLocation] = useState<string | undefined>(undefined);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [annotationsOpen, setAnnotationsOpen] = useState(false);
   const [newAnnotationNote, setNewAnnotationNote] = useState("");
   const [toc, setToc] = useState<EpubTocItem[]>([]);
-  const [tocOpen, setTocOpen] = useState(false);
   const readerRef = useRef<ReaderHandle>(null);
 
   useEffect(() => {
@@ -79,12 +77,12 @@ export default function ReaderScreen() {
 
   function handleJumpToAnnotation(location: string) {
     readerRef.current?.goTo(location);
-    setAnnotationsOpen(false);
+    setOpenPanel(null);
   }
 
   function handleJumpToChapter(href: string) {
     readerRef.current?.goTo(href);
-    setTocOpen(false);
+    setOpenPanel(null);
   }
 
   function handleToggleZoom() {
@@ -116,36 +114,24 @@ export default function ReaderScreen() {
         <strong className="reader-fullscreen-title">{doc?.title ?? "Carregando..."}</strong>
         {isEpub && toc.length > 0 && (
           <button
-            className={`icon-btn${tocOpen ? " active" : ""}`}
-            onClick={() => {
-              setTocOpen((v) => !v);
-              setAnnotationsOpen(false);
-              setEpubSettingsOpen(false);
-            }}
+            className={`icon-btn${openPanel === "toc" ? " active" : ""}`}
+            onClick={() => setOpenPanel((p) => (p === "toc" ? null : "toc"))}
             aria-label="Capítulos"
           >
             <BookIcon width={16} height={16} />
           </button>
         )}
         <button
-          className={`icon-btn${annotationsOpen ? " active" : ""}`}
-          onClick={() => {
-            setAnnotationsOpen((v) => !v);
-            setTocOpen(false);
-            setEpubSettingsOpen(false);
-          }}
+          className={`icon-btn${openPanel === "annotations" ? " active" : ""}`}
+          onClick={() => setOpenPanel((p) => (p === "annotations" ? null : "annotations"))}
           aria-label="Anotações"
         >
           <DiaryIcon width={16} height={16} />
         </button>
         {isEpub && (
           <button
-            className={`icon-btn reader-aa-btn${epubSettingsOpen ? " active" : ""}`}
-            onClick={() => {
-              setEpubSettingsOpen((v) => !v);
-              setTocOpen(false);
-              setAnnotationsOpen(false);
-            }}
+            className={`icon-btn reader-aa-btn${openPanel === "epubSettings" ? " active" : ""}`}
+            onClick={() => setOpenPanel((p) => (p === "epubSettings" ? null : "epubSettings"))}
             aria-label="Fonte e tema de leitura"
           >
             Aa
@@ -153,7 +139,7 @@ export default function ReaderScreen() {
         )}
       </div>
 
-      {tocOpen && toc.length > 0 && (
+      {openPanel === "toc" && toc.length > 0 && (
         <div className="epub-settings-panel reader-panel-scroll">
           {toc.map((item) => (
             <button key={item.href} className="reader-panel-item" onClick={() => handleJumpToChapter(item.href)}>
@@ -163,7 +149,7 @@ export default function ReaderScreen() {
         </div>
       )}
 
-      {annotationsOpen && (
+      {openPanel === "annotations" && (
         <div className="epub-settings-panel reader-panel-scroll">
           <form
             className="reader-annotation-form"
@@ -195,7 +181,7 @@ export default function ReaderScreen() {
         </div>
       )}
 
-      {isEpub && epubSettingsOpen && (
+      {isEpub && openPanel === "epubSettings" && (
         <div className="epub-settings-panel">
           <div className="epub-settings-row">
             <span className="epub-settings-label">Fonte</span>

@@ -71,12 +71,32 @@ export default function Calendar({ variant = "mensal" }: CalendarProps) {
 
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month]);
   const todayKey = toDateKey(today);
-  const dayEntries = filterEntries(entriesByDay.get(selectedDay) ?? [], filter);
+
+  // Filtra cada dia uma única vez por (dados, filtro) em vez de recomputar
+  // filterEntries por célula da grade e de novo pro painel/agenda.
+  const filteredEntriesByDay = useMemo(() => {
+    const map = new Map<string, CalendarEntry[]>();
+    for (const [key, entries] of entriesByDay) {
+      map.set(key, filterEntries(entries, filter));
+    }
+    return map;
+  }, [entriesByDay, filter]);
 
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowKey = toDateKey(tomorrow);
   const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
+
+  const dayEntries = useMemo(
+    () => (variant === "mensal" ? filteredEntriesByDay.get(selectedDay) ?? [] : []),
+    [variant, filteredEntriesByDay, selectedDay]
+  );
+
+  const selectedDateObj = useMemo(
+    () => (variant === "mensal" ? new Date(`${selectedDay}T00:00:00`) : today),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [variant, selectedDay]
+  );
 
   // Modo "agenda": só os dias do mês em foco, a partir de hoje se for o mês
   // atual (senão do dia 1) — a mesma navegação de mês do modo "mensal",
@@ -88,12 +108,12 @@ export default function Calendar({ variant = "mensal" }: CalendarProps) {
     const days: { key: string; entries: CalendarEntry[] }[] = [];
     for (let d = startDay; d <= daysInMonth; d++) {
       const key = toDateKey(new Date(year, month, d));
-      const entries = filterEntries(entriesByDay.get(key) ?? [], filter);
+      const entries = filteredEntriesByDay.get(key) ?? [];
       if (entries.length > 0) days.push({ key, entries });
     }
     return days;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [variant, year, month, isCurrentMonth, entriesByDay, filter]);
+  }, [variant, year, month, isCurrentMonth, filteredEntriesByDay]);
 
   function goPrevMonth() {
     if (month === 0) {
@@ -138,8 +158,6 @@ export default function Calendar({ variant = "mensal" }: CalendarProps) {
     await api.reminders.remove(id);
     await load();
   }
-
-  const selectedDateObj = new Date(`${selectedDay}T00:00:00`);
 
   return (
     <div className="page calendar-page">
@@ -196,7 +214,7 @@ export default function Calendar({ variant = "mensal" }: CalendarProps) {
           {grid.map((date, i) => {
             if (!date) return <div key={i} className="day-cell empty" />;
             const key = toDateKey(date);
-            const dayItems = filterEntries(entriesByDay.get(key) ?? [], filter);
+            const dayItems = filteredEntriesByDay.get(key) ?? [];
             const isToday = key === todayKey;
             const isSelected = key === selectedDay;
             return (

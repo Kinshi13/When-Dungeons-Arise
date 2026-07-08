@@ -184,7 +184,7 @@ interface LegacyTabDef {
 }
 
 const LEGACY_TABS: LegacyTabDef[] = [
-  { key: "mural", to: "/missoes", label: "Mural", legacyClass: "tab tab-mural", Icon: TabBellIcon },
+  { key: "mural", to: "/sala-do-tempo/tarefas", label: "Mural", legacyClass: "tab tab-mural", Icon: TabBellIcon },
   { key: "tesouraria", to: "/tesouraria", label: "Tesouraria", legacyClass: "tab tab-tesouraria", Icon: TabCoinsIcon },
   { key: "guilda", to: "/", end: true, label: "Guilda", legacyClass: "tab tab-guilda", Icon: TabGuildIcon },
   { key: "tempo", to: "/sala-do-tempo", label: "Tempo", legacyClass: "tab tab-tempo", Icon: TabHomeCalendarIcon },

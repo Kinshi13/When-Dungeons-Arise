@@ -11,23 +11,45 @@ import { BellIcon, HourglassIcon, DiaryIcon, ChecklistIcon, CoinIcon, CalendarIc
 // continuar leitura, buscar) ainda não tem funcionalidade própria no app;
 // entram junto com o conteúdo de cada área nas fases seguintes
 // (Tempo/Tesouraria/Biblioteca), não como botões sem efeito.
-export function buildStellaActions(section: string | null, navigate: ReturnType<typeof useNavigate>): StellaAction[] {
+type Navigate = ReturnType<typeof useNavigate>;
+
+// Ações que aparecem em mais de uma área (com prioridade própria em cada
+// uma) — extraídas pra não duplicar id/label/icon/execute em cada seção.
+function novaMissaoAction(navigate: Navigate, priority: number): StellaAction {
+  return {
+    id: "nova-missao",
+    label: "Nova tarefa",
+    icon: <ChecklistIcon width={20} height={20} />,
+    priority,
+    execute: () => navigateToQuickAction(navigate, "/sala-do-tempo/tarefas/missoes", "nova-missao"),
+  };
+}
+
+function novoEventoAction(navigate: Navigate, priority: number): StellaAction {
+  return {
+    id: "novo-evento",
+    label: "Novo evento",
+    icon: <CalendarIcon width={20} height={20} />,
+    priority,
+    execute: () => navigateToQuickAction(navigate, "/sala-do-tempo/calendario", "novo-evento"),
+  };
+}
+
+function novoGastoAction(navigate: Navigate, priority: number): StellaAction {
+  return {
+    id: "novo-gasto",
+    label: "Novo gasto",
+    icon: <CoinIcon width={20} height={20} />,
+    priority,
+    execute: () => navigateToQuickAction(navigate, "/tesouraria/movimentos", "novo-gasto"),
+  };
+}
+
+export function buildStellaActions(section: string | null, navigate: Navigate): StellaAction[] {
   if (section === "tempo") {
     return [
-      {
-        id: "nova-missao",
-        label: "Nova tarefa",
-        icon: <ChecklistIcon width={20} height={20} />,
-        priority: 3,
-        execute: () => navigateToQuickAction(navigate, "/sala-do-tempo/tarefas/missoes", "nova-missao"),
-      },
-      {
-        id: "novo-evento",
-        label: "Novo evento",
-        icon: <CalendarIcon width={20} height={20} />,
-        priority: 2,
-        execute: () => navigateToQuickAction(navigate, "/sala-do-tempo/calendario", "novo-evento"),
-      },
+      novaMissaoAction(navigate, 3),
+      novoEventoAction(navigate, 2),
       {
         id: "ir-hoje",
         label: "Ir para hoje",
@@ -39,13 +61,7 @@ export function buildStellaActions(section: string | null, navigate: ReturnType<
   }
   if (section === "tesouraria") {
     return [
-      {
-        id: "novo-gasto",
-        label: "Novo gasto",
-        icon: <CoinIcon width={20} height={20} />,
-        priority: 2,
-        execute: () => navigateToQuickAction(navigate, "/tesouraria/movimentos", "novo-gasto"),
-      },
+      novoGastoAction(navigate, 2),
       {
         id: "calculadora",
         label: "Calculadora",
@@ -89,26 +105,8 @@ export function buildStellaActions(section: string | null, navigate: ReturnType<
       priority: 3,
       execute: () => navigateToQuickAction(navigate, "/sala-do-tempo/diario/notas", "nova-nota"),
     },
-    {
-      id: "nova-missao",
-      label: "Nova tarefa",
-      icon: <ChecklistIcon width={20} height={20} />,
-      priority: 2,
-      execute: () => navigateToQuickAction(navigate, "/sala-do-tempo/tarefas/missoes", "nova-missao"),
-    },
-    {
-      id: "novo-gasto",
-      label: "Novo gasto",
-      icon: <CoinIcon width={20} height={20} />,
-      priority: 1,
-      execute: () => navigateToQuickAction(navigate, "/tesouraria/movimentos", "novo-gasto"),
-    },
-    {
-      id: "novo-evento",
-      label: "Novo evento",
-      icon: <CalendarIcon width={20} height={20} />,
-      priority: 0,
-      execute: () => navigateToQuickAction(navigate, "/sala-do-tempo/calendario", "novo-evento"),
-    },
+    novaMissaoAction(navigate, 2),
+    novoGastoAction(navigate, 1),
+    novoEventoAction(navigate, 0),
   ];
 }
