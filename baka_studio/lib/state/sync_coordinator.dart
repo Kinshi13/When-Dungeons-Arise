@@ -5,10 +5,12 @@ import 'package:flutter/foundation.dart';
 import '../data/repositories/local_settings_repository.dart';
 import '../data/supabase/supabase_bootstrap.dart';
 import '../data/sync/remote_workspace_service.dart';
+import '../data/sync/sync_engine.dart';
 import 'auth_state.dart';
 
 /// Reage a mudanças de sessão para manter o dispositivo linkado ao
-/// workspace remoto do usuário autenticado.
+/// workspace remoto do usuário autenticado e disparar a primeira
+/// sincronização assim que esse vínculo existir.
 ///
 /// O perfil e o workspace já existem no servidor assim que o cadastro é
 /// concluído (trigger `baka_handle_new_user`, seção 55) — aqui só
@@ -21,13 +23,14 @@ import 'auth_state.dart';
 /// [LocalSettingsRepository.getRemoteWorkspaceId] para saber se este é o
 /// primeiro login deste dispositivo.
 class SyncCoordinator {
-  SyncCoordinator(this._authState, this._localSettings) {
+  SyncCoordinator(this._authState, this._localSettings, this._syncEngine) {
     _authState.addListener(_onAuthChanged);
     _onAuthChanged();
   }
 
   final AuthState _authState;
   final LocalSettingsRepository _localSettings;
+  final SyncEngine _syncEngine;
   String? _lastBootstrappedUserId;
 
   void _onAuthChanged() {
@@ -48,6 +51,7 @@ class SyncCoordinator {
       final info = await RemoteWorkspaceService(client).fetchForCurrentUser();
       if (info == null) return;
       await _localSettings.setRemoteWorkspaceId(info.id);
+      await _syncEngine.runFullSync(info.id);
     } catch (error) {
       debugPrint('SyncCoordinator: falha ao buscar workspace remoto: $error');
     }
