@@ -3,6 +3,8 @@ import 'package:drift/drift.dart';
 import '../db/app_database.dart';
 import '../db/ids.dart';
 import '../models/project.dart';
+import '../models/sync_state.dart';
+import 'sync_queue_repository.dart';
 
 /// Projects ("constelações"), their N:N relation to channels, and their
 /// nodes (constellation map items — either free-standing milestones or a
@@ -11,6 +13,12 @@ class ProjectRepository {
   ProjectRepository(this._db);
 
   final AppDatabase _db;
+  late final SyncQueueRepository _syncQueue = SyncQueueRepository(_db);
+
+  Future<String?> _workspaceIdForProject(String projectId) async {
+    final row = await (_db.select(_db.projects)..where((p) => p.id.equals(projectId))).getSingleOrNull();
+    return row?.workspaceId;
+  }
 
   Future<Project> _hydrate(ProjectEntry row) async {
     final channelLinks = await (_db.select(
@@ -81,6 +89,7 @@ class ProjectRepository {
   }) async {
     final now = DateTime.now();
     final id = newId();
+    final channelLinkIds = <String>[];
     await _db.transaction(() async {
       await _db.into(_db.projects).insert(
         ProjectsCompanion.insert(
@@ -97,9 +106,11 @@ class ProjectRepository {
         ),
       );
       for (final channelId in channelIds) {
+        final linkId = newId();
+        channelLinkIds.add(linkId);
         await _db.into(_db.projectChannels).insert(
           ProjectChannelsCompanion.insert(
-            id: newId(),
+            id: linkId,
             workspaceId: workspaceId,
             projectId: id,
             channelId: channelId,
@@ -109,6 +120,15 @@ class ProjectRepository {
         );
       }
     });
+    await _syncQueue.enqueue(workspaceId: workspaceId, entityType: 'project', entityId: id, operation: SyncOperationType.create);
+    for (final linkId in channelLinkIds) {
+      await _syncQueue.enqueue(
+        workspaceId: workspaceId,
+        entityType: 'project_channel',
+        entityId: linkId,
+        operation: SyncOperationType.create,
+      );
+    }
     return (await getById(id))!;
   }
 
@@ -122,6 +142,9 @@ class ProjectRepository {
     DateTime? targetDate,
     List<String>? channelIds,
   }) async {
+    final removedLinkIds = <String>[];
+    final addedLinkIds = <String>[];
+    String workspaceId = '';
     await _db.transaction(() async {
       await (_db.update(_db.projects)..where((p) => p.id.equals(id))).write(
         ProjectsCompanion(
@@ -134,6 +157,7 @@ class ProjectRepository {
           updatedAt: Value(DateTime.now()),
         ),
       );
+      workspaceId = await _workspaceIdForProject(id) ?? '';
       if (channelIds != null) {
         final now = DateTime.now();
         final existing = await (_db.select(
@@ -150,14 +174,15 @@ class ProjectRepository {
             await (_db.update(_db.projectChannels)..where((c) => c.id.equals(row.id))).write(
               ProjectChannelsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
             );
+            removedLinkIds.add(row.id);
           }
         }
-        final project = await getById(id);
-        final workspaceId = project?.workspaceId ?? '';
         for (final channelId in wantedChannelIds.difference(existingChannelIds)) {
+          final linkId = newId();
+          addedLinkIds.add(linkId);
           await _db.into(_db.projectChannels).insert(
             ProjectChannelsCompanion.insert(
-              id: newId(),
+              id: linkId,
               workspaceId: workspaceId,
               projectId: id,
               channelId: channelId,
@@ -168,18 +193,46 @@ class ProjectRepository {
         }
       }
     });
+    if (workspaceId.isNotEmpty) {
+      await _syncQueue.enqueue(workspaceId: workspaceId, entityType: 'project', entityId: id, operation: SyncOperationType.update);
+      for (final linkId in addedLinkIds) {
+        await _syncQueue.enqueue(
+          workspaceId: workspaceId,
+          entityType: 'project_channel',
+          entityId: linkId,
+          operation: SyncOperationType.create,
+        );
+      }
+      for (final linkId in removedLinkIds) {
+        await _syncQueue.enqueue(
+          workspaceId: workspaceId,
+          entityType: 'project_channel',
+          entityId: linkId,
+          operation: SyncOperationType.delete,
+        );
+      }
+    }
   }
 
   Future<void> archive(String id) async {
+    final now = DateTime.now();
     await (_db.update(_db.projects)..where((p) => p.id.equals(id))).write(
-      ProjectsCompanion(archivedAt: Value(DateTime.now()), status: Value(ProjectStatus.archived), updatedAt: Value(DateTime.now())),
+      ProjectsCompanion(archivedAt: Value(now), status: Value(ProjectStatus.archived), updatedAt: Value(now)),
     );
+    final workspaceId = await _workspaceIdForProject(id);
+    if (workspaceId != null) {
+      await _syncQueue.enqueue(workspaceId: workspaceId, entityType: 'project', entityId: id, operation: SyncOperationType.update);
+    }
   }
 
   Future<void> restore(String id) async {
     await (_db.update(_db.projects)..where((p) => p.id.equals(id))).write(
-      const ProjectsCompanion(archivedAt: Value(null)),
+      ProjectsCompanion(archivedAt: const Value(null), updatedAt: Value(DateTime.now())),
     );
+    final workspaceId = await _workspaceIdForProject(id);
+    if (workspaceId != null) {
+      await _syncQueue.enqueue(workspaceId: workspaceId, entityType: 'project', entityId: id, operation: SyncOperationType.update);
+    }
   }
 
   // Nodes ------------------------------------------------------------
@@ -195,6 +248,7 @@ class ProjectRepository {
     final nodeId = newId();
     final project = await getById(projectId);
     final workspaceId = project?.workspaceId ?? '';
+    final relationIds = <String>[];
     await _db.transaction(() async {
       await _db.into(_db.projectNodes).insert(
         ProjectNodesCompanion.insert(
@@ -209,9 +263,11 @@ class ProjectRepository {
         ),
       );
       for (final depId in dependsOn) {
+        final relationId = newId();
+        relationIds.add(relationId);
         await _db.into(_db.projectNodeRelations).insert(
           ProjectNodeRelationsCompanion.insert(
-            id: newId(),
+            id: relationId,
             workspaceId: Value(workspaceId),
             projectId: projectId,
             sourceNodeId: depId,
@@ -224,6 +280,22 @@ class ProjectRepository {
       await (_db.update(_db.projects)..where((p) => p.id.equals(projectId)))
           .write(ProjectsCompanion(updatedAt: Value(now)));
     });
+    if (workspaceId.isNotEmpty) {
+      await _syncQueue.enqueue(
+        workspaceId: workspaceId,
+        entityType: 'project_node',
+        entityId: nodeId,
+        operation: SyncOperationType.create,
+      );
+      for (final relationId in relationIds) {
+        await _syncQueue.enqueue(
+          workspaceId: workspaceId,
+          entityType: 'project_node_relation',
+          entityId: relationId,
+          operation: SyncOperationType.create,
+        );
+      }
+    }
     return nodeId;
   }
 
@@ -231,6 +303,18 @@ class ProjectRepository {
     await (_db.update(_db.projectNodes)..where((n) => n.id.equals(nodeId))).write(
       ProjectNodesCompanion(state: Value(state), updatedAt: Value(DateTime.now())),
     );
+    final node = await (_db.select(_db.projectNodes)..where((n) => n.id.equals(nodeId))).getSingleOrNull();
+    if (node != null) {
+      final workspaceId = await _workspaceIdForProject(node.projectId);
+      if (workspaceId != null) {
+        await _syncQueue.enqueue(
+          workspaceId: workspaceId,
+          entityType: 'project_node',
+          entityId: nodeId,
+          operation: SyncOperationType.update,
+        );
+      }
+    }
   }
 
   /// Tombstones the node and its dependency edges instead of deleting them
@@ -238,6 +322,10 @@ class ProjectRepository {
   /// disappear on next sync, not resurrect it by pushing its stale copy.
   Future<void> removeNode(String nodeId) async {
     final now = DateTime.now();
+    final node = await (_db.select(_db.projectNodes)..where((n) => n.id.equals(nodeId))).getSingleOrNull();
+    final affectedRelations = await (_db.select(
+      _db.projectNodeRelations,
+    )..where((r) => r.sourceNodeId.equals(nodeId) | r.targetNodeId.equals(nodeId))).get();
     await _db.transaction(() async {
       await (_db.update(_db.projectNodeRelations)
             ..where((r) => r.sourceNodeId.equals(nodeId) | r.targetNodeId.equals(nodeId)))
@@ -246,5 +334,24 @@ class ProjectRepository {
         ProjectNodesCompanion(deletedAt: Value(now), updatedAt: Value(now)),
       );
     });
+    if (node != null) {
+      final workspaceId = await _workspaceIdForProject(node.projectId);
+      if (workspaceId != null) {
+        await _syncQueue.enqueue(
+          workspaceId: workspaceId,
+          entityType: 'project_node',
+          entityId: nodeId,
+          operation: SyncOperationType.delete,
+        );
+        for (final rel in affectedRelations) {
+          await _syncQueue.enqueue(
+            workspaceId: workspaceId,
+            entityType: 'project_node_relation',
+            entityId: rel.id,
+            operation: SyncOperationType.delete,
+          );
+        }
+      }
+    }
   }
 }

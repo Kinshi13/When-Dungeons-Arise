@@ -5,6 +5,8 @@ import '../db/app_database.dart';
 import '../db/ids.dart';
 import '../models/channel.dart';
 import '../models/channel_link.dart';
+import '../models/sync_state.dart';
+import 'sync_queue_repository.dart';
 
 Channel channelFromRow(ChannelEntry row) => Channel(
   id: row.id,
@@ -29,6 +31,7 @@ class ChannelRepository {
   ChannelRepository(this._db);
 
   final AppDatabase _db;
+  late final SyncQueueRepository _syncQueue = SyncQueueRepository(_db);
 
   Stream<List<Channel>> watchAll({bool includeArchived = false}) {
     final query = _db.select(_db.channels)
@@ -76,6 +79,7 @@ class ChannelRepository {
         updatedAt: now,
       ),
     );
+    await _syncQueue.enqueue(workspaceId: workspaceId, entityType: 'channel', entityId: id, operation: SyncOperationType.create);
     return (await getById(id))!;
   }
 
@@ -94,18 +98,33 @@ class ChannelRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    await _syncQueue.enqueue(
+      workspaceId: channel.workspaceId,
+      entityType: 'channel',
+      entityId: channel.id,
+      operation: SyncOperationType.update,
+    );
   }
 
   Future<void> archive(String id) async {
+    final now = DateTime.now();
     await (_db.update(_db.channels)..where((c) => c.id.equals(id))).write(
-      ChannelsCompanion(archivedAt: Value(DateTime.now()), updatedAt: Value(DateTime.now())),
+      ChannelsCompanion(archivedAt: Value(now), updatedAt: Value(now)),
     );
+    final channel = await getById(id);
+    if (channel != null) {
+      await _syncQueue.enqueue(workspaceId: channel.workspaceId, entityType: 'channel', entityId: id, operation: SyncOperationType.update);
+    }
   }
 
   Future<void> restore(String id) async {
     await (_db.update(_db.channels)..where((c) => c.id.equals(id))).write(
-      const ChannelsCompanion(archivedAt: Value(null)),
+      ChannelsCompanion(archivedAt: const Value(null), updatedAt: Value(DateTime.now())),
     );
+    final channel = await getById(id);
+    if (channel != null) {
+      await _syncQueue.enqueue(workspaceId: channel.workspaceId, entityType: 'channel', entityId: id, operation: SyncOperationType.update);
+    }
   }
 
   // Relations ------------------------------------------------------------
@@ -133,9 +152,10 @@ class ChannelRepository {
     required String label,
     ChannelRelationType type = ChannelRelationType.strategic,
   }) async {
+    final id = newId();
     await _db.into(_db.channelRelations).insert(
       ChannelRelationsCompanion.insert(
-        id: newId(),
+        id: id,
         workspaceId: workspaceId,
         sourceChannelId: channelIdA,
         targetChannelId: channelIdB,
@@ -144,6 +164,7 @@ class ChannelRepository {
         createdAt: DateTime.now(),
       ),
     );
+    await _syncQueue.enqueue(workspaceId: workspaceId, entityType: 'channel_relation', entityId: id, operation: SyncOperationType.create);
   }
 
   /// Removes a manually curated relation. Derived (`sharedProject`/
@@ -155,9 +176,18 @@ class ChannelRepository {
   /// that hasn't pulled the removal yet.
   Future<void> removeRelation(String id) async {
     final now = DateTime.now();
+    final row = await (_db.select(_db.channelRelations)..where((r) => r.id.equals(id))).getSingleOrNull();
     await (_db.update(_db.channelRelations)..where((r) => r.id.equals(id))).write(
       ChannelRelationsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
     );
+    if (row != null) {
+      await _syncQueue.enqueue(
+        workspaceId: row.workspaceId,
+        entityType: 'channel_relation',
+        entityId: id,
+        operation: SyncOperationType.delete,
+      );
+    }
   }
 
   /// Recomputes every `sharedProject` relation from real

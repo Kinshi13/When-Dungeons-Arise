@@ -2,7 +2,9 @@ import 'package:drift/drift.dart';
 
 import '../db/app_database.dart';
 import '../db/ids.dart';
+import '../models/sync_state.dart';
 import '../models/task.dart';
+import 'sync_queue_repository.dart';
 
 DailyTask taskFromRow(TaskEntry row) => DailyTask(
   id: row.id,
@@ -25,6 +27,7 @@ class TaskRepository {
   TaskRepository(this._db);
 
   final AppDatabase _db;
+  late final SyncQueueRepository _syncQueue = SyncQueueRepository(_db);
 
   Stream<List<DailyTask>> watchAll() {
     final query = _db.select(_db.tasks)
@@ -70,6 +73,7 @@ class TaskRepository {
         updatedAt: now,
       ),
     );
+    await _syncQueue.enqueue(workspaceId: workspaceId, entityType: 'task', entityId: id, operation: SyncOperationType.create);
     return taskFromRow((await (_db.select(_db.tasks)..where((t) => t.id.equals(id))).getSingle()));
   }
 
@@ -83,6 +87,7 @@ class TaskRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    await _enqueueUpdate(id);
   }
 
   Future<void> setStatus(String id, TaskStatus status) async {
@@ -93,6 +98,7 @@ class TaskRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    await _enqueueUpdate(id);
   }
 
   Future<void> toggleDone(String id) async {
@@ -105,8 +111,19 @@ class TaskRepository {
   /// removal to other devices instead of a stale copy resurrecting it.
   Future<void> delete(String id) async {
     final now = DateTime.now();
+    final row = await (_db.select(_db.tasks)..where((t) => t.id.equals(id))).getSingleOrNull();
     await (_db.update(_db.tasks)..where((t) => t.id.equals(id))).write(
       TasksCompanion(deletedAt: Value(now), updatedAt: Value(now)),
     );
+    if (row != null) {
+      await _syncQueue.enqueue(workspaceId: row.workspaceId, entityType: 'task', entityId: id, operation: SyncOperationType.delete);
+    }
+  }
+
+  Future<void> _enqueueUpdate(String id) async {
+    final row = await (_db.select(_db.tasks)..where((t) => t.id.equals(id))).getSingleOrNull();
+    if (row != null) {
+      await _syncQueue.enqueue(workspaceId: row.workspaceId, entityType: 'task', entityId: id, operation: SyncOperationType.update);
+    }
   }
 }

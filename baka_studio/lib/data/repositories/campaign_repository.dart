@@ -3,6 +3,8 @@ import 'package:drift/drift.dart';
 import '../db/app_database.dart';
 import '../db/ids.dart';
 import '../models/campaign.dart';
+import '../models/sync_state.dart';
+import 'sync_queue_repository.dart';
 
 Campaign _campaignFromRow(CampaignEntry row) => Campaign(
   id: row.id,
@@ -22,6 +24,7 @@ class CampaignRepository {
   CampaignRepository(this._db);
 
   final AppDatabase _db;
+  late final SyncQueueRepository _syncQueue = SyncQueueRepository(_db);
 
   Stream<List<Campaign>> watchAll({bool includeArchived = false}) {
     final query = _db.select(_db.campaigns)
@@ -69,6 +72,7 @@ class CampaignRepository {
         updatedAt: now,
       ),
     );
+    await _syncQueue.enqueue(workspaceId: workspaceId, entityType: 'campaign', entityId: id, operation: SyncOperationType.create);
     return _campaignFromRow(await (_db.select(_db.campaigns)..where((c) => c.id.equals(id))).getSingle());
   }
 
@@ -92,12 +96,22 @@ class CampaignRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    await _enqueueCampaignUpdate(id);
   }
 
   Future<void> archive(String id) async {
+    final now = DateTime.now();
     await (_db.update(_db.campaigns)..where((c) => c.id.equals(id))).write(
-      CampaignsCompanion(archivedAt: Value(DateTime.now()), status: Value(CampaignStatus.archived), updatedAt: Value(DateTime.now())),
+      CampaignsCompanion(archivedAt: Value(now), status: Value(CampaignStatus.archived), updatedAt: Value(now)),
     );
+    await _enqueueCampaignUpdate(id);
+  }
+
+  Future<void> _enqueueCampaignUpdate(String id) async {
+    final row = await (_db.select(_db.campaigns)..where((c) => c.id.equals(id))).getSingleOrNull();
+    if (row != null) {
+      await _syncQueue.enqueue(workspaceId: row.workspaceId, entityType: 'campaign', entityId: id, operation: SyncOperationType.update);
+    }
   }
 
   Future<void> addItem(String campaignId, CampaignItemEntityType type, String entityId) async {
@@ -105,10 +119,12 @@ class CampaignRepository {
     final campaignRow = await (_db.select(
       _db.campaigns,
     )..where((c) => c.id.equals(campaignId))).getSingleOrNull();
+    final workspaceId = campaignRow?.workspaceId ?? '';
+    final itemId = newId();
     await _db.into(_db.campaignItems).insert(
       CampaignItemsCompanion.insert(
-        id: newId(),
-        workspaceId: Value(campaignRow?.workspaceId ?? ''),
+        id: itemId,
+        workspaceId: Value(workspaceId),
         campaignId: campaignId,
         entityType: type,
         entityId: entityId,
@@ -116,6 +132,14 @@ class CampaignRepository {
         updatedAt: Value(now),
       ),
     );
+    if (workspaceId.isNotEmpty) {
+      await _syncQueue.enqueue(
+        workspaceId: workspaceId,
+        entityType: 'campaign_item',
+        entityId: itemId,
+        operation: SyncOperationType.create,
+      );
+    }
   }
 
   /// Tombstoned rather than physically deleted, same reasoning as
@@ -123,8 +147,17 @@ class CampaignRepository {
   /// removal yet must not resurrect the item by pushing its stale copy.
   Future<void> removeItem(String itemId) async {
     final now = DateTime.now();
+    final row = await (_db.select(_db.campaignItems)..where((i) => i.id.equals(itemId))).getSingleOrNull();
     await (_db.update(_db.campaignItems)..where((i) => i.id.equals(itemId))).write(
       CampaignItemsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
     );
+    if (row?.workspaceId != null) {
+      await _syncQueue.enqueue(
+        workspaceId: row!.workspaceId!,
+        entityType: 'campaign_item',
+        entityId: itemId,
+        operation: SyncOperationType.delete,
+      );
+    }
   }
 }

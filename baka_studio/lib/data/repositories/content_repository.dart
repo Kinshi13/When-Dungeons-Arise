@@ -3,6 +3,8 @@ import 'package:drift/drift.dart';
 import '../db/app_database.dart';
 import '../db/ids.dart';
 import '../models/content_item.dart';
+import '../models/sync_state.dart';
+import 'sync_queue_repository.dart';
 
 /// Productions ("produções"), including their N:N relation to channels
 /// (a single piece of content can be a collaboration between two channels).
@@ -10,6 +12,7 @@ class ContentRepository {
   ContentRepository(this._db);
 
   final AppDatabase _db;
+  late final SyncQueueRepository _syncQueue = SyncQueueRepository(_db);
 
   Future<ContentItem> _hydrate(ContentItemEntry row) async {
     final channelLinks = await (_db.select(
@@ -66,6 +69,7 @@ class ContentRepository {
     assert(channelIds.isNotEmpty, 'A production needs at least one channel');
     final now = DateTime.now();
     final id = newId();
+    final channelLinkIds = <String>[];
     await _db.transaction(() async {
       await _db.into(_db.contentItems).insert(
         ContentItemsCompanion.insert(
@@ -85,9 +89,11 @@ class ContentRepository {
         ),
       );
       for (final channelId in channelIds) {
+        final linkId = newId();
+        channelLinkIds.add(linkId);
         await _db.into(_db.contentChannels).insert(
           ContentChannelsCompanion.insert(
-            id: newId(),
+            id: linkId,
             workspaceId: workspaceId,
             contentItemId: id,
             channelId: channelId,
@@ -97,6 +103,15 @@ class ContentRepository {
         );
       }
     });
+    await _syncQueue.enqueue(workspaceId: workspaceId, entityType: 'content_item', entityId: id, operation: SyncOperationType.create);
+    for (final linkId in channelLinkIds) {
+      await _syncQueue.enqueue(
+        workspaceId: workspaceId,
+        entityType: 'content_channel',
+        entityId: linkId,
+        operation: SyncOperationType.create,
+      );
+    }
     return (await getById(id))!;
   }
 
@@ -113,6 +128,9 @@ class ContentRepository {
     String? platform,
     String? notes,
   }) async {
+    final removedLinkIds = <String>[];
+    final addedLinkIds = <String>[];
+    var workspaceId = '';
     await _db.transaction(() async {
       await (_db.update(_db.contentItems)..where((c) => c.id.equals(id))).write(
         ContentItemsCompanion(
@@ -127,6 +145,8 @@ class ContentRepository {
           updatedAt: Value(DateTime.now()),
         ),
       );
+      final contentItem = await getById(id);
+      workspaceId = contentItem?.workspaceId ?? '';
       if (channelIds != null) {
         final now = DateTime.now();
         final existing = await (_db.select(
@@ -143,16 +163,17 @@ class ContentRepository {
             await (_db.update(_db.contentChannels)..where((c) => c.id.equals(row.id))).write(
               ContentChannelsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
             );
+            removedLinkIds.add(row.id);
           }
         }
         // Insert only genuinely new pairs — untouched existing ones keep
         // their own updatedAt instead of bumping on every unrelated edit.
-        final contentItem = await getById(id);
-        final workspaceId = contentItem?.workspaceId ?? '';
         for (final channelId in wantedChannelIds.difference(existingChannelIds)) {
+          final linkId = newId();
+          addedLinkIds.add(linkId);
           await _db.into(_db.contentChannels).insert(
             ContentChannelsCompanion.insert(
-              id: newId(),
+              id: linkId,
               workspaceId: workspaceId,
               contentItemId: id,
               channelId: channelId,
@@ -163,6 +184,30 @@ class ContentRepository {
         }
       }
     });
+    if (workspaceId.isNotEmpty) {
+      await _syncQueue.enqueue(
+        workspaceId: workspaceId,
+        entityType: 'content_item',
+        entityId: id,
+        operation: SyncOperationType.update,
+      );
+      for (final linkId in addedLinkIds) {
+        await _syncQueue.enqueue(
+          workspaceId: workspaceId,
+          entityType: 'content_channel',
+          entityId: linkId,
+          operation: SyncOperationType.create,
+        );
+      }
+      for (final linkId in removedLinkIds) {
+        await _syncQueue.enqueue(
+          workspaceId: workspaceId,
+          entityType: 'content_channel',
+          entityId: linkId,
+          operation: SyncOperationType.delete,
+        );
+      }
+    }
   }
 
   /// Moves a production to a new pipeline stage — the Kanban drag-and-drop
@@ -180,15 +225,29 @@ class ContentRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    if (current != null) {
+      await _syncQueue.enqueue(
+        workspaceId: current.workspaceId,
+        entityType: 'content_item',
+        entityId: id,
+        operation: SyncOperationType.update,
+      );
+    }
   }
 
   Future<void> archive(String id) async {
+    final now = DateTime.now();
     await (_db.update(_db.contentItems)..where((c) => c.id.equals(id))).write(
-      ContentItemsCompanion(
-        archivedAt: Value(DateTime.now()),
-        stage: const Value(ContentStage.arquivado),
-        updatedAt: Value(DateTime.now()),
-      ),
+      ContentItemsCompanion(archivedAt: Value(now), stage: const Value(ContentStage.arquivado), updatedAt: Value(now)),
     );
+    final content = await getById(id);
+    if (content != null) {
+      await _syncQueue.enqueue(
+        workspaceId: content.workspaceId,
+        entityType: 'content_item',
+        entityId: id,
+        operation: SyncOperationType.update,
+      );
+    }
   }
 }

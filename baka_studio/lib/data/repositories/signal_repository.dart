@@ -3,6 +3,8 @@ import 'package:drift/drift.dart';
 import '../db/app_database.dart';
 import '../db/ids.dart';
 import '../models/signal.dart';
+import '../models/sync_state.dart';
+import 'sync_queue_repository.dart';
 
 Signal signalFromRow(SignalEntry row) => Signal(
   id: row.id,
@@ -27,6 +29,7 @@ class SignalRepository {
   SignalRepository(this._db);
 
   final AppDatabase _db;
+  late final SyncQueueRepository _syncQueue = SyncQueueRepository(_db);
 
   Stream<List<Signal>> watchAll() {
     final query = _db.select(_db.signals)
@@ -58,6 +61,7 @@ class SignalRepository {
         updatedAt: now,
       ),
     );
+    await _syncQueue.enqueue(workspaceId: workspaceId, entityType: 'inbox_item', entityId: id, operation: SyncOperationType.create);
     return signalFromRow(await (_db.select(_db.signals)..where((s) => s.id.equals(id))).getSingle());
   }
 
@@ -71,14 +75,32 @@ class SignalRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    final row = await (_db.select(_db.signals)..where((s) => s.id.equals(id))).getSingleOrNull();
+    if (row != null) {
+      await _syncQueue.enqueue(
+        workspaceId: row.workspaceId,
+        entityType: 'inbox_item',
+        entityId: id,
+        operation: SyncOperationType.update,
+      );
+    }
   }
 
   Future<void> archive(String id) => markProcessed(id, convertedEntityType: 'archived');
 
   Future<void> delete(String id) async {
     final now = DateTime.now();
+    final row = await (_db.select(_db.signals)..where((s) => s.id.equals(id))).getSingleOrNull();
     await (_db.update(_db.signals)..where((s) => s.id.equals(id))).write(
       SignalsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
     );
+    if (row != null) {
+      await _syncQueue.enqueue(
+        workspaceId: row.workspaceId,
+        entityType: 'inbox_item',
+        entityId: id,
+        operation: SyncOperationType.delete,
+      );
+    }
   }
 }
