@@ -81,7 +81,29 @@ public class AppNotificationListenerService extends NotificationListenerService 
     }
 
     @Override
+    public void onListenerConnected() {
+        super.onListenerConnected();
+        // Backfill: sem isso, o histórico fica vazio até a PRÓXIMA notificação
+        // nova chegar — mesmo que várias já estivessem ativas na barra do
+        // sistema (reboot do aparelho, app forçado a parar, ou primeira vez
+        // que o usuário liga o acesso em Ajustes). Achado da auditoria da
+        // Fase 7 (seção "riscos atuais").
+        StatusBarNotification[] active = getActiveNotifications();
+        if (active == null) return;
+        // Da mais antiga pra mais nova, já que cacheNotification usa addFirst
+        // — processar nessa ordem deixa a mais recente no topo do cache no
+        // final, igual já aconteceria organicamente com onNotificationPosted.
+        for (int i = active.length - 1; i >= 0; i--) {
+            cacheNotification(active[i]);
+        }
+    }
+
+    @Override
     public void onNotificationPosted(StatusBarNotification sbn) {
+        cacheNotification(sbn);
+    }
+
+    private void cacheNotification(StatusBarNotification sbn) {
         Notification notification = sbn.getNotification();
         if (notification == null) return;
 
