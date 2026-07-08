@@ -55,11 +55,12 @@ export function buildMissingRuleOccurrences(
   rule: RecurringFinanceRule,
   existingBillsForRule: Bill[],
   createId: () => string,
-  monthsAhead = RULE_MONTHS_AHEAD
+  monthsAhead = RULE_MONTHS_AHEAD,
+  now = new Date()
 ): Bill[] {
   const existingMonths = new Set(existingBillsForRule.map((b) => b.dueDate.slice(0, 7)));
   const missing: Bill[] = [];
-  for (const dueDate of upcomingDueDates(rule, monthsAhead)) {
+  for (const dueDate of upcomingDueDates(rule, monthsAhead, now)) {
     const monthKey = dueDate.slice(0, 7);
     if (existingMonths.has(monthKey)) continue;
     missing.push({
