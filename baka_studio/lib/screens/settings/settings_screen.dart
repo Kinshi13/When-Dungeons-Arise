@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/theme.dart';
 import '../../data/repositories/sync_queue_repository.dart';
+import '../../data/sync/sync_engine.dart';
 import '../../state/app_state.dart';
 import '../../state/auth_state.dart';
 import '../../widgets/cosmic_section_header.dart';
@@ -43,6 +44,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: BakaSpacing.md),
           _buildAccountCard(context, state),
+          const SizedBox(height: BakaSpacing.md),
+          _buildSyncStatusCard(context, state),
           const SizedBox(height: BakaSpacing.md),
           StellarCard(
             padding: EdgeInsets.zero,
@@ -148,6 +151,92 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+
+  /// Indicador discreto de sincronização (seção 25-26): nunca bloqueia a
+  /// UI, só informa sincronizado/sincronizando/pendente/erro e oferece o
+  /// botão manual "Sincronizar agora". Só aparece com sessão autenticada —
+  /// sem conta não há workspace remoto para sincronizar com.
+  Widget _buildSyncStatusCard(BuildContext context, AppState state) {
+    final authState = context.watch<AuthState>();
+    if (authState.status != AuthStatus.authenticated) return const SizedBox.shrink();
+
+    final syncQueue = SyncQueueRepository(state.db);
+    final engine = context.watch<SyncEngine>();
+
+    return StreamBuilder<int>(
+      stream: syncQueue.watchPendingCount(),
+      initialData: 0,
+      builder: (context, pendingSnapshot) {
+        return StreamBuilder<int>(
+          stream: syncQueue.watchFailedCount(),
+          initialData: 0,
+          builder: (context, failedSnapshot) {
+            final pending = pendingSnapshot.data ?? 0;
+            final failed = failedSnapshot.data ?? 0;
+            return StellarCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Sincronização', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: BakaSpacing.xs),
+                  _syncStatusLine(context, engine: engine, pending: pending, failed: failed),
+                  const SizedBox(height: BakaSpacing.sm),
+                  Row(
+                    children: [
+                      StellarButton(
+                        label: 'Sincronizar agora',
+                        loading: engine.isSyncing,
+                        onPressed: engine.isSyncing ? null : () => engine.runFullSync(state.workspace.id),
+                      ),
+                      if (failed > 0) ...[
+                        const SizedBox(width: BakaSpacing.xs),
+                        StellarButton(
+                          label: 'Tentar novamente',
+                          variant: StellarButtonVariant.text,
+                          onPressed: engine.isSyncing
+                              ? null
+                              : () async {
+                                  await syncQueue.retryAllFailed();
+                                  await engine.runFullSync(state.workspace.id);
+                                },
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _syncStatusLine(BuildContext context, {required SyncEngine engine, required int pending, required int failed}) {
+    final textTheme = Theme.of(context).textTheme;
+    if (engine.isSyncing) {
+      return Text('Sincronizando…', style: textTheme.bodySmall);
+    }
+    if (failed > 0) {
+      return Text(
+        'Erro na sincronização — $failed ${failed == 1 ? 'item não sincronizado' : 'itens não sincronizados'}',
+        style: textTheme.bodySmall?.copyWith(color: BakaColors.danger),
+      );
+    }
+    if (pending > 0) {
+      return Text(
+        '$pending ${pending == 1 ? 'alteração pendente' : 'alterações pendentes'}',
+        style: textTheme.bodySmall?.copyWith(color: BakaColors.warning),
+      );
+    }
+    final lastSynced = engine.lastSyncedAt;
+    return Text(
+      lastSynced == null ? 'Sincronizado' : 'Sincronizado às ${_formatTime(lastSynced)}',
+      style: textTheme.bodySmall?.copyWith(color: BakaColors.success),
+    );
+  }
+
+  String _formatTime(DateTime time) => '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
 
   Future<void> _confirmSignOut(BuildContext context, AppState state) async {
     final syncQueue = SyncQueueRepository(state.db);

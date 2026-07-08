@@ -141,6 +141,13 @@ class SyncQueueRepository {
     return query.watchSingle().map((row) => row.read(_db.syncQueueEntries.id.count()) ?? 0);
   }
 
+  Stream<int> watchFailedCount() {
+    final query = _db.selectOnly(_db.syncQueueEntries)
+      ..addColumns([_db.syncQueueEntries.id.count()])
+      ..where(_db.syncQueueEntries.status.equalsValue(SyncQueueStatus.failed));
+    return query.watchSingle().map((row) => row.read(_db.syncQueueEntries.id.count()) ?? 0);
+  }
+
   Future<void> markDone(String id) async {
     await (_db.delete(_db.syncQueueEntries)..where((e) => e.id.equals(id))).go();
   }

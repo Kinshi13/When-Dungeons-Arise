@@ -20,7 +20,7 @@ class BakaStudioApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AppState()),
         ChangeNotifierProvider(create: (_) => AuthState(AuthRepository())),
-        Provider<SyncEngine>(lazy: false, create: (context) => SyncEngine(context.read<AppState>().db)),
+        ChangeNotifierProvider<SyncEngine>(lazy: false, create: (context) => SyncEngine(context.read<AppState>().db)),
         ChangeNotifierProvider<SyncCoordinator>(
           lazy: false,
           create: (context) => SyncCoordinator(

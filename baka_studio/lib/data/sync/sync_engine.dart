@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart' hide mergeSort;
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../db/app_database.dart';
@@ -36,7 +37,7 @@ const List<String> _pushOrder = [
 /// ([SyncQueueRepository]) para o Supabase (push) e traz de volta o que
 /// mudou remotamente (pull) — nunca o contrário de bloquear a UI, que
 /// sempre lê/escreve local primeiro.
-class SyncEngine {
+class SyncEngine extends ChangeNotifier {
   SyncEngine(this._db)
     : _queue = SyncQueueRepository(_db),
       _localSettings = LocalSettingsRepository(_db),
@@ -49,17 +50,31 @@ class SyncEngine {
 
   bool _running = false;
 
+  /// Estado observável para a UI de status (seção 25-26): discreto,
+  /// nunca bloqueia — só informa o que está acontecendo.
+  bool isSyncing = false;
+  String? lastError;
+  DateTime? lastSyncedAt;
+
   /// Push seguido de pull — usado tanto pelo botão manual "Sincronizar
   /// agora" quanto por um futuro gatilho automático. Ignora chamadas
   /// concorrentes (`_running`) em vez de enfileirar rodadas sobrepostas.
   Future<void> runFullSync(String workspaceId) async {
     if (_running) return;
     _running = true;
+    isSyncing = true;
+    notifyListeners();
     try {
       await push();
       await pull(workspaceId);
+      lastError = null;
+      lastSyncedAt = DateTime.now();
+    } catch (error) {
+      lastError = error.toString();
     } finally {
       _running = false;
+      isSyncing = false;
+      notifyListeners();
     }
   }
 
