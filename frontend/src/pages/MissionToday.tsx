@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type Reminder } from "../api";
-import { generateMissions, type Mission } from "../game/missionGenerator";
+import { generateMissions, type Mission } from "../core/domain/missionGenerator";
 import PixelMissionCard from "../components/game/PixelMissionCard";
 import { playSfx } from "../sound";
 

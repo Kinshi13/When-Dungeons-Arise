@@ -83,19 +83,6 @@ export function TabBookIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-// Diário — caderno com fita de marcador (em vez da pena antiga, mais
-// combinando com a vibe aconchegante Lo-fi do que um acessório de pena/tinta).
-export function TabDiaryIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...base} {...props}>
-      <path d="M5 3.5h11a2 2 0 0 1 2 2v14a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2Z" fill="var(--reuniao)" />
-      <rect x="8" y="8.2" width="6.4" height="1.6" fill="var(--surface)" />
-      <rect x="8" y="11.6" width="6.4" height="1.6" fill="var(--surface)" />
-      <path d="M10 3.5h3v4.5l-1.5-1.2-1.5 1.2Z" fill="var(--accent)" />
-    </svg>
-  );
-}
-
 // Ajustes — engrenagem sólida
 export function TabGearIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -105,31 +92,6 @@ export function TabGearIcon(props: SVGProps<SVGSVGElement>) {
         fill="var(--text-muted)"
       />
       <circle cx="12" cy="12" r="3.2" fill="var(--surface)" />
-    </svg>
-  );
-}
-
-// Bolsa — alforje/bolsa de couro com alça, pra abrigar as ferramentas
-// pessoais (Diário, Biblioteca, Relógio, Clima, Ajustes) num destino só.
-export function TabBagIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...base} {...props}>
-      <path d="M9 8V6.5a3 3 0 0 1 6 0V8" fill="none" stroke="var(--border)" strokeWidth="1.4" />
-      <path d="M6.4 8h11.2l1.2 10.6a1.6 1.6 0 0 1-1.6 1.9H6.8a1.6 1.6 0 0 1-1.6-1.9Z" fill="var(--reuniao)" />
-      <rect x="9" y="10.6" width="6" height="2" fill="var(--accent)" />
-    </svg>
-  );
-}
-
-// Clima — sol atrás de uma nuvem
-export function TabWeatherIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg {...base} {...props}>
-      <circle cx="15.5" cy="8" r="4" fill="var(--outro)" />
-      <path
-        d="M6.5 10.5a4 4 0 0 1 7.6-1.7A4.6 4.6 0 0 1 19 13a4.2 4.2 0 0 1-.5 8.4H6.5a4.5 4.5 0 0 1 0-9Z"
-        fill="var(--accent-2)"
-      />
     </svg>
   );
 }

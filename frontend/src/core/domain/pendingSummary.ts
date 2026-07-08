@@ -1,4 +1,4 @@
-import type { Bill } from "../api";
+import type { Bill } from "../../api";
 import { toDateKey } from "./calendarEntries";
 
 export interface PendingBillDay {

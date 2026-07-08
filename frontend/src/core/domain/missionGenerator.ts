@@ -1,5 +1,5 @@
-import type { Priority, Reminder } from "../api";
-import type { MissionCategory } from "../components/game/PixelMissionCard";
+import type { Priority, Reminder } from "../../api";
+import type { MissionCategory } from "../../components/game/PixelMissionCard";
 
 export interface Mission {
   id: string;

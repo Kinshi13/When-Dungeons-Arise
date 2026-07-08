@@ -1,3 +1,5 @@
+@import "./core/design-system/tokens.css";
+
 :root {
   --bg: #0f0a1e;
   --surface: #1c1430;
@@ -75,12 +77,10 @@
 
   /* Gradientes por área — os mesmos matizes do Lo-fi claro, em versão
      escura e dessaturada (tons de cinza com um sussurro de cor). */
-  --lofi-mural: linear-gradient(165deg, #352e30 0%, #423639 55%, #4d3d41 100%);
   --lofi-tesouraria: linear-gradient(165deg, #2e332c 0%, #383f35 55%, #42493d 100%);
   --lofi-guilda: linear-gradient(165deg, #322e38 0%, #3c3644 55%, #463e50 100%);
   --lofi-tempo: linear-gradient(165deg, #2b3238 0%, #343d45 55%, #3d4852 100%);
   --lofi-ajustes: linear-gradient(165deg, #33302a 0%, #3e3932 55%, #48423a 100%);
-  --lofi-diario: linear-gradient(165deg, #362e31 0%, #44383c 55%, #503f44 100%);
   --lofi-biblioteca: linear-gradient(165deg, #34312a 0%, #403b31 55%, #4c4537 100%);
 }
 
@@ -164,12 +164,10 @@
   filter: brightness(0.72) saturate(0.85);
 }
 
-.lofi-scene-mural { background: var(--lofi-mural); }
 .lofi-scene-tesouraria { background: var(--lofi-tesouraria); }
 .lofi-scene-guilda { background: var(--lofi-guilda); }
 .lofi-scene-tempo { background: var(--lofi-tempo); }
 .lofi-scene-ajustes { background: var(--lofi-ajustes); }
-.lofi-scene-diario { background: var(--lofi-diario); }
 .lofi-scene-biblioteca { background: var(--lofi-biblioteca); }
 
 /* Área com ilustração fixa (hoje só a Guilda) — sem o brilho ::after (a

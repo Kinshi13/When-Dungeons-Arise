@@ -5,10 +5,11 @@ import { tabContentEnter } from "../motion";
 import Calendar from "./Calendar";
 import LinhaDoTempo from "./LinhaDoTempo";
 import PixelDialogBox from "../components/game/PixelDialogBox";
+import TempoTabBar from "../components/TempoTabBar";
 import { api, type Bill, type Reminder } from "../api";
-import { buildPendingBillsSummary } from "../game/pendingSummary";
-import { buildAgendaSummary } from "../game/agendaSummary";
-import { getBrazilianHolidays } from "../game/holidays";
+import { buildPendingBillsSummary } from "../core/domain/pendingSummary";
+import { buildAgendaSummary } from "../core/domain/agendaSummary";
+import { getBrazilianHolidays } from "../core/domain/holidays";
 
 type Tab = "calendario" | "agenda" | "linha-do-tempo";
 
@@ -75,20 +76,7 @@ export default function TimeRoom() {
             ))}
           {tab === "linha-do-tempo" && "Tudo que vem por aí, em ordem, num relance."}
         </PixelDialogBox>
-        <div className="drawer-tabs">
-          <Link to="/sala-do-tempo/calendario" className={tab === "calendario" ? "drawer-tab active" : "drawer-tab"}>
-            Mês
-          </Link>
-          <Link to="/sala-do-tempo/agenda" className={tab === "agenda" ? "drawer-tab active" : "drawer-tab"}>
-            Agenda
-          </Link>
-          <Link
-            to="/sala-do-tempo/linha-do-tempo"
-            className={tab === "linha-do-tempo" ? "drawer-tab active" : "drawer-tab"}
-          >
-            Linha do Tempo
-          </Link>
-        </div>
+        <TempoTabBar />
       </div>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={tab} {...tabContentEnter}>

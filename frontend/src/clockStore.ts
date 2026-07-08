@@ -1,5 +1,5 @@
-import { table, createId } from "./storage";
-import { saveFile, loadFile, deleteFile } from "./blobStore";
+import { table, createId } from "./core/repositories/storage";
+import { saveFile, loadFile, deleteFile } from "./core/repositories/blobStore";
 import { syncAlarmsNow } from "./syncAlarms";
 
 // Relógio — despertadores, cronômetro e temporizador. Tudo local, como o

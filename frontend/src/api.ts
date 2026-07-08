@@ -1,8 +1,8 @@
-import { createId, table } from "./storage";
-import { saveFile, loadFile, deleteFile } from "./blobStore";
+import { createId, table } from "./core/repositories/storage";
+import { saveFile, loadFile, deleteFile } from "./core/repositories/blobStore";
 import { generateCoverThumbnail } from "./bookCovers";
-import { buildRecurringOccurrences } from "./game/recurrence";
-import { buildInstallmentExpenses } from "./game/installments";
+import { buildRecurringOccurrences } from "./core/domain/recurrence";
+import { buildInstallmentExpenses } from "./core/domain/installments";
 import {
   scheduleReminderNotification,
   cancelReminderNotification,
@@ -12,7 +12,7 @@ import {
   cancelBirthdayNotifications,
   checkOverspendingAndNotify,
 } from "./notifications";
-import { compareWeek, compareMonth } from "./game/financeAnalysis";
+import { compareWeek, compareMonth } from "./core/domain/financeAnalysis";
 import { syncReminderWidget, syncCalendarWidget } from "./widgetBridge";
 import { syncRemindersNow } from "./syncReminders";
 import { syncNotesNow } from "./syncNotes";

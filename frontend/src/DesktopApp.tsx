@@ -1,4 +1,4 @@
-import { NavLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState, type SVGProps, type ReactElement } from "react";
 import GuildReception from "./pages/GuildReception";
 import MissionBoard from "./pages/MissionBoard";
@@ -11,20 +11,15 @@ import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
 import AlarmRinger from "./components/AlarmRinger";
 import Splash from "./components/Splash";
+import StellaCore from "./ui/stella-core/StellaCore";
+import { buildStellaActions } from "./stellaActions";
 import { useSettings, isLofiTheme } from "./contexts/SettingsContext";
+import { sectionOf } from "./useSwipeNav";
 import { api, type Bill, type Reminder } from "./api";
 import { nextAlarm, type Alarm } from "./clockStore";
 import { getCachedPrimaryWeather, fetchPrimaryWeather, type WeatherInfo } from "./weather";
-import { buildHomeSummary } from "./game/homeSummary";
-import {
-  TabBellIcon,
-  TabCoinsIcon,
-  TabGuildIcon,
-  TabHomeCalendarIcon,
-  TabGearIcon,
-  TabDiaryIcon,
-  TabBookIcon,
-} from "./icons2";
+import { buildHomeSummary } from "./core/domain/homeSummary";
+import { TabCoinsIcon, TabGuildIcon, TabHomeCalendarIcon, TabGearIcon, TabBookIcon } from "./icons2";
 import "./DesktopApp.css";
 
 interface NavItem {
@@ -34,12 +29,13 @@ interface NavItem {
   Icon: (props: SVGProps<SVGSVGElement>) => ReactElement;
 }
 
+// Mesmos 4 núcleos + Ajustes da dock mobile (ver DOCK_ITEMS em App.tsx) —
+// Tarefas (antigo Mural) e Diário viraram sub-abas de Tempo (TempoTabBar),
+// reaproveitadas aqui sem duplicar a navegação por plataforma.
 const NAV_ITEMS: NavItem[] = [
-  { to: "/", end: true, label: "Guilda", Icon: TabGuildIcon },
-  { to: "/missoes", label: "Mural", Icon: TabBellIcon },
+  { to: "/", end: true, label: "Recepção", Icon: TabGuildIcon },
+  { to: "/sala-do-tempo", label: "Tempo", Icon: TabHomeCalendarIcon },
   { to: "/tesouraria", label: "Tesouraria", Icon: TabCoinsIcon },
-  { to: "/sala-do-tempo", label: "Sala do Tempo", Icon: TabHomeCalendarIcon },
-  { to: "/diario/notas", label: "Diário", Icon: TabDiaryIcon },
   { to: "/biblioteca", label: "Biblioteca", Icon: TabBookIcon },
   { to: "/regras", label: "Ajustes", Icon: TabGearIcon },
 ];
@@ -185,7 +181,9 @@ function DesktopApp() {
   const { theme } = useSettings();
   const isLofi = isLofiTheme(theme);
   const location = useLocation();
+  const navigate = useNavigate();
   const isReader = location.pathname.startsWith("/leitor");
+  const stellaActions = buildStellaActions(sectionOf(location.pathname), navigate);
 
   if (isReader) {
     return (
@@ -212,6 +210,9 @@ function DesktopApp() {
               <span>{item.label}</span>
             </NavLink>
           ))}
+          <div className="desktop-sidebar-stella">
+            <StellaCore actions={stellaActions} />
+          </div>
         </nav>
 
         <main className="desktop-main">
@@ -219,23 +220,23 @@ function DesktopApp() {
             <div className="main desktop-page-frame">
               <Routes>
                 <Route path="/" element={<GuildReception />} />
-                <Route path="/missoes" element={<Navigate to="/missoes/hoje" replace />} />
-                <Route path="/missoes/hoje" element={<MissionBoard />} />
-                <Route path="/missoes/missoes" element={<MissionBoard />} />
-                <Route path="/missoes/caixa" element={<MissionBoard />} />
                 <Route path="/sala-do-tempo" element={<Navigate to="/sala-do-tempo/calendario" replace />} />
                 <Route path="/sala-do-tempo/calendario" element={<TimeRoom />} />
                 <Route path="/sala-do-tempo/agenda" element={<TimeRoom />} />
                 <Route path="/sala-do-tempo/linha-do-tempo" element={<TimeRoom />} />
+                <Route path="/sala-do-tempo/tarefas" element={<Navigate to="/sala-do-tempo/tarefas/hoje" replace />} />
+                <Route path="/sala-do-tempo/tarefas/hoje" element={<MissionBoard />} />
+                <Route path="/sala-do-tempo/tarefas/missoes" element={<MissionBoard />} />
+                <Route path="/sala-do-tempo/tarefas/caixa" element={<MissionBoard />} />
+                <Route path="/sala-do-tempo/diario" element={<Navigate to="/sala-do-tempo/diario/notas" replace />} />
+                <Route path="/sala-do-tempo/diario/notas" element={<AdventureDiary />} />
+                <Route path="/sala-do-tempo/diario/listas" element={<AdventureDiary />} />
                 <Route path="/tesouraria" element={<Navigate to="/tesouraria/visao-geral" replace />} />
                 <Route path="/tesouraria/visao-geral" element={<Treasury />} />
                 <Route path="/tesouraria/movimentos" element={<Treasury />} />
                 <Route path="/tesouraria/contas" element={<Treasury />} />
                 <Route path="/tesouraria/analises" element={<Treasury />} />
                 <Route path="/tesouraria/ferramentas" element={<Treasury />} />
-                <Route path="/diario" element={<Navigate to="/diario/notas" replace />} />
-                <Route path="/diario/notas" element={<AdventureDiary />} />
-                <Route path="/diario/listas" element={<AdventureDiary />} />
                 <Route path="/biblioteca" element={<Library />} />
                 <Route path="/regras" element={<RulesBook />} />
               </Routes>

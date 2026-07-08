@@ -1,4 +1,4 @@
-import { saveFile, loadFile, deleteFile } from "./blobStore";
+import { saveFile, loadFile, deleteFile } from "./core/repositories/blobStore";
 
 // Papel de parede personalizado (tema "Lo-fi Personalizado"): até 3 imagens
 // guardadas no aparelho (IndexedDB, mesmo mecanismo dos documentos da
@@ -9,8 +9,10 @@ import { saveFile, loadFile, deleteFile } from "./blobStore";
 export const WALLPAPER_SLOT_IDS = ["1", "2", "3"] as const;
 export type WallpaperSlotId = (typeof WALLPAPER_SLOT_IDS)[number];
 
-// Mesmas 7 áreas da barra inferior (ver activeTabOf em App.tsx).
-export type WallpaperScreenKey = "diario" | "mural" | "tesouraria" | "guilda" | "tempo" | "ajustes" | "biblioteca";
+// Mesmas áreas resolvidas por sectionOf (ver useSwipeNav.ts/activeTabOf em
+// App.tsx). Tarefas e Diário não têm mais slot próprio — viraram sub-abas de
+// Tempo, então usam o mesmo papel de parede da área "tempo".
+export type WallpaperScreenKey = "tesouraria" | "guilda" | "tempo" | "ajustes" | "biblioteca";
 
 export type WallpaperMode = "todas" | "principal";
 
@@ -119,9 +121,7 @@ export async function clearWallpaperSlot(slotId: WallpaperSlotId, config: Wallpa
 // parede — mesma cobertura de activeTabOf (App.tsx) e flatSequenceSection
 // (useSwipeNav.ts), reunidas aqui pra não depender de importar de App.tsx.
 export function wallpaperScreenOf(pathname: string): WallpaperScreenKey {
-  if (pathname.startsWith("/diario")) return "diario";
   if (pathname === "/biblioteca") return "biblioteca";
-  if (pathname.startsWith("/missoes")) return "mural";
   if (pathname.startsWith("/tesouraria")) return "tesouraria";
   if (pathname.startsWith("/sala-do-tempo")) return "tempo";
   if (pathname.startsWith("/regras")) return "ajustes";

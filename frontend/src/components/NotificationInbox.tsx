@@ -11,7 +11,7 @@ import {
 import { groupNotifications, hasScheduleHint } from "../notificationGrouping";
 import { ensureAppsKnown, listMonitoredApps } from "../notificationAppPrefs";
 import { runAutoExpenseDetection, isNotificationProcessed } from "../autoExpenseEngine";
-import { findDateMention, resolveDateToISO } from "../game/dateDetector";
+import { findDateMention, resolveDateToISO } from "../core/domain/dateDetector";
 import { BellIcon, PlusIcon, CoinIcon, SettingsIcon } from "../icons";
 import { playSfx } from "../sound";
 

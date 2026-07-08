@@ -1,0 +1,52 @@
+/* Stella Design System — tokens da identidade "Stella Founds".
+   Namespace próprio (--stella-*) pra não colidir com as variáveis de tema
+   existentes em index.css (--bg, --accent, --surface...) usadas pelo visual
+   "Guilda" atual — os dois convivem enquanto a migração acontece aos poucos,
+   por tela, nas fases seguintes. Consumido hoje só pelo Stella Core; outros
+   componentes passam a usar conforme forem migrando. */
+:root {
+  /* Cores — constelações, núcleos conectados, ecossistema (ver brief visual) */
+  --stella-midnight: #0b1026;
+  --stella-midnight-raised: #131a36;
+  --stella-graphite: #232a3d;
+  --stella-graphite-raised: #2d3550;
+  --stella-purple: #4b3f8f;
+  --stella-purple-deep: #2e2560;
+  --stella-blue: #5b8def;
+  --stella-blue-soft: #8fb3f5;
+  --stella-gold: #e8c07d;
+  --stella-green: #6fbf9e;
+  --stella-wine: #8a4a5e;
+
+  --stella-text: #e8ecf7;
+  --stella-text-h: #ffffff;
+  --stella-text-muted: #9aa3c4;
+
+  /* Spacing */
+  --stella-space-1: 4px;
+  --stella-space-2: 8px;
+  --stella-space-3: 12px;
+  --stella-space-4: 16px;
+  --stella-space-5: 24px;
+  --stella-space-6: 32px;
+  --stella-space-7: 48px;
+
+  /* Radius — bordas suaves, sem o corte duro do pixel art */
+  --stella-radius-sm: 8px;
+  --stella-radius-md: 14px;
+  --stella-radius-lg: 22px;
+  --stella-radius-pill: 999px;
+
+  /* Elevação — painéis translúcidos + brilho discreto, não sombra dura */
+  --stella-elevation-1: 0 2px 8px rgba(10, 14, 30, 0.35);
+  --stella-elevation-2: 0 8px 24px rgba(10, 14, 30, 0.45);
+  --stella-glow-blue: 0 0 24px rgba(91, 141, 239, 0.35);
+  --stella-glass-bg: rgba(35, 42, 61, 0.72);
+  --stella-glass-border: rgba(143, 179, 245, 0.18);
+
+  /* Motion — espelha DURATIONS de motion.ts (fast/standard) pra CSS puro
+     (hover, focus) ficar no mesmo ritmo das transições em JS/framer-motion */
+  --stella-duration-fast: 0.15s;
+  --stella-duration-standard: 0.2s;
+  --stella-ease: cubic-bezier(0.32, 0.72, 0, 1);
+}

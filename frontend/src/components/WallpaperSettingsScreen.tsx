@@ -28,14 +28,12 @@ interface WallpaperSettingsScreenProps {
 
 const SCREEN_LABEL: Record<WallpaperScreenKey, string> = {
   guilda: "Recepção",
-  mural: "Mural",
   tesouraria: "Tesouraria",
   tempo: "Sala do Tempo",
   ajustes: "Ajustes",
-  diario: "Diário",
   biblioteca: "Biblioteca",
 };
-const SCREEN_ORDER: WallpaperScreenKey[] = ["guilda", "mural", "tesouraria", "tempo", "ajustes", "diario", "biblioteca"];
+const SCREEN_ORDER: WallpaperScreenKey[] = ["guilda", "tesouraria", "tempo", "ajustes", "biblioteca"];
 
 function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));

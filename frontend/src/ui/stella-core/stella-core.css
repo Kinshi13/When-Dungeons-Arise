@@ -1,0 +1,112 @@
+/* Stella Core — botão central expansível. Usa os tokens --stella-* (ver
+   core/design-system/tokens.css), não os tokens de tema --bg/--accent (esses
+   pertencem ao visual "Guilda" que o Core convive ao lado, não substitui). */
+
+.stella-core {
+  /* z-index PRÓPRIO (não só dos filhos) — o componente é usado tanto dentro
+     da dock mobile (que já tem sua stacking context própria) quanto na
+     sidebar desktop (que não tem nenhuma); sem isso, no desktop o backdrop
+     (ver .stella-core-backdrop) compararia direto contra o :root e venceria,
+     bloqueando o próprio gatilho que deveria fechar o menu. */
+  position: relative;
+  z-index: var(--z-dock);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.stella-core-trigger {
+  position: relative;
+  z-index: 2;
+  width: 56px;
+  height: 56px;
+  margin-top: -18px;
+  border: 1px solid var(--stella-glass-border);
+  border-radius: var(--stella-radius-pill);
+  background: radial-gradient(circle at 35% 30%, var(--stella-purple), var(--stella-midnight-raised));
+  box-shadow: var(--stella-elevation-2), var(--stella-glow-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.stella-core-trigger:active {
+  box-shadow: var(--stella-elevation-1);
+}
+
+/* z-index abaixo de 1 de propósito: o container raiz do app (.app em App.css)
+   já cria sua própria stacking context em z-index:1, o que CONFINA o
+   z-index alto da dock (--z-dock) a só valer dentro dela — não adianta um
+   z-index maior aqui achando que "compete" com --z-dock, porque quem entra
+   na comparação de verdade contra este backdrop (portalizado direto no
+   body) é o .app inteiro. Preciso ficar abaixo do 1 dele pra não cobrir o
+   próprio gatilho que deveria fechar o menu. Ainda fica acima do conteúdo
+   estático comum (que não é elemento posicionado), então continua
+   funcionando como área de "tocar fora fecha". */
+.stella-core-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: transparent;
+}
+
+.stella-core-fan {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  z-index: 3;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.stella-core-action {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 64px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--stella-glass-border);
+  border-radius: var(--stella-radius-md);
+  background: var(--stella-glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--stella-elevation-1);
+  color: var(--stella-text);
+  padding: var(--stella-space-2);
+  cursor: pointer;
+}
+
+.stella-core-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--stella-blue-soft);
+}
+
+.stella-core-action-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.stella-core-action-label {
+  font-size: 0.62rem;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--stella-text-muted);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .stella-core-action {
+    background: var(--stella-graphite);
+  }
+}

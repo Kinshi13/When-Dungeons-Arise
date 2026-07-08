@@ -43,7 +43,7 @@ const WeatherWidget = forwardRef<WeatherWidgetHandle, WeatherWidgetProps>(functi
       aria-label="Clima"
       initial={{ opacity: 0, y: 18, scale: 0.94 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: "spring", stiffness: 380, damping: 26, delay: 5 * 0.05 }}
+      transition={{ type: "spring", stiffness: 380, damping: 26, delay: 6 * 0.05 }}
       whileTap={{ scale: 0.94 }}
     >
       {info ? (

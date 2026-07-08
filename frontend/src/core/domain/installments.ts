@@ -1,4 +1,4 @@
-import type { Expense } from "../api";
+import type { Expense } from "../../api";
 import { addMonths } from "./recurrence";
 
 // Divide um gasto alto em N parcelas mensais, distribuindo os centavos da

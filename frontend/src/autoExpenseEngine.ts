@@ -1,4 +1,4 @@
-import { table } from "./storage";
+import { table } from "./core/repositories/storage";
 import { api } from "./api";
 import type { RawSystemNotification } from "./notificationBridge";
 import { findExpenseMention } from "./expenseDetector";

@@ -6,6 +6,7 @@ import { bookSpriteFor } from "../bookSprites";
 import { PlusIcon, ChevronUpIcon } from "../icons";
 import { playSfx } from "../sound";
 import { useSettings, isLofiTheme } from "../contexts/SettingsContext";
+import { useQuickAction } from "../useQuickAction";
 
 // Regiões das 4 prateleiras utilizáveis (a primeira, decorativa, fica de fora),
 // em % da altura/largura da arte da estante — descobertas inspecionando as
@@ -35,6 +36,8 @@ export default function Library() {
   useEffect(() => {
     load();
   }, []);
+
+  useQuickAction("importar-livro", () => fileInputRef.current?.click());
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

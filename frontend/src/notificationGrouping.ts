@@ -1,5 +1,5 @@
 import type { RawSystemNotification } from "./notificationBridge";
-import { findDateMention } from "./game/dateDetector";
+import { findDateMention } from "./core/domain/dateDetector";
 
 export interface NotificationGroup {
   packageName: string;

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { api, type Bill, type Reminder } from "./api";
-import { buildCalendarEntries, type CalendarEntry } from "./game/calendarEntries";
-import { getBrazilianHolidays, type Holiday } from "./game/holidays";
+import { buildCalendarEntries, type CalendarEntry } from "./core/domain/calendarEntries";
+import { getBrazilianHolidays, type Holiday } from "./core/domain/holidays";
 
 // "financas": só contas (sem feriado) — grade da Tesouraria/Mês. "agenda":
 // só feriados (sem conta) — grade de eventos/aniversário. "tudo": os dois

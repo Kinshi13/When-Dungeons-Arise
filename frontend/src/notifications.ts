@@ -1,8 +1,8 @@
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import type { Reminder, Bill } from "./api";
-import type { Holiday } from "./game/holidays";
-import type { PeriodComparison } from "./game/financeAnalysis";
+import type { Holiday } from "./core/domain/holidays";
+import type { PeriodComparison } from "./core/domain/financeAnalysis";
 import { loadNotificationPrefs } from "./notificationPrefs";
 
 const BILL_ALERT_DAYS = [10, 5, 1];

@@ -1,3 +1,5 @@
+// Contraparte de Repository<T> (ver storage.ts) pra dados binários — chave/blob
+// em vez de lista de entidades, por isso não implementa a mesma interface.
 const DB_NAME = "lembretes-app-files";
 const STORE = "files";
 

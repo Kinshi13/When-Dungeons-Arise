@@ -1,4 +1,4 @@
-import type { Bill } from "../api";
+import type { Bill } from "../../api";
 
 // Quantidade de lançamentos futuros gerados quando uma conta vira recorrente mensal
 // (11 meses à frente + a conta original = 1 ano de cobertura).

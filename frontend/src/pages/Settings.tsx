@@ -14,7 +14,7 @@ import {
   cancelHolidayNotification,
   cancelBirthdayNotifications,
 } from "../notifications";
-import { getBrazilianHolidays } from "../game/holidays";
+import { getBrazilianHolidays } from "../core/domain/holidays";
 import {
   loadNotificationPrefs,
   saveNotificationPrefs,

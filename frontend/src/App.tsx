@@ -9,16 +9,15 @@ import Treasury from "./pages/Treasury";
 import AdventureDiary from "./pages/AdventureDiary";
 import Library from "./pages/Library";
 import RulesBook from "./pages/RulesBook";
-import Bolsa from "./pages/Bolsa";
 import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
 import AlarmRinger from "./components/AlarmRinger";
-import QuickPanel from "./components/QuickPanel";
 import AmbientParticles from "./components/AmbientParticles";
 import Splash from "./components/Splash";
+import StellaCore from "./ui/stella-core/StellaCore";
+import { buildStellaActions } from "./stellaActions";
 import { useSettings, isLofiTheme } from "./contexts/SettingsContext";
 import { sectionOf } from "./useSwipeNav";
-import { useVerticalSwipe } from "./useVerticalSwipe";
 import { SPRINGS, screenEnter } from "./motion";
 import { isNativePlatform } from "./notifications";
 import { consumeBackPress } from "./useOverlayBackClose";
@@ -34,7 +33,7 @@ import {
 } from "./wallpaperStore";
 import { onWallpaperChanged } from "./wallpaperEvents";
 import { playSfx } from "./sound";
-import { TabBellIcon, TabCoinsIcon, TabGuildIcon, TabHomeCalendarIcon, TabGearIcon, TabBagIcon } from "./icons2";
+import { TabBellIcon, TabCoinsIcon, TabGuildIcon, TabHomeCalendarIcon, TabGearIcon, TabBookIcon } from "./icons2";
 import "./App.css";
 
 const MotionNavLink = motion.create(NavLink);
@@ -50,37 +49,33 @@ const PAGE_BACKGROUNDS: Record<string, { src: string; blurred?: boolean }> = {
   "/tesouraria/contas": { src: "/finance-bg.png", blurred: true },
   "/tesouraria/analises": { src: "/finance-bg.png", blurred: true },
   "/tesouraria/ferramentas": { src: "/finance-bg.png", blurred: true },
-  "/diario/notas": { src: "/diario-notas-bg.png", blurred: true },
-  "/diario/listas": { src: "/diario-listas-bg.png", blurred: true },
+  "/sala-do-tempo/diario/notas": { src: "/diario-notas-bg.png", blurred: true },
+  "/sala-do-tempo/diario/listas": { src: "/diario-listas-bg.png", blurred: true },
 };
 
 // Cor/gradiente flat por área no tema Lo-fi — substitui inteiramente a arte
-// pintada (ver .lofi-scene-* no index.css). Diário e Biblioteca não fazem
-// parte das 5 áreas da barra, então são resolvidos à parte pelo pathname.
+// pintada (ver .lofi-scene-* no index.css). Tarefas e Diário são sub-abas de
+// Tempo (ver sectionOf em useSwipeNav.ts), por isso não têm entrada própria.
 const LOFI_SECTION_CLASS: Record<string, string> = {
-  mural: "lofi-scene-mural",
   tesouraria: "lofi-scene-tesouraria",
   guilda: "lofi-scene-guilda",
   tempo: "lofi-scene-tempo",
   ajustes: "lofi-scene-ajustes",
+  biblioteca: "lofi-scene-biblioteca",
 };
 
 function lofiSceneClass(pathname: string): string {
-  if (pathname.startsWith("/diario")) return "lofi-scene-diario";
-  if (pathname === "/biblioteca") return "lofi-scene-biblioteca";
   const section = sectionOf(pathname);
   return (section && LOFI_SECTION_CLASS[section]) || "lofi-scene-guilda";
 }
 
 // Chave da tela PRINCIPAL atual, agrupando sub-rotas da mesma área (ex.:
-// /missoes/hoje e /missoes/missoes) num valor só — usada como key do
-// AnimatePresence externo (fundo + screenEnter) pra essa transição mais forte
-// disparar só ao trocar de área pela dock, não a cada troca de sub-aba
-// (que já tem sua própria transição mais leve, ver tabContentEnter).
+// /sala-do-tempo/calendario e /sala-do-tempo/tarefas/hoje) num valor só —
+// usada como key do AnimatePresence externo (fundo + screenEnter) pra essa
+// transição mais forte disparar só ao trocar de área pela dock, não a cada
+// troca de sub-aba (que já tem sua própria transição mais leve, ver
+// tabContentEnter).
 function mainScreenKeyOf(pathname: string): string {
-  if (pathname.startsWith("/diario")) return "diario";
-  if (pathname === "/biblioteca") return "biblioteca";
-  if (pathname.startsWith("/bolsa")) return "bolsa";
   return sectionOf(pathname) ?? pathname;
 }
 
@@ -194,9 +189,10 @@ const LEGACY_TABS: LegacyTabDef[] = [
   { key: "ajustes", to: "/regras", label: "Ajustes", legacyClass: "tab tab-ajustes", Icon: TabGearIcon },
 ];
 
-// Dock flutuante do tema Lo-fi — 5 destinos principais. Diário, Biblioteca,
-// Relógio, Clima e Ajustes moram dentro de "Bolsa" (ver pages/Bolsa.tsx) em
-// vez de ocuparem posição própria na dock.
+// Dock flutuante — 4 núcleos (Recepção, Tempo, Tesouraria, Biblioteca) com o
+// Stella Core no centro (renderizado à parte, ver StellaCore mais abaixo).
+// Mural (Tarefas) e Diário viraram sub-abas de Tempo; Ajustes é acessado
+// pela Recepção; Relógio/Clima já são cards da própria Recepção.
 interface DockItemDef {
   key: string;
   to: string;
@@ -206,21 +202,17 @@ interface DockItemDef {
 }
 
 const DOCK_ITEMS: DockItemDef[] = [
-  { key: "guilda", to: "/", end: true, label: "Guilda", Icon: TabGuildIcon },
-  { key: "mural", to: "/missoes", label: "Mural", Icon: TabBellIcon },
+  { key: "guilda", to: "/", end: true, label: "Recepção", Icon: TabGuildIcon },
   { key: "tempo", to: "/sala-do-tempo", label: "Tempo", Icon: TabHomeCalendarIcon },
   { key: "tesouraria", to: "/tesouraria", label: "Tesouraria", Icon: TabCoinsIcon },
-  { key: "bolsa", to: "/bolsa", label: "Bolsa", Icon: TabBagIcon },
+  { key: "biblioteca", to: "/biblioteca", label: "Biblioteca", Icon: TabBookIcon },
 ];
 
-// A qual item da dock a rota atual pertence, pra destaque visual. Diário,
-// Biblioteca e Ajustes (que moram dentro de Bolsa, sem rota própria na dock)
-// destacam "bolsa"; o resto usa sectionOf normalmente.
+// A qual item da dock a rota atual pertence, pra destaque visual. Ajustes
+// não tem posição própria na dock (é acessado pela Recepção), então destaca
+// "guilda" enquanto o usuário estiver lá.
 function activeTabOf(pathname: string): string | null {
-  if (pathname.startsWith("/diario")) return "bolsa";
-  if (pathname === "/biblioteca") return "bolsa";
-  if (pathname.startsWith("/regras")) return "bolsa";
-  if (pathname.startsWith("/bolsa")) return "bolsa";
+  if (pathname.startsWith("/regras")) return "guilda";
   return sectionOf(pathname);
 }
 
@@ -337,6 +329,7 @@ function App() {
   const animationsEnabled = animationLevel !== "reduzidas";
   const isLofi = isLofiTheme(theme);
   const location = useLocation();
+  const navigate = useNavigate();
   useAndroidBackButton();
   useAmbientParticlesPause();
   const resolveCustomWallpaper = useWallpaperState();
@@ -351,16 +344,29 @@ function App() {
     setTabBurst({ tab, id: Date.now() });
   }
 
-  const [quickPanelOpen, setQuickPanelOpen] = useState(false);
-  function openQuickPanel() {
-    playSfx("coin");
-    setQuickPanelOpen(true);
-  }
-  const quickPanelSwipe = useVerticalSwipe(openQuickPanel, undefined);
-
   const isReader = location.pathname.startsWith("/leitor");
   const pageBackground = PAGE_BACKGROUNDS[location.pathname];
   const activeTab = activeTabOf(location.pathname);
+  const stellaActions = buildStellaActions(sectionOf(location.pathname), navigate);
+
+  function renderDockItem(item: DockItemDef) {
+    const active = activeTab === item.key;
+    return (
+      <MotionNavLink
+        key={item.key}
+        to={item.to}
+        end={item.end}
+        className="dock-item"
+        aria-label={item.label}
+        onClick={() => handleTabTap(item.key)}
+        animate={active ? ACTIVE_TAB_POSE : INACTIVE_TAB_POSE}
+        {...tabMotion}
+      >
+        <item.Icon />
+        {tabBurst?.tab === item.key && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
+      </MotionNavLink>
+    );
+  }
   // Sem a animação de transição, cada tela só troca na hora — nenhuma das
   // duas camadas abaixo precisa de initial/exit, só o conteúdo já assentado.
   const transitionProps = screenTransitionAnimationEnabled ? screenEnter : {};
@@ -395,63 +401,36 @@ function App() {
             <motion.div key={mainScreenKeyOf(location.pathname)} className="screen-transition" {...transitionProps}>
               <Routes location={location}>
                 <Route path="/" element={<GuildReception />} />
-                <Route path="/missoes" element={<Navigate to="/missoes/hoje" replace />} />
-                <Route path="/missoes/hoje" element={<MissionBoard />} />
-                <Route path="/missoes/missoes" element={<MissionBoard />} />
-                <Route path="/missoes/caixa" element={<MissionBoard />} />
                 <Route path="/sala-do-tempo" element={<Navigate to="/sala-do-tempo/calendario" replace />} />
                 <Route path="/sala-do-tempo/calendario" element={<TimeRoom />} />
                 <Route path="/sala-do-tempo/agenda" element={<TimeRoom />} />
                 <Route path="/sala-do-tempo/linha-do-tempo" element={<TimeRoom />} />
+                <Route path="/sala-do-tempo/tarefas" element={<Navigate to="/sala-do-tempo/tarefas/hoje" replace />} />
+                <Route path="/sala-do-tempo/tarefas/hoje" element={<MissionBoard />} />
+                <Route path="/sala-do-tempo/tarefas/missoes" element={<MissionBoard />} />
+                <Route path="/sala-do-tempo/tarefas/caixa" element={<MissionBoard />} />
+                <Route path="/sala-do-tempo/diario" element={<Navigate to="/sala-do-tempo/diario/notas" replace />} />
+                <Route path="/sala-do-tempo/diario/notas" element={<AdventureDiary />} />
+                <Route path="/sala-do-tempo/diario/listas" element={<AdventureDiary />} />
                 <Route path="/tesouraria" element={<Navigate to="/tesouraria/visao-geral" replace />} />
                 <Route path="/tesouraria/visao-geral" element={<Treasury />} />
                 <Route path="/tesouraria/movimentos" element={<Treasury />} />
                 <Route path="/tesouraria/contas" element={<Treasury />} />
                 <Route path="/tesouraria/analises" element={<Treasury />} />
                 <Route path="/tesouraria/ferramentas" element={<Treasury />} />
-                <Route path="/diario" element={<Navigate to="/diario/notas" replace />} />
-                <Route path="/diario/notas" element={<AdventureDiary />} />
-                <Route path="/diario/listas" element={<AdventureDiary />} />
                 <Route path="/biblioteca" element={<Library />} />
                 <Route path="/regras" element={<RulesBook />} />
-                <Route path="/bolsa" element={<Bolsa />} />
               </Routes>
             </motion.div>
           </AnimatePresence>
         </main>
         <DueBillsPopup />
         <AlarmRinger />
-        {isLofi && (
-          <>
-            <button
-              className="dock-handle"
-              aria-label="Painel rápido"
-              onClick={openQuickPanel}
-              {...quickPanelSwipe}
-            />
-            <QuickPanel open={quickPanelOpen} onClose={() => setQuickPanelOpen(false)} />
-          </>
-        )}
         {isLofi ? (
           <nav className="dock">
-            {DOCK_ITEMS.map((item) => {
-              const active = activeTab === item.key;
-              return (
-                <MotionNavLink
-                  key={item.key}
-                  to={item.to}
-                  end={item.end}
-                  className="dock-item"
-                  aria-label={item.label}
-                  onClick={() => handleTabTap(item.key)}
-                  animate={active ? ACTIVE_TAB_POSE : INACTIVE_TAB_POSE}
-                  {...tabMotion}
-                >
-                  <item.Icon />
-                  {tabBurst?.tab === item.key && <TabBurst key={tabBurst.id} onDone={() => setTabBurst(null)} />}
-                </MotionNavLink>
-              );
-            })}
+            {DOCK_ITEMS.slice(0, 2).map((item) => renderDockItem(item))}
+            <StellaCore actions={stellaActions} />
+            {DOCK_ITEMS.slice(2).map((item) => renderDockItem(item))}
           </nav>
         ) : (
           <nav className="tabbar">

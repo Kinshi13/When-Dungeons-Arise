@@ -2,7 +2,7 @@ import { useMemo, useRef, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { api, type ReminderType } from "../api";
-import { toDateKey, type CalendarEntry } from "../game/calendarEntries";
+import { toDateKey, type CalendarEntry } from "../core/domain/calendarEntries";
 import { useCalendarData } from "../useCalendarData";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon } from "../icons";
 import { playSfx } from "../sound";

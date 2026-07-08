@@ -1,3 +1,16 @@
+// Forma comum que qualquer repositório de entidades (local ou remoto) deve
+// seguir — table() abaixo é a implementação local sobre localStorage; uma
+// futura implementação remota (API/Supabase) pode expor o mesmo formato sem
+// exigir mudança nos chamadores.
+export interface Repository<T extends { id: string }> {
+  list(): T[] | Promise<T[]>;
+  save(items: T[]): void | Promise<void>;
+  insert(item: T): T | Promise<T>;
+  update(id: string, patch: Partial<T>): T | undefined | Promise<T | undefined>;
+  remove(id: string): void | Promise<void>;
+  get(id: string): T | undefined | Promise<T | undefined>;
+}
+
 const PREFIX = "lembretes-app:";
 
 function read<T>(key: string): T[] {
@@ -18,6 +31,10 @@ export function createId(): string {
   return `id-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+// Nota: a assinatura concreta abaixo é síncrona (localStorage não é async);
+// Repository<T> descreve o contrato mais amplo que uma implementação remota
+// futura também vai seguir, sem forçar essa forma aqui e quebrar quem já
+// consome table() como síncrono.
 export function table<T extends { id: string }>(key: string) {
   return {
     list(): T[] {

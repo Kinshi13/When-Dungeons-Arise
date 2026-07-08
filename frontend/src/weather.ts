@@ -1,4 +1,4 @@
-import { createId } from "./storage";
+import { createId } from "./core/repositories/storage";
 
 // Clima via Open-Meteo — gratuita, sem chave e com CORS liberado pra uso
 // direto do navegador/WebView (confirmado: access-control-allow-origin: *).

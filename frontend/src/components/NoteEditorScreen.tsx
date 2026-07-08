@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { api, type Note } from "../api";
 import { TrashIcon, PlusIcon, ChevronLeftIcon } from "../icons";
 import { playSfx } from "../sound";
-import { findDateMention, resolveDateToISO } from "../game/dateDetector";
+import { findDateMention, resolveDateToISO } from "../core/domain/dateDetector";
 
 interface NoteEditorScreenProps {
   note: Note | null;

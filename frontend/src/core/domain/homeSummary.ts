@@ -1,6 +1,6 @@
-import type { Bill, Reminder } from "../api";
-import type { WeatherInfo } from "../weather";
-import type { Alarm } from "../clockStore";
+import type { Bill, Reminder } from "../../api";
+import type { WeatherInfo } from "../../weather";
+import type { Alarm } from "../../clockStore";
 import { toDateKey } from "./calendarEntries";
 
 export interface HomeHighlight {

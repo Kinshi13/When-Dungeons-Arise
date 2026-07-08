@@ -1,4 +1,4 @@
-import { table } from "./storage";
+import { table } from "./core/repositories/storage";
 
 export interface MonitoredApp {
   id: string; // packageName

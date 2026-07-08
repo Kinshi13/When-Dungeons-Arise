@@ -5,7 +5,7 @@ import {
   percentageOf,
   simpleInterest,
   subtractPercentage,
-} from "../game/percentage";
+} from "../core/domain/percentage";
 import { fetchLiveRates, getCachedRates, setManualRates, type CurrencyRates } from "../currencyRates";
 import { PlusIcon } from "../icons";
 

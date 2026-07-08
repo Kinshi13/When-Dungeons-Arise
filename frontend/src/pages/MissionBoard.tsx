@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { tabContentEnter } from "../motion";
+import TempoTabBar from "../components/TempoTabBar";
 import MissionToday from "./MissionToday";
 import MissionList from "./MissionList";
 import NotificationInbox from "../components/NotificationInbox";
@@ -20,15 +21,16 @@ export default function MissionBoard() {
   return (
     <div>
       <div className="page" style={{ paddingBottom: 0 }}>
+        <TempoTabBar />
         <h1>Mural</h1>
         <div className="drawer-tabs">
-          <Link to="/missoes/hoje" className={tab === "hoje" ? "drawer-tab active" : "drawer-tab"}>
+          <Link to="/sala-do-tempo/tarefas/hoje" className={tab === "hoje" ? "drawer-tab active" : "drawer-tab"}>
             Hoje
           </Link>
-          <Link to="/missoes/missoes" className={tab === "missoes" ? "drawer-tab active" : "drawer-tab"}>
+          <Link to="/sala-do-tempo/tarefas/missoes" className={tab === "missoes" ? "drawer-tab active" : "drawer-tab"}>
             Missões
           </Link>
-          <Link to="/missoes/caixa" className={tab === "caixa" ? "drawer-tab active" : "drawer-tab"}>
+          <Link to="/sala-do-tempo/tarefas/caixa" className={tab === "caixa" ? "drawer-tab active" : "drawer-tab"}>
             Caixa de Entrada
           </Link>
         </div>

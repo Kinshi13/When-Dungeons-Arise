@@ -6,14 +6,14 @@ import { playSfx } from "../sound";
 import { useVerticalSwipe } from "../useVerticalSwipe";
 import { useSettings, isLofiTheme } from "../contexts/SettingsContext";
 import { HourglassIcon } from "../icons";
-import { FlowerDecorIcon, TabBellIcon, TabHomeCalendarIcon, TabCoinsIcon } from "../icons2";
+import { FlowerDecorIcon, TabBellIcon, TabHomeCalendarIcon, TabCoinsIcon, TabGearIcon } from "../icons2";
 import ClockScreen from "../components/ClockScreen";
 import WeatherWidget, { type WeatherWidgetHandle } from "../components/WeatherWidget";
 import WeatherScreen from "../components/WeatherScreen";
 import { nextAlarm, type Alarm } from "../clockStore";
 import { api, type Bill, type Reminder } from "../api";
 import { getCachedPrimaryWeather, fetchPrimaryWeather, type WeatherInfo } from "../weather";
-import { buildHomeSummary } from "../game/homeSummary";
+import { buildHomeSummary } from "../core/domain/homeSummary";
 import { useQuickAction } from "../useQuickAction";
 
 type ClockTab = "despertador" | "cronometro" | "temporizador";
@@ -209,7 +209,7 @@ export default function GuildReception() {
             className="reception-card reception-card-mural"
             onClick={() => {
               playSfx("coin");
-              navigate("/missoes");
+              navigate("/sala-do-tempo/tarefas");
             }}
             {...cardEnter(1)}
           >
@@ -262,6 +262,18 @@ export default function GuildReception() {
             <span className="reception-card-temas-label">Temas</span>
           </motion.button>
 
+          <motion.button
+            className="reception-card reception-card-ajustes"
+            onClick={() => {
+              playSfx("coin");
+              navigate("/regras");
+            }}
+            {...cardEnter(5)}
+          >
+            <TabGearIcon width={22} height={22} />
+            <span className="reception-card-fn-label">Ajustes</span>
+          </motion.button>
+
           <WeatherWidget
             ref={weatherWidgetRef}
             onOpen={() => {
@@ -275,7 +287,7 @@ export default function GuildReception() {
             aria-label="Relógio — deslize para cronômetro ou temporizador"
             onClick={() => openClock("despertador")}
             {...clockCardSwipe}
-            {...cardEnter(6)}
+            {...cardEnter(7)}
           >
             <HourglassIcon width={24} height={24} />
             <span className="reception-card-relogio-label">{nextAlarmLabel(nextAlarmInfo)}</span>

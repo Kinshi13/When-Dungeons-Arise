@@ -1,8 +1,8 @@
 import { registerPlugin } from "@capacitor/core";
 import { isNativePlatform } from "./notifications";
 import type { Reminder, Bill } from "./api";
-import { buildCalendarEntries, toDateKey } from "./game/calendarEntries";
-import { getBrazilianHolidays } from "./game/holidays";
+import { buildCalendarEntries, toDateKey } from "./core/domain/calendarEntries";
+import { getBrazilianHolidays } from "./core/domain/holidays";
 import { CURRENCY_PAIRS } from "./currencyWidgetStore";
 
 interface WidgetItem {

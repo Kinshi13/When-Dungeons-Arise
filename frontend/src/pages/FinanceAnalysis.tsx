@@ -7,7 +7,7 @@ import {
   superficialTotal,
   forecastMonthEndBalance,
   type PeriodComparison,
-} from "../game/financeAnalysis";
+} from "../core/domain/financeAnalysis";
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

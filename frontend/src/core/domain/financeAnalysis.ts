@@ -1,4 +1,4 @@
-import type { Bill, DailySummary, Expense } from "../api";
+import type { Bill, DailySummary, Expense } from "../../api";
 
 export interface PeriodComparison {
   currentTotal: number;

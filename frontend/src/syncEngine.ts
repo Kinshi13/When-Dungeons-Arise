@@ -1,4 +1,4 @@
-import { table } from "./storage";
+import { table } from "./core/repositories/storage";
 import { supabase, isSupabaseConfigured } from "./supabaseClient";
 import { getSession } from "./auth";
 

@@ -5,6 +5,7 @@ import { tabContentEnter } from "../motion";
 import Notes from "../components/Notes";
 import Lists from "../components/Lists";
 import PixelDialogBox from "../components/game/PixelDialogBox";
+import TempoTabBar from "../components/TempoTabBar";
 import { api } from "../api";
 
 type Tab = "notas" | "listas";
@@ -27,6 +28,7 @@ export default function AdventureDiary() {
   return (
     <div>
       <div className="page" style={{ paddingBottom: 0 }}>
+        <TempoTabBar />
         <h1>Diário do Aventureiro</h1>
         <PixelDialogBox speaker="Escriba">
           {tab === "notas"
@@ -34,10 +36,10 @@ export default function AdventureDiary() {
             : `Organize suas listas de tarefas. Você tem ${listaCount} lista${listaCount === 1 ? "" : "s"} ativa${listaCount === 1 ? "" : "s"}.`}
         </PixelDialogBox>
         <div className="drawer-tabs">
-          <Link to="/diario/notas" className={tab === "notas" ? "drawer-tab active" : "drawer-tab"}>
+          <Link to="/sala-do-tempo/diario/notas" className={tab === "notas" ? "drawer-tab active" : "drawer-tab"}>
             Notas
           </Link>
-          <Link to="/diario/listas" className={tab === "listas" ? "drawer-tab active" : "drawer-tab"}>
+          <Link to="/sala-do-tempo/diario/listas" className={tab === "listas" ? "drawer-tab active" : "drawer-tab"}>
             Listas
           </Link>
         </div>

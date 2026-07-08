@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, type Note } from "../api";
 import { playSfx } from "../sound";
-import { findDateMention } from "../game/dateDetector";
+import { findDateMention } from "../core/domain/dateDetector";
 import NoteEditorScreen from "./NoteEditorScreen";
 import { useQuickAction } from "../useQuickAction";
 

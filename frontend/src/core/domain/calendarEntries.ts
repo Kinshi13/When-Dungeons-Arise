@@ -1,4 +1,4 @@
-import type { Bill, Reminder } from "../api";
+import type { Bill, Reminder } from "../../api";
 import type { Holiday } from "./holidays";
 
 export function toDateKey(d: Date): string {

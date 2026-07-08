@@ -7,7 +7,8 @@ export type QuickActionId =
   | "nova-nota"
   | "nova-missao"
   | "novo-gasto"
-  | "novo-evento";
+  | "novo-evento"
+  | "importar-livro";
 
 interface QuickActionState {
   quickAction?: QuickActionId;
@@ -15,8 +16,8 @@ interface QuickActionState {
 
 // Navega pra rota certa carregando qual ação disparou a navegação — cada tela
 // de destino escuta a própria ação com este hook e decide o que fazer (focar
-// um campo, abrir um editor, etc.). Usado pelo QuickPanel (painel rápido
-// global) pra ter efeito real em vez de só trocar de tela.
+// um campo, abrir um editor, etc.). Usado pelo Stella Core (ver
+// stellaActions.tsx) pra ter efeito real em vez de só trocar de tela.
 export function navigateToQuickAction(
   navigate: ReturnType<typeof useNavigate>,
   path: string,

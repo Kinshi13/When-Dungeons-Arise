@@ -29,7 +29,7 @@ import {
   syncAllHolidayNotifications,
   syncAllBirthdayNotifications,
 } from './notifications'
-import { getBrazilianHolidays } from './game/holidays'
+import { getBrazilianHolidays } from './core/domain/holidays'
 import { syncReminderWidget, syncCalendarWidget, syncCurrencyWidgetPair } from './widgetBridge'
 import { getCurrencyWidgetPair } from './currencyWidgetStore'
 import { isSyncAvailable } from './auth'

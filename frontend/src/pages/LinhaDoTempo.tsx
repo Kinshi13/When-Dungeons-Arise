@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useCalendarData } from "../useCalendarData";
-import { toDateKey, type CalendarEntry } from "../game/calendarEntries";
+import { toDateKey, type CalendarEntry } from "../core/domain/calendarEntries";
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

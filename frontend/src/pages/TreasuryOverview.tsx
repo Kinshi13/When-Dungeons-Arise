@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { api, type Bill, type DailySummary, type Expense } from "../api";
-import { compareWeek, compareMonth, forecastMonthEndBalance, type PeriodComparison } from "../game/financeAnalysis";
-import { buildPendingBillsSummary } from "../game/pendingSummary";
+import { compareWeek, compareMonth, forecastMonthEndBalance, type PeriodComparison } from "../core/domain/financeAnalysis";
+import { buildPendingBillsSummary } from "../core/domain/pendingSummary";
 import { PlusIcon } from "../icons";
 
 function toDateKey(d: Date) {

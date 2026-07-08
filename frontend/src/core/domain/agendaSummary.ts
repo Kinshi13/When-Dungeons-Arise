@@ -1,4 +1,4 @@
-import type { Reminder } from "../api";
+import type { Reminder } from "../../api";
 import type { Holiday } from "./holidays";
 import { toDateKey } from "./calendarEntries";
 
