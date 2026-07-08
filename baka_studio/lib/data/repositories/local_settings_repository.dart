@@ -2,6 +2,7 @@ import '../db/app_database.dart';
 import '../db/ids.dart';
 
 const _deviceIdKey = 'device_id';
+const _remoteWorkspaceIdKey = 'remote_workspace_id';
 
 /// Genérico key/value local — usado hoje para o `device_id` da instalação
 /// e para o cursor de pull por workspace (`last_pulled_at:<workspaceId>`).
@@ -47,4 +48,12 @@ class LocalSettingsRepository {
   Future<void> setLastPulledAt(String workspaceId, DateTime value) {
     return set(_pullCursorKey(workspaceId), value.toIso8601String());
   }
+
+  /// Id do workspace remoto (Supabase) já vinculado a este dispositivo, se
+  /// algum usuário já autenticou aqui. `null` significa que o dispositivo
+  /// ainda não tem nenhum vínculo remoto — inclusive o caso normal de nunca
+  /// ter feito login, que continua 100% válido e local.
+  Future<String?> getRemoteWorkspaceId() => get(_remoteWorkspaceIdKey);
+
+  Future<void> setRemoteWorkspaceId(String workspaceId) => set(_remoteWorkspaceIdKey, workspaceId);
 }

@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 
 import 'core/theme/theme.dart';
 import 'data/auth/auth_repository.dart';
+import 'data/repositories/local_settings_repository.dart';
 import 'screens/splash/splash_screen.dart';
 import 'state/app_state.dart';
 import 'state/auth_state.dart';
+import 'state/sync_coordinator.dart';
 
 class BakaStudioApp extends StatelessWidget {
   const BakaStudioApp({super.key});
@@ -16,6 +18,14 @@ class BakaStudioApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AppState()),
         ChangeNotifierProvider(create: (_) => AuthState(AuthRepository())),
+        Provider<SyncCoordinator>(
+          lazy: false,
+          create: (context) => SyncCoordinator(
+            context.read<AuthState>(),
+            LocalSettingsRepository(context.read<AppState>().db),
+          ),
+          dispose: (_, coordinator) => coordinator.dispose(),
+        ),
       ],
       child: MaterialApp(
         title: 'Baka Studio',
