@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import ThemesScreen from "../components/ThemesScreen";
@@ -15,6 +15,10 @@ import { api, type Bill, type Reminder } from "../api";
 import { getCachedPrimaryWeather, fetchPrimaryWeather, type WeatherInfo } from "../weather";
 import { buildHomeSummary } from "../core/domain/homeSummary";
 import { useQuickAction } from "../useQuickAction";
+
+// Phaser só baixa quando a Recepção realmente monta (ver phaser/ReceptionCanvas.tsx)
+// — não entra no bundle principal, que as outras 3 áreas nunca precisam dele.
+const ReceptionCanvas = lazy(() => import("../phaser/ReceptionCanvas"));
 
 type ClockTab = "despertador" | "cronometro" | "temporizador";
 
@@ -104,8 +108,11 @@ export default function GuildReception() {
   const [bills, setBills] = useState<Bill[]>([]);
   const [summaryWeather, setSummaryWeather] = useState<WeatherInfo | null>(() => getCachedPrimaryWeather());
   const weatherWidgetRef = useRef<WeatherWidgetHandle>(null);
-  const { theme } = useSettings();
+  const { theme, animationLevel } = useSettings();
   const isLofi = isLofiTheme(theme);
+  // Mesma regra da poeira/chuva CSS (index.css) — "Reduzidas" desliga o
+  // canvas do Phaser por completo, não só as animações dentro dele.
+  const showPhaserScene = isLofi && animationLevel !== "reduzidas";
   const navigate = useNavigate();
 
   // Derivados só pra exibição rápida nos cards de Mural/Tesouraria — reaproveita
@@ -181,6 +188,17 @@ export default function GuildReception() {
   return (
     <div className="page reception-page" {...verticalSwipe}>
       <h1 className="sr-only">Recepção da Guilda</h1>
+
+      {showPhaserScene && (
+        <Suspense fallback={null}>
+          <ReceptionCanvas
+            onHotspotTap={() => {
+              playSfx("coin");
+              setWeatherOpen(true);
+            }}
+          />
+        </Suspense>
+      )}
 
       {isLofi ? (
         <div className="reception-cards">

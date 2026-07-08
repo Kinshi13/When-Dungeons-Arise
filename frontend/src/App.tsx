@@ -129,11 +129,13 @@ function renderBackgroundContent(
     // demais áreas ganham a poeira flutuante genérica (seção 27 do spec).
     const particleKind = sceneClass === "lofi-scene-tempo" ? "rain" : "dust";
     if (image) {
+      // Só a Guilda tem foto hoje — a ambientação dela vira o canvas do
+      // Phaser (ver ReceptionCanvas em GuildReception.tsx), não a poeira
+      // CSS genérica; por isso não entra AmbientParticles aqui.
       return (
         <div className={`lofi-scene ${sceneClass} lofi-scene-photo${hasWallpaperClass}`} aria-hidden="true">
           <img src={image} alt="" className="lofi-scene-photo-img" />
           {renderWallpaperOverlay(customWallpaper)}
-          <AmbientParticles kind={particleKind} />
         </div>
       );
     }
