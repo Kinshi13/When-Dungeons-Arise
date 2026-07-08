@@ -55,40 +55,82 @@ extension ContentFormatLabel on ContentFormat {
 }
 
 /// A "produção" — a piece of content moving through the editorial pipeline.
+/// Can belong to more than one channel (N:N via [channelIds]) — e.g. a
+/// collaboration between Baka Code and Baka Phone.
 class ContentItem {
   const ContentItem({
     required this.id,
+    required this.workspaceId,
     required this.title,
-    required this.channelId,
+    this.description = '',
+    required this.channelIds,
     required this.format,
     required this.stage,
     required this.priority,
     this.projectId,
     this.dueDate,
+    this.publishedAt,
     this.platform,
+    this.notes = '',
+    required this.createdAt,
+    required this.updatedAt,
+    this.archivedAt,
   });
 
   final String id;
+  final String workspaceId;
   final String title;
-  final String channelId;
+  final String description;
+  final List<String> channelIds;
   final String? projectId;
   final ContentFormat format;
   final ContentStage stage;
   final ContentPriority priority;
   final DateTime? dueDate;
+  final DateTime? publishedAt;
   final String? platform;
+  final String notes;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? archivedAt;
 
-  ContentItem copyWith({ContentStage? stage}) {
+  bool get isArchived => archivedAt != null;
+
+  /// First channel — used where the UI only has room for one badge.
+  String get primaryChannelId => channelIds.first;
+
+  ContentItem copyWith({
+    String? title,
+    String? description,
+    List<String>? channelIds,
+    ContentFormat? format,
+    ContentStage? stage,
+    ContentPriority? priority,
+    String? projectId,
+    DateTime? dueDate,
+    DateTime? publishedAt,
+    String? platform,
+    String? notes,
+    DateTime? updatedAt,
+    DateTime? archivedAt,
+  }) {
     return ContentItem(
       id: id,
-      title: title,
-      channelId: channelId,
-      format: format,
+      workspaceId: workspaceId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      channelIds: channelIds ?? this.channelIds,
+      format: format ?? this.format,
       stage: stage ?? this.stage,
-      priority: priority,
-      projectId: projectId,
-      dueDate: dueDate,
-      platform: platform,
+      priority: priority ?? this.priority,
+      projectId: projectId ?? this.projectId,
+      dueDate: dueDate ?? this.dueDate,
+      publishedAt: publishedAt ?? this.publishedAt,
+      platform: platform ?? this.platform,
+      notes: notes ?? this.notes,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
+      archivedAt: archivedAt ?? this.archivedAt,
     );
   }
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/theme.dart';
-import '../../data/seed/seed_data.dart';
 import '../../state/app_state.dart';
 import '../../widgets/cosmic_section_header.dart';
 import '../../widgets/stellar_card.dart';
@@ -34,7 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Text('Workspace', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: BakaSpacing.xs),
-                Text(SeedData.workspaceName, style: Theme.of(context).textTheme.bodyLarge),
+                Text(state.workspace.name, style: Theme.of(context).textTheme.bodyLarge),
               ],
             ),
           ),
@@ -73,9 +72,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Text('Sobre', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: BakaSpacing.xs),
-                Text('Baka Studio · v0.1.0 · fundação visual', style: Theme.of(context).textTheme.bodyMedium),
+                Text('Baka Studio · v0.1.0', style: Theme.of(context).textTheme.bodyMedium),
                 const SizedBox(height: 2),
-                Text('Rede Baka', style: Theme.of(context).textTheme.bodySmall),
+                Text(state.workspace.name, style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
           ),

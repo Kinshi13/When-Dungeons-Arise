@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/date_utils.dart';
 import '../core/theme/theme.dart';
 import '../data/models/content_item.dart';
 import 'star_node.dart';
@@ -49,7 +50,7 @@ class ContentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final isLate = item.dueDate != null &&
-        item.dueDate!.isBefore(DateTime.now()) &&
+        isBeforeToday(item.dueDate!) &&
         item.stage != ContentStage.publicado &&
         item.stage != ContentStage.arquivado;
 

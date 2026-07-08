@@ -30,13 +30,9 @@ class _QuickCaptureSheetState extends State<QuickCaptureSheet> {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
     context.read<AppState>().addSignal(
-      Signal(
-        id: 'signal_${DateTime.now().microsecondsSinceEpoch}',
-        type: _type,
-        text: text,
-        receivedAt: DateTime.now(),
-        channelId: _channelId,
-      ),
+      type: _type,
+      title: text,
+      channelId: _channelId,
     );
     Navigator.of(context).pop();
   }

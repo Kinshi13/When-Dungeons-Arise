@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../core/date_utils.dart';
 import '../core/theme/theme.dart';
 import '../data/models/content_item.dart';
-import '../data/seed/seed_data.dart';
 import '../state/app_state.dart';
 import 'stellar_card.dart';
 
@@ -26,8 +26,9 @@ class ChannelContextPanel extends StatelessWidget {
         .contentForChannel(channelId)
         .where((c) => c.stage != ContentStage.publicado && c.stage != ContentStage.arquivado)
         .toList();
-    final lateItems = content.where((c) => c.dueDate != null && c.dueDate!.isBefore(DateTime.now())).length;
-    final links = SeedData.channelLinks.where((l) => l.involves(channelId)).toList();
+    final lateItems = content.where((c) => c.dueDate != null && isBeforeToday(c.dueDate!)).length;
+    final links = state.channelRelations.where((l) => l.involves(channelId)).toList();
+    final nextPublication = state.nextPublicationForChannel(channelId);
 
     return StellarCard(
       accentColor: channel.color,
@@ -42,7 +43,7 @@ class ChannelContextPanel extends StatelessWidget {
             _MiniStat(label: 'Produções ativas', value: '${content.length}'),
             if (lateItems > 0) _MiniStat(label: 'Itens atrasados', value: '$lateItems', color: BakaColors.danger),
             _MiniStat(label: 'Projetos ativos', value: '${projects.length}'),
-            _MiniStat(label: 'Próxima publicação', value: channel.nextPublication ?? '—'),
+            _MiniStat(label: 'Próxima publicação', value: nextPublication ?? '—'),
           ]),
           if (links.isNotEmpty) ...[
             const SizedBox(height: BakaSpacing.sm),
@@ -72,7 +73,7 @@ class ChannelContextPanel extends StatelessWidget {
                               text: '${state.channelById(link.other(channelId))?.name ?? '—'}: ',
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(color: BakaColors.starWhite),
                             ),
-                            TextSpan(text: link.relation, style: Theme.of(context).textTheme.bodySmall),
+                            TextSpan(text: link.description, style: Theme.of(context).textTheme.bodySmall),
                           ],
                         ),
                       ),

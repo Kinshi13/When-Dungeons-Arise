@@ -8,6 +8,8 @@ import '../../state/app_state.dart';
 import '../../widgets/content_card.dart';
 import '../../widgets/cosmic_section_header.dart';
 import '../../widgets/empty_constellation_state.dart';
+import '../../widgets/forms/form_sheet_scaffold.dart';
+import 'content_form_sheet.dart';
 
 enum _ContentView { list, cards, kanban }
 
@@ -30,28 +32,44 @@ class _ContentScreenState extends State<ContentScreen> {
       backgroundColor: BakaColors.nebulaSlate,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(BakaRadii.xl))),
       builder: (sheetContext) => SafeArea(
-        child: RadioGroup<ContentStage>(
-          groupValue: item.stage,
-          onChanged: (value) {
-            state.moveContent(item.id, value!);
-            Navigator.of(sheetContext).pop();
-          },
-          child: ListView(
-            shrinkWrap: true,
-            padding: const EdgeInsets.symmetric(vertical: BakaSpacing.md),
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: BakaSpacing.lg),
-                child: Text('Mover "${item.title}" para…', style: Theme.of(sheetContext).textTheme.titleMedium),
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.symmetric(vertical: BakaSpacing.md),
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: BakaSpacing.lg),
+              child: Text(item.title, style: Theme.of(sheetContext).textTheme.titleMedium),
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Editar produção'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                showBakaFormSheet(context, builder: (_) => ContentFormSheet(existing: item));
+              },
+            ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: BakaSpacing.lg),
+              child: Text('Mover para…', style: Theme.of(sheetContext).textTheme.labelMedium),
+            ),
+            RadioGroup<ContentStage>(
+              groupValue: item.stage,
+              onChanged: (value) {
+                state.moveContent(item.id, value!);
+                Navigator.of(sheetContext).pop();
+              },
+              child: Column(
+                children: [
+                  for (final stage in ContentStage.values)
+                    RadioListTile<ContentStage>(
+                      value: stage,
+                      title: Text(stage.label),
+                    ),
+                ],
               ),
-              const SizedBox(height: BakaSpacing.sm),
-              for (final stage in ContentStage.values)
-                RadioListTile<ContentStage>(
-                  value: stage,
-                  title: Text(stage.label),
-                ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -62,7 +80,7 @@ class _ContentScreenState extends State<ContentScreen> {
     final state = context.watch<AppState>();
 
     var items = state.contentItems.where((c) {
-      final matchesChannel = _channelFilter == null || c.channelId == _channelFilter;
+      final matchesChannel = _channelFilter == null || c.channelIds.contains(_channelFilter);
       final matchesQuery = _query.isEmpty || c.title.toLowerCase().contains(_query.toLowerCase());
       return matchesChannel && matchesQuery;
     }).toList();
@@ -75,14 +93,25 @@ class _ContentScreenState extends State<ContentScreen> {
           child: CosmicSectionHeader(
             title: 'Produções',
             subtitle: 'Conteúdos',
-            trailing: SegmentedButton<_ContentView>(
-              segments: const [
-                ButtonSegment(value: _ContentView.list, icon: Icon(Icons.view_list_outlined), label: Text('Lista')),
-                ButtonSegment(value: _ContentView.cards, icon: Icon(Icons.grid_view_rounded), label: Text('Cards')),
-                ButtonSegment(value: _ContentView.kanban, icon: Icon(Icons.view_column_outlined), label: Text('Kanban')),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SegmentedButton<_ContentView>(
+                  segments: const [
+                    ButtonSegment(value: _ContentView.list, icon: Icon(Icons.view_list_outlined), label: Text('Lista')),
+                    ButtonSegment(value: _ContentView.cards, icon: Icon(Icons.grid_view_rounded), label: Text('Cards')),
+                    ButtonSegment(value: _ContentView.kanban, icon: Icon(Icons.view_column_outlined), label: Text('Kanban')),
+                  ],
+                  selected: {_view},
+                  onSelectionChanged: (s) => setState(() => _view = s.first),
+                ),
+                const SizedBox(width: BakaSpacing.sm),
+                FilledButton.icon(
+                  onPressed: () => showBakaFormSheet(context, builder: (_) => const ContentFormSheet()),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Nova produção'),
+                ),
               ],
-              selected: {_view},
-              onSelectionChanged: (s) => setState(() => _view = s.first),
             ),
           ),
         ),
@@ -155,7 +184,7 @@ class _ContentList extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(height: BakaSpacing.sm),
       itemBuilder: (context, index) {
         final item = items[index];
-        final channel = state.channelById(item.channelId);
+        final channel = state.channelById(item.primaryChannelId);
         final project = item.projectId == null
             ? null
             : state.projects.where((p) => p.id == item.projectId).firstOrNull;
@@ -194,8 +223,8 @@ class _ContentGrid extends StatelessWidget {
                 width: cardWidth,
                 child: ContentCard(
                   item: item,
-                  channelName: state.channelById(item.channelId)?.name ?? '—',
-                  channelColor: state.channelById(item.channelId)?.color ?? BakaColors.textTertiary,
+                  channelName: state.channelById(item.primaryChannelId)?.name ?? '—',
+                  channelColor: state.channelById(item.primaryChannelId)?.color ?? BakaColors.textTertiary,
                   projectName: state.projects.where((p) => p.id == item.projectId).firstOrNull?.name,
                   onTap: () => onTap(item),
                 ),
@@ -233,7 +262,17 @@ class _ContentKanban extends StatelessWidget {
                 items: items.where((i) => i.stage == stage).toList(),
                 allowDragDrop: allowDragDrop,
                 onTap: onTap,
-                onDrop: (item) => state.moveContent(item.id, stage),
+                onDrop: (item) async {
+                  try {
+                    await state.moveContent(item.id, stage);
+                  } catch (_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Não foi possível mover a produção. Tente novamente.')),
+                      );
+                    }
+                  }
+                },
                 channelName: (id) => state.channelById(id)?.name ?? '—',
                 channelColor: (id) => state.channelById(id)?.color ?? BakaColors.textTertiary,
               ),
@@ -295,8 +334,8 @@ class _KanbanColumn extends StatelessWidget {
                       final item = items[index];
                       final card = ContentCard(
                         item: item,
-                        channelName: channelName(item.channelId),
-                        channelColor: channelColor(item.channelId),
+                        channelName: channelName(item.primaryChannelId),
+                        channelColor: channelColor(item.primaryChannelId),
                         onTap: () => onTap(item),
                       );
                       if (!allowDragDrop) return card;

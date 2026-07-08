@@ -15,21 +15,66 @@ extension ChannelStatusLabel on ChannelStatus {
 class Channel {
   const Channel({
     required this.id,
+    required this.workspaceId,
     required this.name,
-    required this.niche,
-    required this.objective,
+    this.handle,
+    this.niche = '',
+    this.objective = '',
+    this.description = '',
     required this.color,
+    this.audience,
+    this.desiredFrequency,
     required this.status,
-    this.nextPublication,
-    this.pendingSignals = 0,
+    required this.createdAt,
+    required this.updatedAt,
+    this.archivedAt,
   });
 
   final String id;
+  final String workspaceId;
   final String name;
+  final String? handle;
   final String niche;
   final String objective;
+  final String description;
   final Color color;
+  final String? audience;
+  final String? desiredFrequency;
   final ChannelStatus status;
-  final String? nextPublication;
-  final int pendingSignals;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? archivedAt;
+
+  bool get isArchived => archivedAt != null;
+
+  Channel copyWith({
+    String? name,
+    String? handle,
+    String? niche,
+    String? objective,
+    String? description,
+    Color? color,
+    String? audience,
+    String? desiredFrequency,
+    ChannelStatus? status,
+    DateTime? updatedAt,
+    DateTime? archivedAt,
+  }) {
+    return Channel(
+      id: id,
+      workspaceId: workspaceId,
+      name: name ?? this.name,
+      handle: handle ?? this.handle,
+      niche: niche ?? this.niche,
+      objective: objective ?? this.objective,
+      description: description ?? this.description,
+      color: color ?? this.color,
+      audience: audience ?? this.audience,
+      desiredFrequency: desiredFrequency ?? this.desiredFrequency,
+      status: status ?? this.status,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? DateTime.now(),
+      archivedAt: archivedAt ?? this.archivedAt,
+    );
+  }
 }

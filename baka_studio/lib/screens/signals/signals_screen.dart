@@ -6,6 +6,7 @@ import '../../state/app_state.dart';
 import '../../widgets/cosmic_section_header.dart';
 import '../../widgets/empty_constellation_state.dart';
 import '../../widgets/signal_item.dart';
+import '../capture/quick_capture_sheet.dart';
 
 class SignalsScreen extends StatelessWidget {
   const SignalsScreen({super.key});
@@ -22,7 +23,20 @@ class SignalsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CosmicSectionHeader(title: 'Sinais', subtitle: 'Caixa de entrada'),
+          CosmicSectionHeader(
+            title: 'Sinais',
+            subtitle: 'Caixa de entrada',
+            trailing: FilledButton.icon(
+              onPressed: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => const QuickCaptureSheet(),
+              ),
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Novo sinal'),
+            ),
+          ),
           const SizedBox(height: BakaSpacing.lg),
           if (pending.isEmpty)
             const EmptyConstellationState(message: 'Nenhum sinal pendente.')
@@ -35,6 +49,8 @@ class SignalsScreen extends StatelessWidget {
                     child: SignalItemTile(
                       signal: signal,
                       onConvertToContent: () => state.convertSignalToContent(signal.id),
+                      onConvertToTask: () => state.convertSignalToTask(signal.id),
+                      onConvertToProject: () => state.convertSignalToProject(signal.id),
                       onArchive: () => state.archiveSignal(signal.id),
                     ),
                   ),
@@ -51,11 +67,7 @@ class SignalsScreen extends StatelessWidget {
                     opacity: 0.55,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: BakaSpacing.sm),
-                      child: SignalItemTile(
-                        signal: signal,
-                        onConvertToContent: () {},
-                        onArchive: () {},
-                      ),
+                      child: SignalItemTile(signal: signal),
                     ),
                   ),
               ],

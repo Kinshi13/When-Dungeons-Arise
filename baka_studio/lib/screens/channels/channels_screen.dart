@@ -4,13 +4,15 @@ import 'package:provider/provider.dart';
 import '../../core/theme/theme.dart';
 import '../../data/models/channel.dart';
 import '../../data/models/content_item.dart';
-import '../../data/seed/seed_data.dart';
 import '../../state/app_state.dart';
 import '../../widgets/channel_context_panel.dart';
 import '../../widgets/channel_network_map.dart';
 import '../../widgets/cosmic_section_header.dart';
+import '../../widgets/forms/form_sheet_scaffold.dart';
 import '../../widgets/star_node.dart';
 import '../../widgets/stellar_card.dart';
+import 'channel_detail_screen.dart';
+import 'channel_form_sheet.dart';
 
 enum _ChannelsView { cards, map }
 
@@ -36,24 +38,52 @@ class _ChannelsScreenState extends State<ChannelsScreen> {
           CosmicSectionHeader(
             title: 'Canais',
             subtitle: 'Seus canais',
-            trailing: SegmentedButton<_ChannelsView>(
-              segments: const [
-                ButtonSegment(value: _ChannelsView.cards, icon: Icon(Icons.grid_view_rounded), label: Text('Cards')),
-                ButtonSegment(value: _ChannelsView.map, icon: Icon(Icons.hub_outlined), label: Text('Mapa')),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SegmentedButton<_ChannelsView>(
+                  segments: const [
+                    ButtonSegment(value: _ChannelsView.cards, icon: Icon(Icons.grid_view_rounded), label: Text('Cards')),
+                    ButtonSegment(value: _ChannelsView.map, icon: Icon(Icons.hub_outlined), label: Text('Mapa')),
+                  ],
+                  selected: {_view},
+                  onSelectionChanged: (s) => setState(() => _view = s.first),
+                ),
+                const SizedBox(width: BakaSpacing.sm),
+                FilledButton.icon(
+                  onPressed: () => showBakaFormSheet(context, builder: (_) => const ChannelFormSheet()),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Novo canal'),
+                ),
               ],
-              selected: {_view},
-              onSelectionChanged: (s) => setState(() => _view = s.first),
             ),
           ),
           const SizedBox(height: BakaSpacing.lg),
-          if (_view == _ChannelsView.cards)
+          if (state.channels.isEmpty)
+            StellarCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Nenhum canal ainda', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: BakaSpacing.xs),
+                  Text('Crie seu primeiro canal para começar a organizar produções.', style: Theme.of(context).textTheme.bodySmall),
+                  const SizedBox(height: BakaSpacing.md),
+                  FilledButton.icon(
+                    onPressed: () => showBakaFormSheet(context, builder: (_) => const ChannelFormSheet()),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Novo canal'),
+                  ),
+                ],
+              ),
+            )
+          else if (_view == _ChannelsView.cards)
             _ChannelsGrid(channels: state.channels)
           else ...[
             StellarCard(
               child: ChannelNetworkMap(
                 height: 320,
                 channels: state.channels,
-                links: SeedData.channelLinks,
+                links: state.channelRelations,
                 selectedChannelId: state.selectedChannelId,
                 onSelect: state.selectChannel,
               ),
@@ -105,7 +135,10 @@ class _ChannelCard extends StatelessWidget {
 
     return StellarCard(
       accentColor: channel.color,
-      onTap: () => state.selectChannel(channel.id),
+      onTap: () {
+        state.selectChannel(channel.id);
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => ChannelDetailScreen(channelId: channel.id)));
+      },
       selected: state.selectedChannelId == channel.id,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,9 +162,9 @@ class _ChannelCard extends StatelessWidget {
           _InfoRow(
             icon: Icons.event_outlined,
             label: 'Próxima publicação',
-            value: channel.nextPublication ?? 'Nenhuma agendada',
+            value: state.nextPublicationForChannel(channel.id) ?? 'Nenhuma agendada',
           ),
-          _InfoRow(icon: Icons.graphic_eq, label: 'Sinais pendentes', value: '${channel.pendingSignals}'),
+          _InfoRow(icon: Icons.graphic_eq, label: 'Sinais pendentes', value: '${state.pendingSignalsForChannel(channel.id)}'),
         ],
       ),
     );

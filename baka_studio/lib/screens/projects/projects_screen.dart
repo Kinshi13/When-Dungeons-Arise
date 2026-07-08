@@ -7,8 +7,11 @@ import '../../data/models/project.dart';
 import '../../state/app_state.dart';
 import '../../widgets/cosmic_section_header.dart';
 import '../../widgets/empty_constellation_state.dart';
+import '../../widgets/forms/form_sheet_scaffold.dart';
 import '../../widgets/project_constellation_view.dart';
 import '../../widgets/stellar_card.dart';
+import 'project_form_sheet.dart';
+import 'project_node_form_sheet.dart';
 
 enum _ProjectsView { list, cards, map }
 
@@ -33,27 +36,12 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     });
   }
 
-  Future<void> _createProject(AppState state) async {
-    final controller = TextEditingController();
-    final name = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Nova constelação'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'Nome do projeto'),
-          onSubmitted: (v) => Navigator.of(dialogContext).pop(v),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(controller.text), child: const Text('Criar')),
-        ],
-      ),
-    );
-    if (name == null || name.trim().isEmpty) return;
-    final project = state.createProject(name.trim());
-    _selectMapProject(project.id);
+  Future<void> _createProject() async {
+    final created = await showBakaFormSheet(context, builder: (_) => const ProjectFormSheet());
+    if (created == true && mounted) {
+      final state = context.read<AppState>();
+      if (state.projects.isNotEmpty) _selectMapProject(state.projects.last.id);
+    }
   }
 
   @override
@@ -65,11 +53,13 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
       return EmptyConstellationState(
         message: 'Nenhuma constelação foi formada ainda.',
         actionLabel: 'Criar projeto',
-        onAction: () => _createProject(state),
+        onAction: _createProject,
       );
     }
 
-    _mapProjectId ??= projects.first.id;
+    if (_mapProjectId == null || !projects.any((p) => p.id == _mapProjectId)) {
+      _mapProjectId = projects.first.id;
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(BakaSpacing.lg),
@@ -79,14 +69,25 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
           CosmicSectionHeader(
             title: 'Constelações',
             subtitle: 'Projetos',
-            trailing: SegmentedButton<_ProjectsView>(
-              segments: const [
-                ButtonSegment(value: _ProjectsView.list, icon: Icon(Icons.view_list_outlined), label: Text('Lista')),
-                ButtonSegment(value: _ProjectsView.cards, icon: Icon(Icons.grid_view_rounded), label: Text('Cards')),
-                ButtonSegment(value: _ProjectsView.map, icon: Icon(Icons.hub_outlined), label: Text('Mapa')),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SegmentedButton<_ProjectsView>(
+                  segments: const [
+                    ButtonSegment(value: _ProjectsView.list, icon: Icon(Icons.view_list_outlined), label: Text('Lista')),
+                    ButtonSegment(value: _ProjectsView.cards, icon: Icon(Icons.grid_view_rounded), label: Text('Cards')),
+                    ButtonSegment(value: _ProjectsView.map, icon: Icon(Icons.hub_outlined), label: Text('Mapa')),
+                  ],
+                  selected: {_view},
+                  onSelectionChanged: (s) => setState(() => _view = s.first),
+                ),
+                const SizedBox(width: BakaSpacing.sm),
+                FilledButton.icon(
+                  onPressed: _createProject,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Novo projeto'),
+                ),
               ],
-              selected: {_view},
-              onSelectionChanged: (s) => setState(() => _view = s.first),
             ),
           ),
           const SizedBox(height: BakaSpacing.lg),
@@ -98,13 +99,17 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
               selectedId: _mapProjectId!,
               recentIds: _recentProjectIds,
               onSelect: _selectMapProject,
-              onCreate: () => _createProject(state),
+              onCreate: _createProject,
               state: state,
             ),
         ],
       ),
     );
   }
+}
+
+void _editProject(BuildContext context, Project project) {
+  showBakaFormSheet(context, builder: (_) => ProjectFormSheet(existing: project));
 }
 
 class _ProjectsList extends StatelessWidget {
@@ -122,6 +127,7 @@ class _ProjectsList extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: BakaSpacing.sm),
             child: StellarCard(
               accentColor: _channelColor(project, state),
+              onTap: () => _editProject(context, project),
               child: Row(
                 children: [
                   Expanded(
@@ -167,6 +173,7 @@ class _ProjectsGrid extends StatelessWidget {
               width: cardWidth,
               child: StellarCard(
                 accentColor: _channelColor(project, state),
+                onTap: () => _editProject(context, project),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -263,6 +270,16 @@ class _ProjectsMap extends StatelessWidget {
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Nova constelação'),
             ),
+            OutlinedButton.icon(
+              onPressed: () => _editProject(context, selected),
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: const Text('Editar'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => showBakaFormSheet(context, builder: (_) => ProjectNodeFormSheet(project: selected)),
+              icon: const Icon(Icons.add_circle_outline, size: 18),
+              label: const Text('Novo item'),
+            ),
           ],
         ),
         if (recents.isNotEmpty) ...[
@@ -327,10 +344,12 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
+      ProjectStatus.idea => BakaColors.textTertiary,
+      ProjectStatus.planned => BakaColors.warning,
       ProjectStatus.active => BakaColors.stellarBlue,
-      ProjectStatus.planning => BakaColors.warning,
-      ProjectStatus.blocked => BakaColors.danger,
-      ProjectStatus.done => BakaColors.success,
+      ProjectStatus.paused => BakaColors.textTertiary,
+      ProjectStatus.completed => BakaColors.success,
+      ProjectStatus.archived => BakaColors.textTertiary,
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
