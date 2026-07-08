@@ -220,12 +220,18 @@ async function materializeRuleOccurrences(rule: RecurringFinanceRule, existingFo
 // só chaves de mês) pra rodar toda vez em vez de precisar de um agendador
 // próprio. Regras sem autoGenerate (ex.: recorrência parada) não geram mais
 // nada, mas as ocorrências já materializadas continuam existindo.
+//
+// Usa billTable.list() SEM filtrar apagadas de propósito: se o usuário apaga
+// só a ocorrência de um mês específico (sem parar a recorrência inteira),
+// esse mês precisa continuar contando como "já existente" pra dedupe — senão
+// buildMissingRuleOccurrences o vê como faltando e recria sozinho no próximo
+// carregamento da tela de Contas (achado da auditoria da Fase 7).
 async function ensureRuleOccurrences() {
-  const bills = activeBills();
+  const allBills = billTable.list();
   for (const rule of activeFinanceRules()) {
     if (!rule.autoGenerate) continue;
-    const existingForRule = bills.filter((b) => b.recurrenceId === rule.id);
-    await materializeRuleOccurrences(rule, existingForRule);
+    const occurrencesForRule = allBills.filter((b) => b.recurrenceId === rule.id);
+    await materializeRuleOccurrences(rule, occurrencesForRule);
   }
 }
 
