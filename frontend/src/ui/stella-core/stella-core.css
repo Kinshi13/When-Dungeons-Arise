@@ -23,9 +23,9 @@
   width: 56px;
   height: 56px;
   margin-top: -18px;
-  border: 1px solid var(--stella-glass-border);
+  border: 1px solid var(--stella-surface-glass-border);
   border-radius: var(--stella-radius-pill);
-  background: radial-gradient(circle at 35% 30%, var(--stella-purple), var(--stella-midnight-raised));
+  background: radial-gradient(circle at 35% 30%, var(--stella-lavender), var(--stella-graphite));
   box-shadow: var(--stella-elevation-2), var(--stella-glow-blue);
   display: flex;
   align-items: center;
@@ -75,13 +75,13 @@
   gap: 2px;
   width: 64px;
   transform: translate(-50%, -50%);
-  border: 1px solid var(--stella-glass-border);
+  border: 1px solid var(--stella-surface-glass-border);
   border-radius: var(--stella-radius-md);
-  background: var(--stella-glass-bg);
+  background: var(--stella-surface-glass);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: var(--stella-elevation-1);
-  color: var(--stella-text);
+  color: var(--stella-text-on-glass);
   padding: var(--stella-space-2);
   cursor: pointer;
 }
@@ -90,7 +90,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--stella-blue-soft);
+  color: var(--stella-sky);
 }
 
 .stella-core-action-icon svg {
@@ -102,7 +102,7 @@
   font-size: 0.62rem;
   line-height: 1.15;
   text-align: center;
-  color: var(--stella-text-muted);
+  color: var(--stella-text-on-glass-muted);
 }
 
 @supports not (backdrop-filter: blur(1px)) {

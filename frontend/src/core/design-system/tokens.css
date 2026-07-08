@@ -3,24 +3,53 @@
    existentes em index.css (--bg, --accent, --surface...) usadas pelo visual
    "Guilda" atual — os dois convivem enquanto a migração acontece aos poucos,
    por tela, nas fases seguintes. Consumido hoje só pelo Stella Core; outros
-   componentes passam a usar conforme forem migrando. */
-:root {
-  /* Cores — constelações, núcleos conectados, ecossistema (ver brief visual) */
-  --stella-midnight: #0b1026;
-  --stella-midnight-raised: #131a36;
-  --stella-graphite: #232a3d;
-  --stella-graphite-raised: #2d3550;
-  --stella-purple: #4b3f8f;
-  --stella-purple-deep: #2e2560;
-  --stella-blue: #5b8def;
-  --stella-blue-soft: #8fb3f5;
-  --stella-gold: #e8c07d;
-  --stella-green: #6fbf9e;
-  --stella-wine: #8a4a5e;
+   componentes passam a usar conforme forem migrando.
 
-  --stella-text: #e8ecf7;
-  --stella-text-h: #ffffff;
-  --stella-text-muted: #9aa3c4;
+   Paleta (Fase 7, etapa D) extraída do concept pack "Stella Founds Reception
+   Concept Pack v1" — fantasia clara, constelações, sem o visual medieval
+   escuro do tema Guilda. Valores exatos vêm de 02_palette_reference.png;
+   graphite vem do mockup completo (00_...full.png), usado como o "escuro"
+   da paleta pra texto e pros painéis translúcidos de UI (o próprio mockup
+   usa cards escuros translúcidos sobre a cena clara, não só fundo escuro
+   uniforme — replicado abaixo como --stella-surface-glass). */
+:root {
+  /* Paleta base — nomes literais da referência, não semânticos ainda */
+  --stella-cream: #f7e5c9;
+  --stella-ivory: #ead8b0;
+  --stella-gold: #d8a66a;
+  --stella-blue: #7faee6;
+  --stella-sky: #9cc9f1;
+  --stella-lavender: #7b61a8;
+  --stella-coral: #e45d4e;
+  --stella-graphite: #3a3f4b;
+
+  /* Tokens semânticos — o que os componentes devem consumir de fato */
+  --stella-bg-primary: var(--stella-cream);
+  --stella-bg-elevated: var(--stella-ivory);
+
+  /* Painel translúcido escuro (cards de info sobre a ilustração, Stella
+     Core) — combinação clara-por-baixo/escuro-translúcido-por-cima é a
+     mesma do mockup de referência, não um remanescente do tema escuro
+     antigo. */
+  --stella-surface-glass: rgba(58, 63, 75, 0.82);
+  --stella-surface-glass-border: rgba(216, 166, 106, 0.35);
+  /* Variante clara, pra superfícies elevadas sobre fundo já claro (ex.: um
+     card dentro de outro card, sem precisar do contraste escuro). */
+  --stella-surface-soft: rgba(247, 229, 201, 0.65);
+
+  --stella-text-primary: var(--stella-graphite);
+  --stella-text-secondary: rgba(58, 63, 75, 0.65);
+  /* Texto sobre --stella-surface-glass (escura) — não sobre o fundo claro. */
+  --stella-text-on-glass: var(--stella-cream);
+  --stella-text-on-glass-muted: rgba(247, 229, 201, 0.68);
+
+  --stella-accent-stella: var(--stella-blue);
+  --stella-accent-gold: var(--stella-gold);
+  --stella-accent-lavender: var(--stella-lavender);
+
+  --stella-status-success: #7fbf9e;
+  --stella-status-warning: var(--stella-gold);
+  --stella-status-danger: var(--stella-coral);
 
   /* Spacing */
   --stella-space-1: 4px;
@@ -37,12 +66,12 @@
   --stella-radius-lg: 22px;
   --stella-radius-pill: 999px;
 
-  /* Elevação — painéis translúcidos + brilho discreto, não sombra dura */
-  --stella-elevation-1: 0 2px 8px rgba(10, 14, 30, 0.35);
-  --stella-elevation-2: 0 8px 24px rgba(10, 14, 30, 0.45);
-  --stella-glow-blue: 0 0 24px rgba(91, 141, 239, 0.35);
-  --stella-glass-bg: rgba(35, 42, 61, 0.72);
-  --stella-glass-border: rgba(143, 179, 245, 0.18);
+  /* Elevação — sombra continua escura de propósito (funciona sobre fundo
+     claro ou escuro, é assim que sombra se comporta), só o brilho (glow)
+     acompanha a cor de destaque nova. */
+  --stella-elevation-1: 0 2px 8px rgba(58, 63, 75, 0.25);
+  --stella-elevation-2: 0 8px 24px rgba(58, 63, 75, 0.32);
+  --stella-glow-blue: 0 0 24px rgba(127, 174, 230, 0.35);
 
   /* Motion — espelha DURATIONS de motion.ts (fast/standard) pra CSS puro
      (hover, focus) ficar no mesmo ritmo das transições em JS/framer-motion */

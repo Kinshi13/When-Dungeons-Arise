@@ -13,7 +13,7 @@ export default function StellaStarIcon(props: SVGProps<SVGSVGElement>) {
       />
       <defs>
         <linearGradient id="stella-core-star-gradient" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="var(--stella-blue-soft)" />
+          <stop offset="0%" stopColor="var(--stella-sky)" />
           <stop offset="100%" stopColor="var(--stella-gold)" />
         </linearGradient>
       </defs>
