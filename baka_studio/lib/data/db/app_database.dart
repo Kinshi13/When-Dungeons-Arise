@@ -30,6 +30,9 @@ part 'app_database.g.dart';
     Campaigns,
     CampaignItems,
     ChannelRelations,
+    LocalSettings,
+    SyncQueueEntries,
+    SyncConflicts,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -77,6 +80,9 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(channelRelations, channelRelations.updatedAt);
         await m.addColumn(channelRelations, channelRelations.deletedAt);
         await _migrateJunctionTablesToV2(m);
+        await m.createTable(localSettings);
+        await m.createTable(syncQueueEntries);
+        await m.createTable(syncConflicts);
       }
     },
   );

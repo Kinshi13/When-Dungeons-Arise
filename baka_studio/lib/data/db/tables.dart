@@ -12,6 +12,7 @@ import '../models/channel_link.dart' show ChannelRelationType;
 import '../models/content_item.dart' show ContentFormat, ContentStage, ContentPriority;
 import '../models/project.dart' show ProjectStatus, ProjectPriority, ProjectItemState;
 import '../models/signal.dart' show SignalType;
+import '../models/sync_state.dart' show SyncOperationType, SyncQueueStatus;
 import '../models/task.dart' show TaskStatus, TaskPriority;
 
 // Re-exported (not just imported) so app_database.dart — which is the
@@ -23,6 +24,7 @@ export '../models/channel_link.dart' show ChannelRelationType;
 export '../models/content_item.dart' show ContentFormat, ContentStage, ContentPriority;
 export '../models/project.dart' show ProjectStatus, ProjectPriority, ProjectItemState;
 export '../models/signal.dart' show SignalType;
+export '../models/sync_state.dart' show SyncOperationType, SyncQueueStatus;
 export '../models/task.dart' show TaskStatus, TaskPriority;
 
 /// Schema notes (see final report for the full rationale):
@@ -297,6 +299,58 @@ class ChannelRelations extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime().nullable()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ---------------------------------------------------------------------
+// Sync engine infrastructure — local-only, never pushed to Supabase.
+// ---------------------------------------------------------------------
+
+/// Arbitrary local key/value storage — used for the installation's
+/// `device_id` and per-workspace pull cursors (`last_pulled_at:<wsId>`).
+/// Deliberately generic instead of one column per concern so new bits of
+/// sync bookkeeping don't need a schema migration.
+class LocalSettings extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+}
+
+/// One pending write the sync engine still owes the server. Survives app
+/// restarts (it's a real table, not an in-memory list) — see section 17 of
+/// the Fase 4 brief ("a fila deve sobreviver a reinicialização").
+@DataClassName('SyncQueueEntryRow')
+class SyncQueueEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get workspaceId => text()();
+  TextColumn get entityType => text()();
+  TextColumn get entityId => text()();
+  TextColumn get operation => textEnum<SyncOperationType>()();
+  DateTimeColumn get createdAt => dateTime()();
+  IntColumn get retryCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get nextRetryAt => dateTime().nullable()();
+  TextColumn get lastError => text().nullable()();
+  TextColumn get status => textEnum<SyncQueueStatus>()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// A detected but not-necessarily-resolved conflict — kept for diagnostics
+/// (section 28), not surfaced as a blocking UI in this phase.
+class SyncConflicts extends Table {
+  TextColumn get id => text()();
+  TextColumn get entityType => text()();
+  TextColumn get entityId => text()();
+  TextColumn get localPayload => text()();
+  TextColumn get remotePayload => text()();
+  DateTimeColumn get detectedAt => dateTime()();
+  DateTimeColumn get resolvedAt => dateTime().nullable()();
+  TextColumn get resolution => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
