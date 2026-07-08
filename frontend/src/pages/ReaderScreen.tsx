@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { api, type DocumentMeta } from "../api";
+import { api, type Annotation, type DocumentMeta } from "../api";
 import PdfReader, { type ReaderHandle } from "../components/PdfReader";
-import EpubReader from "../components/EpubReader";
-import { ChevronLeftIcon, ChevronRightIcon, MinusIcon, PlusIcon, MoonIcon } from "../icons";
+import EpubReader, { type EpubTocItem } from "../components/EpubReader";
+import { ChevronLeftIcon, ChevronRightIcon, MinusIcon, PlusIcon, MoonIcon, TrashIcon, DiaryIcon, BookIcon } from "../icons";
 import {
   EPUB_FONT_FAMILIES,
   EPUB_THEMES,
@@ -27,6 +27,12 @@ export default function ReaderScreen() {
   const [pageInfo, setPageInfo] = useState<{ page: number; numPages: number } | null>(null);
   const [epubSettings, setEpubSettings] = useState(() => loadEpubReaderSettings());
   const [epubSettingsOpen, setEpubSettingsOpen] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<string | undefined>(undefined);
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [annotationsOpen, setAnnotationsOpen] = useState(false);
+  const [newAnnotationNote, setNewAnnotationNote] = useState("");
+  const [toc, setToc] = useState<EpubTocItem[]>([]);
+  const [tocOpen, setTocOpen] = useState(false);
   const readerRef = useRef<ReaderHandle>(null);
 
   useEffect(() => {
@@ -37,13 +43,16 @@ export default function ReaderScreen() {
         setNotFound(true);
         return;
       }
-      const [fileBlob, progress] = await Promise.all([
+      const [fileBlob, progress, annotationsData] = await Promise.all([
         api.documents.getFile(id),
         api.readingProgress.get(id),
+        api.annotations.list(id),
       ]);
       setDoc(meta);
       setBlob(fileBlob ?? null);
       setInitialLocation(progress?.location);
+      setCurrentLocation(progress?.location);
+      setAnnotations(annotationsData);
     })();
   }, [id]);
 
@@ -52,7 +61,30 @@ export default function ReaderScreen() {
   }
 
   function saveProgress(location: string) {
+    setCurrentLocation(location);
     if (id) api.readingProgress.save(id, location);
+  }
+
+  async function handleAddAnnotation() {
+    if (!id || !currentLocation || !newAnnotationNote.trim()) return;
+    await api.annotations.create(id, currentLocation, newAnnotationNote.trim());
+    setNewAnnotationNote("");
+    setAnnotations(await api.annotations.list(id));
+  }
+
+  async function handleDeleteAnnotation(annotationId: string) {
+    await api.annotations.remove(annotationId);
+    if (id) setAnnotations(await api.annotations.list(id));
+  }
+
+  function handleJumpToAnnotation(location: string) {
+    readerRef.current?.goTo(location);
+    setAnnotationsOpen(false);
+  }
+
+  function handleJumpToChapter(href: string) {
+    readerRef.current?.goTo(href);
+    setTocOpen(false);
   }
 
   function handleToggleZoom() {
@@ -82,16 +114,86 @@ export default function ReaderScreen() {
           <ChevronLeftIcon width={18} height={18} />
         </button>
         <strong className="reader-fullscreen-title">{doc?.title ?? "Carregando..."}</strong>
+        {isEpub && toc.length > 0 && (
+          <button
+            className={`icon-btn${tocOpen ? " active" : ""}`}
+            onClick={() => {
+              setTocOpen((v) => !v);
+              setAnnotationsOpen(false);
+              setEpubSettingsOpen(false);
+            }}
+            aria-label="Capítulos"
+          >
+            <BookIcon width={16} height={16} />
+          </button>
+        )}
+        <button
+          className={`icon-btn${annotationsOpen ? " active" : ""}`}
+          onClick={() => {
+            setAnnotationsOpen((v) => !v);
+            setTocOpen(false);
+            setEpubSettingsOpen(false);
+          }}
+          aria-label="Anotações"
+        >
+          <DiaryIcon width={16} height={16} />
+        </button>
         {isEpub && (
           <button
             className={`icon-btn reader-aa-btn${epubSettingsOpen ? " active" : ""}`}
-            onClick={() => setEpubSettingsOpen((v) => !v)}
+            onClick={() => {
+              setEpubSettingsOpen((v) => !v);
+              setTocOpen(false);
+              setAnnotationsOpen(false);
+            }}
             aria-label="Fonte e tema de leitura"
           >
             Aa
           </button>
         )}
       </div>
+
+      {tocOpen && toc.length > 0 && (
+        <div className="epub-settings-panel reader-panel-scroll">
+          {toc.map((item) => (
+            <button key={item.href} className="reader-panel-item" onClick={() => handleJumpToChapter(item.href)}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {annotationsOpen && (
+        <div className="epub-settings-panel reader-panel-scroll">
+          <form
+            className="reader-annotation-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleAddAnnotation();
+            }}
+          >
+            <input
+              placeholder={doc?.type === "pdf" ? "Anotação nesta página..." : "Anotação neste trecho..."}
+              value={newAnnotationNote}
+              onChange={(e) => setNewAnnotationNote(e.target.value)}
+            />
+            <button type="submit" className="icon-btn primary" aria-label="Salvar anotação">
+              <PlusIcon width={16} height={16} />
+            </button>
+          </form>
+          {annotations.length === 0 && <p className="hint">Nenhuma anotação neste livro ainda.</p>}
+          {annotations.map((ann) => (
+            <div key={ann.id} className="reader-annotation-item">
+              <button className="reader-panel-item" onClick={() => handleJumpToAnnotation(ann.location)}>
+                {ann.note}
+              </button>
+              <button className="icon-btn" onClick={() => handleDeleteAnnotation(ann.id)} aria-label="Excluir anotação">
+                <TrashIcon width={14} height={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {isEpub && epubSettingsOpen && (
         <div className="epub-settings-panel">
@@ -155,6 +257,7 @@ export default function ReaderScreen() {
           theme={epubSettings.theme}
           onLocationChange={saveProgress}
           onToggleZoom={handleToggleZoom}
+          onTocReady={setToc}
         />
       )}
 

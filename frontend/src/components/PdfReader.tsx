@@ -12,6 +12,10 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
 export interface ReaderHandle {
   next: () => void;
   prev: () => void;
+  // PDF: número da página (como string). EPUB: CFI ou href do sumário —
+  // usado tanto pra retomar leitura (já cobria isso) quanto pra pular pra
+  // uma anotação ou capítulo específico (ver ReaderScreen.tsx).
+  goTo: (location: string) => void;
 }
 
 interface PdfReaderProps {
@@ -103,6 +107,7 @@ const PdfReader = forwardRef<ReaderHandle, PdfReaderProps>(function PdfReader(
   useImperativeHandle(ref, () => ({
     next: () => goTo(page + 1),
     prev: () => goTo(page - 1),
+    goTo: (location: string) => goTo(Number(location)),
   }));
 
   const { handleTap } = useReaderGestures({

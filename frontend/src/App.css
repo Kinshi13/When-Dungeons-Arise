@@ -1572,6 +1572,20 @@
   object-fit: contain;
 }
 
+/* Poeira dourada do Phaser (ver LibraryScene.ts) — sem z-index de propósito:
+   precisa ficar entre a imagem da estante (pintada antes dela no DOM) e os
+   botões de importar/livros (depois dela no DOM), então a ordem no HTML já
+   resolve a camada sozinha, sem competir em stacking context com nada. */
+.library-phaser-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.library-phaser-canvas canvas {
+  width: 100%;
+  height: 100%;
+}
+
 .library-import-zone {
   position: absolute;
   left: 0;
@@ -1921,6 +1935,50 @@
   font-size: 0.6rem;
   font-weight: 400;
   opacity: 0.8;
+}
+
+/* Painel de Anotações/Capítulos — mesma casca visual do .epub-settings-panel
+   (ver acima), mas usado tanto no PDF quanto no EPUB, por isso não herda o
+   nome "epub"; a classe base continua sendo reaproveitada via className
+   composto em ReaderScreen.tsx. */
+.reader-panel-scroll {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.reader-panel-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 20%, transparent);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.reader-panel-item:last-child {
+  border-bottom: none;
+}
+
+.reader-annotation-form {
+  display: flex;
+  gap: 8px;
+}
+
+.reader-annotation-form input {
+  flex: 1;
+}
+
+.reader-annotation-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reader-annotation-item .reader-panel-item {
+  flex: 1;
 }
 
 .reader-dim-overlay {

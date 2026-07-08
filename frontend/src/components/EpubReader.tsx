@@ -5,6 +5,11 @@ import { playPageFlip } from "../sound";
 import type { ReaderHandle } from "./PdfReader";
 import { EPUB_FONT_FAMILIES, EPUB_THEMES, type EpubFontFamily, type EpubTheme } from "../epubReaderSettings";
 
+export interface EpubTocItem {
+  label: string;
+  href: string;
+}
+
 interface EpubReaderProps {
   blob: Blob;
   initialLocation?: string;
@@ -13,10 +18,11 @@ interface EpubReaderProps {
   theme: EpubTheme;
   onLocationChange?: (cfi: string) => void;
   onToggleZoom?: () => void;
+  onTocReady?: (toc: EpubTocItem[]) => void;
 }
 
 const EpubReader = forwardRef<ReaderHandle, EpubReaderProps>(function EpubReader(
-  { blob, initialLocation, zoomStep, fontFamily, theme, onLocationChange, onToggleZoom },
+  { blob, initialLocation, zoomStep, fontFamily, theme, onLocationChange, onToggleZoom, onTocReady },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -34,6 +40,7 @@ const EpubReader = forwardRef<ReaderHandle, EpubReaderProps>(function EpubReader
   useImperativeHandle(ref, () => ({
     next: () => renditionRef.current?.next(),
     prev: () => renditionRef.current?.prev(),
+    goTo: (location: string) => renditionRef.current?.display(location),
   }));
 
   useEffect(() => {
@@ -72,6 +79,11 @@ const EpubReader = forwardRef<ReaderHandle, EpubReaderProps>(function EpubReader
         });
 
         await rendition.display(initialLocation || undefined);
+
+        book.loaded.navigation.then((nav) => {
+          if (cancelled) return;
+          onTocReady?.(nav.toc.map((item) => ({ label: item.label.trim(), href: item.href })));
+        });
       } catch {
         setError("Não foi possível abrir este EPUB.");
       }

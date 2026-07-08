@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type TouchEvent } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type TouchEvent } from "react";
 import { api, type DocumentMeta, type DocumentType } from "../api";
 import BookCoverSheet from "../components/BookCoverSheet";
 import LibraryDrawer from "../components/LibraryDrawer";
@@ -7,6 +7,9 @@ import { PlusIcon, ChevronUpIcon } from "../icons";
 import { playSfx } from "../sound";
 import { useSettings, isLofiTheme } from "../contexts/SettingsContext";
 import { useQuickAction } from "../useQuickAction";
+
+// Mesmo motivo do ReceptionCanvas: Phaser só baixa quando a Biblioteca monta.
+const LibraryCanvas = lazy(() => import("../phaser/LibraryCanvas"));
 
 // Regiões das 4 prateleiras utilizáveis (a primeira, decorativa, fica de fora),
 // em % da altura/largura da arte da estante — descobertas inspecionando as
@@ -21,8 +24,9 @@ const SHELVES = [
 const SWIPE_THRESHOLD = 70;
 
 export default function Library() {
-  const { theme } = useSettings();
+  const { theme, animationLevel } = useSettings();
   const isLofi = isLofiTheme(theme);
+  const showPhaserScene = isLofi && animationLevel !== "reduzidas";
   const [docs, setDocs] = useState<DocumentMeta[]>([]);
   const [selected, setSelected] = useState<DocumentMeta | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -84,6 +88,12 @@ export default function Library() {
           <div className="lofi-scene lofi-scene-biblioteca library-shelf-img" aria-hidden="true" />
         ) : (
           <img src="/biblioteca-bg.png" alt="Estante da biblioteca" className="library-shelf-img" />
+        )}
+
+        {showPhaserScene && (
+          <Suspense fallback={null}>
+            <LibraryCanvas />
+          </Suspense>
         )}
 
         <button

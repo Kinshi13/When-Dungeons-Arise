@@ -115,6 +115,20 @@ export interface ReadingProgress {
   updatedAt: string;
 }
 
+// Anotação amarrada a um documento específico (seção 11 do spec Stella
+// Founds) — mesmo formato de "location" do ReadingProgress (página do PDF ou
+// CFI do EPUB), então pular pra uma anotação usa o mesmo ReaderHandle.goTo
+// já usado pra retomar a leitura.
+export interface Annotation {
+  id: string;
+  documentId: string;
+  location: string;
+  note: string;
+  createdAt: string;
+  updatedAt?: string;
+  deleted?: boolean;
+}
+
 export type BillType = "CARTAO" | "BOLETO" | "ASSINATURA" | "OUTRO";
 export type BillKind = "PAGAR" | "RECEBER" | "ASSINATURA";
 export type BillStatus = "PENDENTE" | "PAGA" | "RECEBIDA";
@@ -144,6 +158,7 @@ const billTable = table<Bill>("bills");
 const financeRuleTable = table<RecurringFinanceRule>("finance-rules");
 const documentTable = table<DocumentMeta>("documents");
 const readingProgressTable = table<ReadingProgress>("reading-progress");
+const annotationTable = table<Annotation>("annotations");
 
 // Carteira — não é uma lista, é um único valor base ajustado manualmente pelo
 // usuário (mesmo padrão de storage simples do SettingsContext), então fica
@@ -618,6 +633,9 @@ export const api = {
       documentTable.remove(id);
       await deleteFile(id);
       readingProgressTable.remove(id);
+      for (const ann of annotationTable.list().filter((a) => a.documentId === id)) {
+        annotationTable.remove(ann.id);
+      }
     },
   },
   readingProgress: {
@@ -630,6 +648,29 @@ export const api = {
       } else {
         readingProgressTable.insert(entry);
       }
+    },
+  },
+  annotations: {
+    list: async (documentId: string) =>
+      annotationTable
+        .list()
+        .filter((a) => a.documentId === documentId && !a.deleted)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    create: async (documentId: string, location: string, note: string) => {
+      const annotation: Annotation = {
+        id: createId(),
+        documentId,
+        location,
+        note,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deleted: false,
+      };
+      annotationTable.insert(annotation);
+      return annotation;
+    },
+    remove: async (id: string) => {
+      annotationTable.update(id, { deleted: true, updatedAt: new Date().toISOString() });
     },
   },
 };
