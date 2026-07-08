@@ -34,10 +34,19 @@ Store — PWA e Desktop ficam pra quando o usuário priorizar essas frentes.
   coleta de dados). Levantamento do que o app realmente faz:
   - Todos os dados do usuário (lembretes, contas, notas, biblioteca) ficam
     **só no dispositivo** (local-first, sem backend).
-  - Duas chamadas de rede existem: `open-meteo.com` (previsão do tempo,
-    a partir do nome da cidade que o usuário digita) e `open.er-api.com`
-    (cotação de moedas, sem enviar nenhum dado do usuário). Nenhuma das
-    duas é analytics/rastreamento — são só consultas públicas.
+  - Três chamadas de rede existem: `open-meteo.com` (previsão do tempo, a
+    partir do nome da cidade que o usuário digita), `open.er-api.com`
+    (cotação de moedas na tela de Tesouraria) e `economia.awesomeapi.com.br`
+    (cotação do widget de Câmbio da tela inicial — código nativo Java,
+    `CurrencyWidgetProvider.java`, roda mesmo com o app fechado). Nenhuma
+    das três é analytics/rastreamento — só o nome da cidade digitado pelo
+    usuário é enviado (pro geocoding do clima); nenhuma outra vai a
+    lugar nenhum além do dispositivo.
+  - **Atenção**: o widget de Câmbio e a tela de Tesouraria usam fontes
+    diferentes pro mesmo par de moedas (AwesomeAPI vs. open.er-api.com) —
+    os valores exibidos podem não bater exatamente. Decisão deliberada (o
+    widget precisa funcionar com o app fechado), mas vale confirmar
+    visualmente no aparelho se a diferença incomoda.
   - Nenhum SDK de anúncios, analytics ou crash reporting está presente.
   - Isso simplifica bastante a política de privacidade e o formulário de
     **Data Safety** do Play Console — posso rascunhar os dois textos.
