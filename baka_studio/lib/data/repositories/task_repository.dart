@@ -28,13 +28,15 @@ class TaskRepository {
 
   Stream<List<DailyTask>> watchAll() {
     final query = _db.select(_db.tasks)
-      ..where((t) => t.status.equalsValue(TaskStatus.cancelled).not())
+      ..where((t) => t.status.equalsValue(TaskStatus.cancelled).not() & t.deletedAt.isNull())
       ..orderBy([(t) => OrderingTerm.asc(t.dueDate)]);
     return query.watch().map((rows) => rows.map(taskFromRow).toList());
   }
 
   Stream<List<DailyTask>> watchForCampaign(String campaignId) {
-    final query = _db.select(_db.tasks)..where((t) => t.campaignId.equals(campaignId));
+    final query = _db.select(
+      _db.tasks,
+    )..where((t) => t.campaignId.equals(campaignId) & t.deletedAt.isNull());
     return query.watch().map((rows) => rows.map(taskFromRow).toList());
   }
 
@@ -98,7 +100,13 @@ class TaskRepository {
     await setStatus(id, row.status == TaskStatus.done ? TaskStatus.todo : TaskStatus.done);
   }
 
+  /// Tombstoned rather than physically deleted — tasks are a "minor" entity
+  /// (hard delete is allowed by the UI), but still need to propagate the
+  /// removal to other devices instead of a stale copy resurrecting it.
   Future<void> delete(String id) async {
-    await (_db.delete(_db.tasks)..where((t) => t.id.equals(id))).go();
+    final now = DateTime.now();
+    await (_db.update(_db.tasks)..where((t) => t.id.equals(id))).write(
+      TasksCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+    );
   }
 }

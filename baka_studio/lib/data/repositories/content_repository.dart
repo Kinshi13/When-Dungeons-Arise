@@ -12,7 +12,9 @@ class ContentRepository {
   final AppDatabase _db;
 
   Future<ContentItem> _hydrate(ContentItemEntry row) async {
-    final channelLinks = await (_db.select(_db.contentChannels)..where((c) => c.contentItemId.equals(row.id))).get();
+    final channelLinks = await (_db.select(
+      _db.contentChannels,
+    )..where((c) => c.contentItemId.equals(row.id) & c.deletedAt.isNull())).get();
     return ContentItem(
       id: row.id,
       workspaceId: row.workspaceId,
@@ -34,7 +36,9 @@ class ContentRepository {
   }
 
   Stream<List<ContentItem>> watchAll({bool includeArchived = false}) {
-    final query = _db.select(_db.contentItems)..orderBy([(c) => OrderingTerm.desc(c.updatedAt)]);
+    final query = _db.select(_db.contentItems)
+      ..where((c) => c.deletedAt.isNull())
+      ..orderBy([(c) => OrderingTerm.desc(c.updatedAt)]);
     if (!includeArchived) {
       query.where((c) => c.archivedAt.isNull());
     }
@@ -82,7 +86,14 @@ class ContentRepository {
       );
       for (final channelId in channelIds) {
         await _db.into(_db.contentChannels).insert(
-          ContentChannelsCompanion.insert(contentItemId: id, channelId: channelId),
+          ContentChannelsCompanion.insert(
+            id: newId(),
+            workspaceId: workspaceId,
+            contentItemId: id,
+            channelId: channelId,
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
         );
       }
     });
@@ -117,10 +128,37 @@ class ContentRepository {
         ),
       );
       if (channelIds != null) {
-        await (_db.delete(_db.contentChannels)..where((c) => c.contentItemId.equals(id))).go();
-        for (final channelId in channelIds) {
+        final now = DateTime.now();
+        final existing = await (_db.select(
+          _db.contentChannels,
+        )..where((c) => c.contentItemId.equals(id) & c.deletedAt.isNull())).get();
+        final existingChannelIds = existing.map((e) => e.channelId).toSet();
+        final wantedChannelIds = channelIds.toSet();
+
+        // Tombstone pairs that were removed — a physical delete here would
+        // let another device that hasn't pulled this change yet resurrect
+        // the pairing by pushing its still-active local copy.
+        for (final row in existing) {
+          if (!wantedChannelIds.contains(row.channelId)) {
+            await (_db.update(_db.contentChannels)..where((c) => c.id.equals(row.id))).write(
+              ContentChannelsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+            );
+          }
+        }
+        // Insert only genuinely new pairs — untouched existing ones keep
+        // their own updatedAt instead of bumping on every unrelated edit.
+        final contentItem = await getById(id);
+        final workspaceId = contentItem?.workspaceId ?? '';
+        for (final channelId in wantedChannelIds.difference(existingChannelIds)) {
           await _db.into(_db.contentChannels).insert(
-            ContentChannelsCompanion.insert(contentItemId: id, channelId: channelId),
+            ContentChannelsCompanion.insert(
+              id: newId(),
+              workspaceId: workspaceId,
+              contentItemId: id,
+              channelId: channelId,
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
           );
         }
       }

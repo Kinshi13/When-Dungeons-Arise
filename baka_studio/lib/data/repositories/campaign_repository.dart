@@ -24,7 +24,9 @@ class CampaignRepository {
   final AppDatabase _db;
 
   Stream<List<Campaign>> watchAll({bool includeArchived = false}) {
-    final query = _db.select(_db.campaigns)..orderBy([(c) => OrderingTerm.desc(c.createdAt)]);
+    final query = _db.select(_db.campaigns)
+      ..where((c) => c.deletedAt.isNull())
+      ..orderBy([(c) => OrderingTerm.desc(c.createdAt)]);
     if (!includeArchived) {
       query.where((c) => c.archivedAt.isNull());
     }
@@ -33,7 +35,7 @@ class CampaignRepository {
 
   Stream<List<CampaignItem>> watchItems(String campaignId) {
     final query = _db.select(_db.campaignItems)
-      ..where((i) => i.campaignId.equals(campaignId))
+      ..where((i) => i.campaignId.equals(campaignId) & i.deletedAt.isNull())
       ..orderBy([(i) => OrderingTerm.asc(i.sortOrder)]);
     return query.watch().map(
       (rows) => rows
@@ -99,12 +101,30 @@ class CampaignRepository {
   }
 
   Future<void> addItem(String campaignId, CampaignItemEntityType type, String entityId) async {
+    final now = DateTime.now();
+    final campaignRow = await (_db.select(
+      _db.campaigns,
+    )..where((c) => c.id.equals(campaignId))).getSingleOrNull();
     await _db.into(_db.campaignItems).insert(
-      CampaignItemsCompanion.insert(id: newId(), campaignId: campaignId, entityType: type, entityId: entityId),
+      CampaignItemsCompanion.insert(
+        id: newId(),
+        workspaceId: Value(campaignRow?.workspaceId ?? ''),
+        campaignId: campaignId,
+        entityType: type,
+        entityId: entityId,
+        createdAt: Value(now),
+        updatedAt: Value(now),
+      ),
     );
   }
 
+  /// Tombstoned rather than physically deleted, same reasoning as
+  /// [ChannelRepository.removeRelation] — a device that hasn't pulled this
+  /// removal yet must not resurrect the item by pushing its stale copy.
   Future<void> removeItem(String itemId) async {
-    await (_db.delete(_db.campaignItems)..where((i) => i.id.equals(itemId))).go();
+    final now = DateTime.now();
+    await (_db.update(_db.campaignItems)..where((i) => i.id.equals(itemId))).write(
+      CampaignItemsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+    );
   }
 }

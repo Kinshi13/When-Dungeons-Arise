@@ -39,8 +39,18 @@ class Workspaces extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get description => text().withDefault(const Constant(''))();
+  // The Supabase auth user id that owns this workspace remotely — null
+  // until the user signs in and this workspace is linked to (or created
+  // for) their account. A purely local, never-logged-in install keeps this
+  // null forever and never syncs.
+  TextColumn get ownerId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  // Tombstone — kept separate from an "archived" concept (workspaces
+  // aren't archivable from the UI today) purely so deletion can propagate
+  // between devices instead of a device silently recreating a workspace
+  // it never saw get deleted.
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -62,6 +72,7 @@ class Channels extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get archivedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -80,19 +91,29 @@ class Projects extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get archivedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
 }
 
-/// Project ⟷ Channel, N:N.
+/// Project ⟷ Channel, N:N. Has its own `id` (not just a composite key) and
+/// its own `createdAt`/`updatedAt`/`deletedAt` — needed so each pairing can
+/// be synced and tombstoned independently (two devices adding different
+/// channels to the same project must both survive, not overwrite each
+/// other as one blob).
 class ProjectChannels extends Table {
+  TextColumn get id => text()();
+  TextColumn get workspaceId => text()();
   TextColumn get projectId => text()();
   TextColumn get channelId => text()();
   TextColumn get role => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().nullable()();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
-  Set<Column> get primaryKey => {projectId, channelId};
+  Set<Column> get primaryKey => {id};
 }
 
 /// A node in a project's constellation map. May stand alone (a milestone)
@@ -108,6 +129,7 @@ class ProjectNodes extends Table {
   TextColumn get linkedEntityId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -116,12 +138,20 @@ class ProjectNodes extends Table {
 /// A dependency edge between two [ProjectNodes] — drawn as a constellation
 /// line. `dependency` is the only type used by the UI today; the others
 /// are modeled so a future edit surface doesn't need a schema change.
+///
+/// `workspaceId`/`createdAt`/`updatedAt` are nullable because they were
+/// retrofitted onto a table that originally had neither — existing local
+/// rows get `NULL` on upgrade (see migration), new rows always set them.
 class ProjectNodeRelations extends Table {
   TextColumn get id => text()();
+  TextColumn get workspaceId => text().nullable()();
   TextColumn get projectId => text()();
   TextColumn get sourceNodeId => text()();
   TextColumn get targetNodeId => text()();
   TextColumn get type => text().withDefault(const Constant('dependency'))();
+  DateTimeColumn get createdAt => dateTime().nullable()();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -144,19 +174,27 @@ class ContentItems extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get archivedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
 }
 
-/// ContentItem ⟷ Channel, N:N (a collaboration between two channels).
+/// ContentItem ⟷ Channel, N:N (a collaboration between two channels). Same
+/// treatment as [ProjectChannels] — its own `id`/timestamps so each pairing
+/// syncs and tombstones independently.
 class ContentChannels extends Table {
+  TextColumn get id => text()();
+  TextColumn get workspaceId => text()();
   TextColumn get contentItemId => text()();
   TextColumn get channelId => text()();
   TextColumn get role => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().nullable()();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
-  Set<Column> get primaryKey => {contentItemId, channelId};
+  Set<Column> get primaryKey => {id};
 }
 
 @DataClassName('TaskEntry')
@@ -175,6 +213,7 @@ class Tasks extends Table {
   TextColumn get campaignId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -195,6 +234,7 @@ class Signals extends Table {
   TextColumn get convertedEntityId => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -213,18 +253,26 @@ class Campaigns extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get archivedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
 }
 
+/// `workspaceId`/`createdAt`/`updatedAt` are nullable for the same
+/// retrofit reason as [ProjectNodeRelations] — this table never had them
+/// before this migration.
 @DataClassName('CampaignItemEntry')
 class CampaignItems extends Table {
   TextColumn get id => text()();
+  TextColumn get workspaceId => text().nullable()();
   TextColumn get campaignId => text()();
   TextColumn get entityType => textEnum<CampaignItemEntityType>()();
   TextColumn get entityId => text()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime().nullable()();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -234,7 +282,11 @@ class CampaignItems extends Table {
 /// `sharedCampaign` are derived and rewritten by the repository whenever
 /// project/campaign membership changes — see `ChannelRepository.
 /// _syncDerivedRelations`. `strategic` / `custom` rows are curated by hand
-/// and never touched by that sync.
+/// and never touched by that sync. Only the curated rows are ever pushed
+/// remotely — derived ones are recomputed independently on every device
+/// from already-synced source data, so `updatedAt` is nullable (never set
+/// on derived rows, which are deleted and reinserted wholesale on recompute
+/// rather than updated in place).
 class ChannelRelations extends Table {
   TextColumn get id => text()();
   TextColumn get workspaceId => text()();
@@ -243,6 +295,8 @@ class ChannelRelations extends Table {
   TextColumn get type => textEnum<ChannelRelationType>()();
   TextColumn get label => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

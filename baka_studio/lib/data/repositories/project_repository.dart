@@ -13,9 +13,15 @@ class ProjectRepository {
   final AppDatabase _db;
 
   Future<Project> _hydrate(ProjectEntry row) async {
-    final channelLinks = await (_db.select(_db.projectChannels)..where((c) => c.projectId.equals(row.id))).get();
-    final nodeRows = await (_db.select(_db.projectNodes)..where((n) => n.projectId.equals(row.id))).get();
-    final relationRows = await (_db.select(_db.projectNodeRelations)..where((r) => r.projectId.equals(row.id))).get();
+    final channelLinks = await (_db.select(
+      _db.projectChannels,
+    )..where((c) => c.projectId.equals(row.id) & c.deletedAt.isNull())).get();
+    final nodeRows = await (_db.select(
+      _db.projectNodes,
+    )..where((n) => n.projectId.equals(row.id) & n.deletedAt.isNull())).get();
+    final relationRows = await (_db.select(
+      _db.projectNodeRelations,
+    )..where((r) => r.projectId.equals(row.id) & r.deletedAt.isNull())).get();
 
     final dependsOnByTarget = <String, List<String>>{};
     for (final rel in relationRows) {
@@ -49,7 +55,9 @@ class ProjectRepository {
   }
 
   Stream<List<Project>> watchAll({bool includeArchived = false}) {
-    final query = _db.select(_db.projects)..orderBy([(p) => OrderingTerm.asc(p.name)]);
+    final query = _db.select(_db.projects)
+      ..where((p) => p.deletedAt.isNull())
+      ..orderBy([(p) => OrderingTerm.asc(p.name)]);
     if (!includeArchived) {
       query.where((p) => p.archivedAt.isNull());
     }
@@ -90,7 +98,14 @@ class ProjectRepository {
       );
       for (final channelId in channelIds) {
         await _db.into(_db.projectChannels).insert(
-          ProjectChannelsCompanion.insert(projectId: id, channelId: channelId),
+          ProjectChannelsCompanion.insert(
+            id: newId(),
+            workspaceId: workspaceId,
+            projectId: id,
+            channelId: channelId,
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
         );
       }
     });
@@ -120,10 +135,35 @@ class ProjectRepository {
         ),
       );
       if (channelIds != null) {
-        await (_db.delete(_db.projectChannels)..where((c) => c.projectId.equals(id))).go();
-        for (final channelId in channelIds) {
+        final now = DateTime.now();
+        final existing = await (_db.select(
+          _db.projectChannels,
+        )..where((c) => c.projectId.equals(id) & c.deletedAt.isNull())).get();
+        final existingChannelIds = existing.map((e) => e.channelId).toSet();
+        final wantedChannelIds = channelIds.toSet();
+
+        // Tombstone removed pairs instead of a physical delete — see
+        // ContentRepository.update for why (a device that hasn't pulled
+        // this change yet must not resurrect the pairing).
+        for (final row in existing) {
+          if (!wantedChannelIds.contains(row.channelId)) {
+            await (_db.update(_db.projectChannels)..where((c) => c.id.equals(row.id))).write(
+              ProjectChannelsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+            );
+          }
+        }
+        final project = await getById(id);
+        final workspaceId = project?.workspaceId ?? '';
+        for (final channelId in wantedChannelIds.difference(existingChannelIds)) {
           await _db.into(_db.projectChannels).insert(
-            ProjectChannelsCompanion.insert(projectId: id, channelId: channelId),
+            ProjectChannelsCompanion.insert(
+              id: newId(),
+              workspaceId: workspaceId,
+              projectId: id,
+              channelId: channelId,
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
           );
         }
       }
@@ -153,6 +193,8 @@ class ProjectRepository {
   }) async {
     final now = DateTime.now();
     final nodeId = newId();
+    final project = await getById(projectId);
+    final workspaceId = project?.workspaceId ?? '';
     await _db.transaction(() async {
       await _db.into(_db.projectNodes).insert(
         ProjectNodesCompanion.insert(
@@ -170,9 +212,12 @@ class ProjectRepository {
         await _db.into(_db.projectNodeRelations).insert(
           ProjectNodeRelationsCompanion.insert(
             id: newId(),
+            workspaceId: Value(workspaceId),
             projectId: projectId,
             sourceNodeId: depId,
             targetNodeId: nodeId,
+            createdAt: Value(now),
+            updatedAt: Value(now),
           ),
         );
       }
@@ -188,12 +233,18 @@ class ProjectRepository {
     );
   }
 
+  /// Tombstones the node and its dependency edges instead of deleting them
+  /// outright — a device that hasn't pulled this removal yet must see it
+  /// disappear on next sync, not resurrect it by pushing its stale copy.
   Future<void> removeNode(String nodeId) async {
+    final now = DateTime.now();
     await _db.transaction(() async {
-      await (_db.delete(_db.projectNodeRelations)
+      await (_db.update(_db.projectNodeRelations)
             ..where((r) => r.sourceNodeId.equals(nodeId) | r.targetNodeId.equals(nodeId)))
-          .go();
-      await (_db.delete(_db.projectNodes)..where((n) => n.id.equals(nodeId))).go();
+          .write(ProjectNodeRelationsCompanion(deletedAt: Value(now), updatedAt: Value(now)));
+      await (_db.update(_db.projectNodes)..where((n) => n.id.equals(nodeId))).write(
+        ProjectNodesCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+      );
     });
   }
 }

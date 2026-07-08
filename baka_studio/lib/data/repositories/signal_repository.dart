@@ -29,7 +29,9 @@ class SignalRepository {
   final AppDatabase _db;
 
   Stream<List<Signal>> watchAll() {
-    final query = _db.select(_db.signals)..orderBy([(s) => OrderingTerm.desc(s.createdAt)]);
+    final query = _db.select(_db.signals)
+      ..where((s) => s.deletedAt.isNull())
+      ..orderBy([(s) => OrderingTerm.desc(s.createdAt)]);
     return query.watch().map((rows) => rows.map(signalFromRow).toList());
   }
 
@@ -74,6 +76,9 @@ class SignalRepository {
   Future<void> archive(String id) => markProcessed(id, convertedEntityType: 'archived');
 
   Future<void> delete(String id) async {
-    await (_db.delete(_db.signals)..where((s) => s.id.equals(id))).go();
+    final now = DateTime.now();
+    await (_db.update(_db.signals)..where((s) => s.id.equals(id))).write(
+      SignalsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+    );
   }
 }

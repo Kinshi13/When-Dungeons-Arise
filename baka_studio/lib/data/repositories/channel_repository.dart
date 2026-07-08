@@ -32,6 +32,7 @@ class ChannelRepository {
 
   Stream<List<Channel>> watchAll({bool includeArchived = false}) {
     final query = _db.select(_db.channels)
+      ..where((c) => c.deletedAt.isNull())
       ..orderBy([(c) => OrderingTerm.asc(c.name)]);
     if (!includeArchived) {
       query.where((c) => c.archivedAt.isNull());
@@ -110,7 +111,8 @@ class ChannelRepository {
   // Relations ------------------------------------------------------------
 
   Stream<List<ChannelLink>> watchRelations(String workspaceId) {
-    final query = _db.select(_db.channelRelations)..where((r) => r.workspaceId.equals(workspaceId));
+    final query = _db.select(_db.channelRelations)
+      ..where((r) => r.workspaceId.equals(workspaceId) & r.deletedAt.isNull());
     return query.watch().map(
       (rows) => rows
           .map((r) => ChannelLink(
@@ -146,9 +148,16 @@ class ChannelRepository {
 
   /// Removes a manually curated relation. Derived (`sharedProject`/
   /// `sharedCampaign`) relations are never removed directly — they follow
-  /// the underlying shared project/campaign automatically.
+  /// the underlying shared project/campaign automatically. Tombstoned
+  /// rather than hard-deleted since this row is one of the few
+  /// [ChannelRelations] rows that does get synced (see [type] check in the
+  /// remote schema) — a physical delete could get resurrected by a device
+  /// that hasn't pulled the removal yet.
   Future<void> removeRelation(String id) async {
-    await (_db.delete(_db.channelRelations)..where((r) => r.id.equals(id))).go();
+    final now = DateTime.now();
+    await (_db.update(_db.channelRelations)..where((r) => r.id.equals(id))).write(
+      ChannelRelationsCompanion(deletedAt: Value(now), updatedAt: Value(now)),
+    );
   }
 
   /// Recomputes every `sharedProject` relation from real
@@ -156,7 +165,9 @@ class ChannelRepository {
   /// before. Manually curated relations (`strategic` / `custom`) are left
   /// untouched. Call this after any project↔channel membership change.
   Future<void> syncSharedProjectRelations(String workspaceId) async {
-    final links = await _db.select(_db.projectChannels).get();
+    final links = await (_db.select(
+      _db.projectChannels,
+    )..where((c) => c.deletedAt.isNull())).get();
     final byProject = <String, Set<String>>{};
     for (final link in links) {
       byProject.putIfAbsent(link.projectId, () => {}).add(link.channelId);

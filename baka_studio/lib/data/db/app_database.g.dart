@@ -39,6 +39,17 @@ class $WorkspacesTable extends Workspaces
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _ownerIdMeta = const VerificationMeta(
+    'ownerId',
+  );
+  @override
+  late final GeneratedColumn<String> ownerId = GeneratedColumn<String>(
+    'owner_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -61,13 +72,26 @@ class $WorkspacesTable extends Workspaces
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
     name,
     description,
+    ownerId,
     createdAt,
     updatedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -103,6 +127,12 @@ class $WorkspacesTable extends Workspaces
         ),
       );
     }
+    if (data.containsKey('owner_id')) {
+      context.handle(
+        _ownerIdMeta,
+        ownerId.isAcceptableOrUnknown(data['owner_id']!, _ownerIdMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -118,6 +148,12 @@ class $WorkspacesTable extends Workspaces
       );
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
     }
     return context;
   }
@@ -140,6 +176,10 @@ class $WorkspacesTable extends Workspaces
         DriftSqlType.string,
         data['${effectivePrefix}description'],
       )!,
+      ownerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_id'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -148,6 +188,10 @@ class $WorkspacesTable extends Workspaces
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -161,14 +205,18 @@ class WorkspaceEntry extends DataClass implements Insertable<WorkspaceEntry> {
   final String id;
   final String name;
   final String description;
+  final String? ownerId;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? deletedAt;
   const WorkspaceEntry({
     required this.id,
     required this.name,
     required this.description,
+    this.ownerId,
     required this.createdAt,
     required this.updatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -176,8 +224,14 @@ class WorkspaceEntry extends DataClass implements Insertable<WorkspaceEntry> {
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['description'] = Variable<String>(description);
+    if (!nullToAbsent || ownerId != null) {
+      map['owner_id'] = Variable<String>(ownerId);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -186,8 +240,14 @@ class WorkspaceEntry extends DataClass implements Insertable<WorkspaceEntry> {
       id: Value(id),
       name: Value(name),
       description: Value(description),
+      ownerId: ownerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ownerId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -200,8 +260,10 @@ class WorkspaceEntry extends DataClass implements Insertable<WorkspaceEntry> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       description: serializer.fromJson<String>(json['description']),
+      ownerId: serializer.fromJson<String?>(json['ownerId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -211,8 +273,10 @@ class WorkspaceEntry extends DataClass implements Insertable<WorkspaceEntry> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'description': serializer.toJson<String>(description),
+      'ownerId': serializer.toJson<String?>(ownerId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -220,14 +284,18 @@ class WorkspaceEntry extends DataClass implements Insertable<WorkspaceEntry> {
     String? id,
     String? name,
     String? description,
+    Value<String?> ownerId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => WorkspaceEntry(
     id: id ?? this.id,
     name: name ?? this.name,
     description: description ?? this.description,
+    ownerId: ownerId.present ? ownerId.value : this.ownerId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   WorkspaceEntry copyWithCompanion(WorkspacesCompanion data) {
     return WorkspaceEntry(
@@ -236,8 +304,10 @@ class WorkspaceEntry extends DataClass implements Insertable<WorkspaceEntry> {
       description: data.description.present
           ? data.description.value
           : this.description,
+      ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -247,14 +317,24 @@ class WorkspaceEntry extends DataClass implements Insertable<WorkspaceEntry> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('description: $description, ')
+          ..write('ownerId: $ownerId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, description, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    description,
+    ownerId,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -262,31 +342,39 @@ class WorkspaceEntry extends DataClass implements Insertable<WorkspaceEntry> {
           other.id == this.id &&
           other.name == this.name &&
           other.description == this.description &&
+          other.ownerId == this.ownerId &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class WorkspacesCompanion extends UpdateCompanion<WorkspaceEntry> {
   final Value<String> id;
   final Value<String> name;
   final Value<String> description;
+  final Value<String?> ownerId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const WorkspacesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.description = const Value.absent(),
+    this.ownerId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   WorkspacesCompanion.insert({
     required String id,
     required String name,
     this.description = const Value.absent(),
+    this.ownerId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -296,16 +384,20 @@ class WorkspacesCompanion extends UpdateCompanion<WorkspaceEntry> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? description,
+    Expression<String>? ownerId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (description != null) 'description': description,
+      if (ownerId != null) 'owner_id': ownerId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -314,16 +406,20 @@ class WorkspacesCompanion extends UpdateCompanion<WorkspaceEntry> {
     Value<String>? id,
     Value<String>? name,
     Value<String>? description,
+    Value<String?>? ownerId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return WorkspacesCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
+      ownerId: ownerId ?? this.ownerId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -340,11 +436,17 @@ class WorkspacesCompanion extends UpdateCompanion<WorkspaceEntry> {
     if (description.present) {
       map['description'] = Variable<String>(description.value);
     }
+    if (ownerId.present) {
+      map['owner_id'] = Variable<String>(ownerId.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -358,8 +460,10 @@ class WorkspacesCompanion extends UpdateCompanion<WorkspaceEntry> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('description: $description, ')
+          ..write('ownerId: $ownerId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -517,6 +621,17 @@ class $ChannelsTable extends Channels
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -533,6 +648,7 @@ class $ChannelsTable extends Channels
     createdAt,
     updatedAt,
     archivedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -642,6 +758,12 @@ class $ChannelsTable extends Channels
         archivedAt.isAcceptableOrUnknown(data['archived_at']!, _archivedAtMeta),
       );
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -709,6 +831,10 @@ class $ChannelsTable extends Channels
         DriftSqlType.dateTime,
         data['${effectivePrefix}archived_at'],
       ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -736,6 +862,7 @@ class ChannelEntry extends DataClass implements Insertable<ChannelEntry> {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? archivedAt;
+  final DateTime? deletedAt;
   const ChannelEntry({
     required this.id,
     required this.workspaceId,
@@ -751,6 +878,7 @@ class ChannelEntry extends DataClass implements Insertable<ChannelEntry> {
     required this.createdAt,
     required this.updatedAt,
     this.archivedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -781,6 +909,9 @@ class ChannelEntry extends DataClass implements Insertable<ChannelEntry> {
     if (!nullToAbsent || archivedAt != null) {
       map['archived_at'] = Variable<DateTime>(archivedAt);
     }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -808,6 +939,9 @@ class ChannelEntry extends DataClass implements Insertable<ChannelEntry> {
       archivedAt: archivedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(archivedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -833,6 +967,7 @@ class ChannelEntry extends DataClass implements Insertable<ChannelEntry> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       archivedAt: serializer.fromJson<DateTime?>(json['archivedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -855,6 +990,7 @@ class ChannelEntry extends DataClass implements Insertable<ChannelEntry> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'archivedAt': serializer.toJson<DateTime?>(archivedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -873,6 +1009,7 @@ class ChannelEntry extends DataClass implements Insertable<ChannelEntry> {
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> archivedAt = const Value.absent(),
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => ChannelEntry(
     id: id ?? this.id,
     workspaceId: workspaceId ?? this.workspaceId,
@@ -890,6 +1027,7 @@ class ChannelEntry extends DataClass implements Insertable<ChannelEntry> {
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   ChannelEntry copyWithCompanion(ChannelsCompanion data) {
     return ChannelEntry(
@@ -915,6 +1053,7 @@ class ChannelEntry extends DataClass implements Insertable<ChannelEntry> {
       archivedAt: data.archivedAt.present
           ? data.archivedAt.value
           : this.archivedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -934,7 +1073,8 @@ class ChannelEntry extends DataClass implements Insertable<ChannelEntry> {
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('archivedAt: $archivedAt')
+          ..write('archivedAt: $archivedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -955,6 +1095,7 @@ class ChannelEntry extends DataClass implements Insertable<ChannelEntry> {
     createdAt,
     updatedAt,
     archivedAt,
+    deletedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -973,7 +1114,8 @@ class ChannelEntry extends DataClass implements Insertable<ChannelEntry> {
           other.status == this.status &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
-          other.archivedAt == this.archivedAt);
+          other.archivedAt == this.archivedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class ChannelsCompanion extends UpdateCompanion<ChannelEntry> {
@@ -991,6 +1133,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelEntry> {
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> archivedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const ChannelsCompanion({
     this.id = const Value.absent(),
@@ -1007,6 +1150,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelEntry> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.archivedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ChannelsCompanion.insert({
@@ -1024,6 +1168,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelEntry> {
     required DateTime createdAt,
     required DateTime updatedAt,
     this.archivedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        workspaceId = Value(workspaceId),
@@ -1047,6 +1192,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelEntry> {
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? archivedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1064,6 +1210,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelEntry> {
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (archivedAt != null) 'archived_at': archivedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1083,6 +1230,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelEntry> {
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? archivedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return ChannelsCompanion(
@@ -1100,6 +1248,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelEntry> {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       archivedAt: archivedAt ?? this.archivedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1151,6 +1300,9 @@ class ChannelsCompanion extends UpdateCompanion<ChannelEntry> {
     if (archivedAt.present) {
       map['archived_at'] = Variable<DateTime>(archivedAt.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1174,6 +1326,7 @@ class ChannelsCompanion extends UpdateCompanion<ChannelEntry> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('archivedAt: $archivedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1300,6 +1453,17 @@ class $ProjectsTable extends Projects
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1313,6 +1477,7 @@ class $ProjectsTable extends Projects
     createdAt,
     updatedAt,
     archivedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1393,6 +1558,12 @@ class $ProjectsTable extends Projects
         archivedAt.isAcceptableOrUnknown(data['archived_at']!, _archivedAtMeta),
       );
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -1450,6 +1621,10 @@ class $ProjectsTable extends Projects
         DriftSqlType.dateTime,
         data['${effectivePrefix}archived_at'],
       ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -1478,6 +1653,7 @@ class ProjectEntry extends DataClass implements Insertable<ProjectEntry> {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? archivedAt;
+  final DateTime? deletedAt;
   const ProjectEntry({
     required this.id,
     required this.workspaceId,
@@ -1490,6 +1666,7 @@ class ProjectEntry extends DataClass implements Insertable<ProjectEntry> {
     required this.createdAt,
     required this.updatedAt,
     this.archivedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1519,6 +1696,9 @@ class ProjectEntry extends DataClass implements Insertable<ProjectEntry> {
     if (!nullToAbsent || archivedAt != null) {
       map['archived_at'] = Variable<DateTime>(archivedAt);
     }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -1541,6 +1721,9 @@ class ProjectEntry extends DataClass implements Insertable<ProjectEntry> {
       archivedAt: archivedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(archivedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -1565,6 +1748,7 @@ class ProjectEntry extends DataClass implements Insertable<ProjectEntry> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       archivedAt: serializer.fromJson<DateTime?>(json['archivedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -1586,6 +1770,7 @@ class ProjectEntry extends DataClass implements Insertable<ProjectEntry> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'archivedAt': serializer.toJson<DateTime?>(archivedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -1601,6 +1786,7 @@ class ProjectEntry extends DataClass implements Insertable<ProjectEntry> {
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> archivedAt = const Value.absent(),
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => ProjectEntry(
     id: id ?? this.id,
     workspaceId: workspaceId ?? this.workspaceId,
@@ -1613,6 +1799,7 @@ class ProjectEntry extends DataClass implements Insertable<ProjectEntry> {
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   ProjectEntry copyWithCompanion(ProjectsCompanion data) {
     return ProjectEntry(
@@ -1635,6 +1822,7 @@ class ProjectEntry extends DataClass implements Insertable<ProjectEntry> {
       archivedAt: data.archivedAt.present
           ? data.archivedAt.value
           : this.archivedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -1651,7 +1839,8 @@ class ProjectEntry extends DataClass implements Insertable<ProjectEntry> {
           ..write('targetDate: $targetDate, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('archivedAt: $archivedAt')
+          ..write('archivedAt: $archivedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -1669,6 +1858,7 @@ class ProjectEntry extends DataClass implements Insertable<ProjectEntry> {
     createdAt,
     updatedAt,
     archivedAt,
+    deletedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -1684,7 +1874,8 @@ class ProjectEntry extends DataClass implements Insertable<ProjectEntry> {
           other.targetDate == this.targetDate &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
-          other.archivedAt == this.archivedAt);
+          other.archivedAt == this.archivedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class ProjectsCompanion extends UpdateCompanion<ProjectEntry> {
@@ -1699,6 +1890,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectEntry> {
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> archivedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const ProjectsCompanion({
     this.id = const Value.absent(),
@@ -1712,6 +1904,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectEntry> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.archivedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ProjectsCompanion.insert({
@@ -1726,6 +1919,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectEntry> {
     required DateTime createdAt,
     required DateTime updatedAt,
     this.archivedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        workspaceId = Value(workspaceId),
@@ -1746,6 +1940,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectEntry> {
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? archivedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1760,6 +1955,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectEntry> {
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (archivedAt != null) 'archived_at': archivedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1776,6 +1972,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectEntry> {
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? archivedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return ProjectsCompanion(
@@ -1790,6 +1987,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectEntry> {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       archivedAt: archivedAt ?? this.archivedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1834,6 +2032,9 @@ class ProjectsCompanion extends UpdateCompanion<ProjectEntry> {
     if (archivedAt.present) {
       map['archived_at'] = Variable<DateTime>(archivedAt.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1854,6 +2055,7 @@ class ProjectsCompanion extends UpdateCompanion<ProjectEntry> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('archivedAt: $archivedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1866,6 +2068,26 @@ class $ProjectChannelsTable extends ProjectChannels
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ProjectChannelsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _workspaceIdMeta = const VerificationMeta(
+    'workspaceId',
+  );
+  @override
+  late final GeneratedColumn<String> workspaceId = GeneratedColumn<String>(
+    'workspace_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _projectIdMeta = const VerificationMeta(
     'projectId',
   );
@@ -1897,8 +2119,50 @@ class $ProjectChannelsTable extends ProjectChannels
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
-  List<GeneratedColumn> get $columns => [projectId, channelId, role];
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    workspaceId,
+    projectId,
+    channelId,
+    role,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1911,6 +2175,22 @@ class $ProjectChannelsTable extends ProjectChannels
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('workspace_id')) {
+      context.handle(
+        _workspaceIdMeta,
+        workspaceId.isAcceptableOrUnknown(
+          data['workspace_id']!,
+          _workspaceIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_workspaceIdMeta);
+    }
     if (data.containsKey('project_id')) {
       context.handle(
         _projectIdMeta,
@@ -1933,15 +2213,41 @@ class $ProjectChannelsTable extends ProjectChannels
         role.isAcceptableOrUnknown(data['role']!, _roleMeta),
       );
     }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {projectId, channelId};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   ProjectChannel map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ProjectChannel(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      workspaceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}workspace_id'],
+      )!,
       projectId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}project_id'],
@@ -1954,6 +2260,18 @@ class $ProjectChannelsTable extends ProjectChannels
         DriftSqlType.string,
         data['${effectivePrefix}role'],
       ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -1964,30 +2282,62 @@ class $ProjectChannelsTable extends ProjectChannels
 }
 
 class ProjectChannel extends DataClass implements Insertable<ProjectChannel> {
+  final String id;
+  final String workspaceId;
   final String projectId;
   final String channelId;
   final String? role;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final DateTime? deletedAt;
   const ProjectChannel({
+    required this.id,
+    required this.workspaceId,
     required this.projectId,
     required this.channelId,
     this.role,
+    this.createdAt,
+    this.updatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['workspace_id'] = Variable<String>(workspaceId);
     map['project_id'] = Variable<String>(projectId);
     map['channel_id'] = Variable<String>(channelId);
     if (!nullToAbsent || role != null) {
       map['role'] = Variable<String>(role);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<DateTime>(createdAt);
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     return map;
   }
 
   ProjectChannelsCompanion toCompanion(bool nullToAbsent) {
     return ProjectChannelsCompanion(
+      id: Value(id),
+      workspaceId: Value(workspaceId),
       projectId: Value(projectId),
       channelId: Value(channelId),
       role: role == null && nullToAbsent ? const Value.absent() : Value(role),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -1997,101 +2347,184 @@ class ProjectChannel extends DataClass implements Insertable<ProjectChannel> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ProjectChannel(
+      id: serializer.fromJson<String>(json['id']),
+      workspaceId: serializer.fromJson<String>(json['workspaceId']),
       projectId: serializer.fromJson<String>(json['projectId']),
       channelId: serializer.fromJson<String>(json['channelId']),
       role: serializer.fromJson<String?>(json['role']),
+      createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'workspaceId': serializer.toJson<String>(workspaceId),
       'projectId': serializer.toJson<String>(projectId),
       'channelId': serializer.toJson<String>(channelId),
       'role': serializer.toJson<String?>(role),
+      'createdAt': serializer.toJson<DateTime?>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
   ProjectChannel copyWith({
+    String? id,
+    String? workspaceId,
     String? projectId,
     String? channelId,
     Value<String?> role = const Value.absent(),
+    Value<DateTime?> createdAt = const Value.absent(),
+    Value<DateTime?> updatedAt = const Value.absent(),
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => ProjectChannel(
+    id: id ?? this.id,
+    workspaceId: workspaceId ?? this.workspaceId,
     projectId: projectId ?? this.projectId,
     channelId: channelId ?? this.channelId,
     role: role.present ? role.value : this.role,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   ProjectChannel copyWithCompanion(ProjectChannelsCompanion data) {
     return ProjectChannel(
+      id: data.id.present ? data.id.value : this.id,
+      workspaceId: data.workspaceId.present
+          ? data.workspaceId.value
+          : this.workspaceId,
       projectId: data.projectId.present ? data.projectId.value : this.projectId,
       channelId: data.channelId.present ? data.channelId.value : this.channelId,
       role: data.role.present ? data.role.value : this.role,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('ProjectChannel(')
+          ..write('id: $id, ')
+          ..write('workspaceId: $workspaceId, ')
           ..write('projectId: $projectId, ')
           ..write('channelId: $channelId, ')
-          ..write('role: $role')
+          ..write('role: $role, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(projectId, channelId, role);
+  int get hashCode => Object.hash(
+    id,
+    workspaceId,
+    projectId,
+    channelId,
+    role,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ProjectChannel &&
+          other.id == this.id &&
+          other.workspaceId == this.workspaceId &&
           other.projectId == this.projectId &&
           other.channelId == this.channelId &&
-          other.role == this.role);
+          other.role == this.role &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class ProjectChannelsCompanion extends UpdateCompanion<ProjectChannel> {
+  final Value<String> id;
+  final Value<String> workspaceId;
   final Value<String> projectId;
   final Value<String> channelId;
   final Value<String?> role;
+  final Value<DateTime?> createdAt;
+  final Value<DateTime?> updatedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const ProjectChannelsCompanion({
+    this.id = const Value.absent(),
+    this.workspaceId = const Value.absent(),
     this.projectId = const Value.absent(),
     this.channelId = const Value.absent(),
     this.role = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ProjectChannelsCompanion.insert({
+    required String id,
+    required String workspaceId,
     required String projectId,
     required String channelId,
     this.role = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : projectId = Value(projectId),
+  }) : id = Value(id),
+       workspaceId = Value(workspaceId),
+       projectId = Value(projectId),
        channelId = Value(channelId);
   static Insertable<ProjectChannel> custom({
+    Expression<String>? id,
+    Expression<String>? workspaceId,
     Expression<String>? projectId,
     Expression<String>? channelId,
     Expression<String>? role,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (workspaceId != null) 'workspace_id': workspaceId,
       if (projectId != null) 'project_id': projectId,
       if (channelId != null) 'channel_id': channelId,
       if (role != null) 'role': role,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   ProjectChannelsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? workspaceId,
     Value<String>? projectId,
     Value<String>? channelId,
     Value<String?>? role,
+    Value<DateTime?>? createdAt,
+    Value<DateTime?>? updatedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return ProjectChannelsCompanion(
+      id: id ?? this.id,
+      workspaceId: workspaceId ?? this.workspaceId,
       projectId: projectId ?? this.projectId,
       channelId: channelId ?? this.channelId,
       role: role ?? this.role,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2099,6 +2532,12 @@ class ProjectChannelsCompanion extends UpdateCompanion<ProjectChannel> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (workspaceId.present) {
+      map['workspace_id'] = Variable<String>(workspaceId.value);
+    }
     if (projectId.present) {
       map['project_id'] = Variable<String>(projectId.value);
     }
@@ -2107,6 +2546,15 @@ class ProjectChannelsCompanion extends UpdateCompanion<ProjectChannel> {
     }
     if (role.present) {
       map['role'] = Variable<String>(role.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -2117,9 +2565,14 @@ class ProjectChannelsCompanion extends UpdateCompanion<ProjectChannel> {
   @override
   String toString() {
     return (StringBuffer('ProjectChannelsCompanion(')
+          ..write('id: $id, ')
+          ..write('workspaceId: $workspaceId, ')
           ..write('projectId: $projectId, ')
           ..write('channelId: $channelId, ')
           ..write('role: $role, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2214,6 +2667,17 @@ class $ProjectNodesTable extends ProjectNodes
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2224,6 +2688,7 @@ class $ProjectNodesTable extends ProjectNodes
     linkedEntityId,
     createdAt,
     updatedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2292,6 +2757,12 @@ class $ProjectNodesTable extends ProjectNodes
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -2335,6 +2806,10 @@ class $ProjectNodesTable extends ProjectNodes
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -2356,6 +2831,7 @@ class ProjectNode extends DataClass implements Insertable<ProjectNode> {
   final String? linkedEntityId;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? deletedAt;
   const ProjectNode({
     required this.id,
     required this.projectId,
@@ -2365,6 +2841,7 @@ class ProjectNode extends DataClass implements Insertable<ProjectNode> {
     this.linkedEntityId,
     required this.createdAt,
     required this.updatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2385,6 +2862,9 @@ class ProjectNode extends DataClass implements Insertable<ProjectNode> {
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -2402,6 +2882,9 @@ class ProjectNode extends DataClass implements Insertable<ProjectNode> {
           : Value(linkedEntityId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -2421,6 +2904,7 @@ class ProjectNode extends DataClass implements Insertable<ProjectNode> {
       linkedEntityId: serializer.fromJson<String?>(json['linkedEntityId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -2437,6 +2921,7 @@ class ProjectNode extends DataClass implements Insertable<ProjectNode> {
       'linkedEntityId': serializer.toJson<String?>(linkedEntityId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -2449,6 +2934,7 @@ class ProjectNode extends DataClass implements Insertable<ProjectNode> {
     Value<String?> linkedEntityId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => ProjectNode(
     id: id ?? this.id,
     projectId: projectId ?? this.projectId,
@@ -2462,6 +2948,7 @@ class ProjectNode extends DataClass implements Insertable<ProjectNode> {
         : this.linkedEntityId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   ProjectNode copyWithCompanion(ProjectNodesCompanion data) {
     return ProjectNode(
@@ -2477,6 +2964,7 @@ class ProjectNode extends DataClass implements Insertable<ProjectNode> {
           : this.linkedEntityId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -2490,7 +2978,8 @@ class ProjectNode extends DataClass implements Insertable<ProjectNode> {
           ..write('linkedEntityType: $linkedEntityType, ')
           ..write('linkedEntityId: $linkedEntityId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -2505,6 +2994,7 @@ class ProjectNode extends DataClass implements Insertable<ProjectNode> {
     linkedEntityId,
     createdAt,
     updatedAt,
+    deletedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -2517,7 +3007,8 @@ class ProjectNode extends DataClass implements Insertable<ProjectNode> {
           other.linkedEntityType == this.linkedEntityType &&
           other.linkedEntityId == this.linkedEntityId &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class ProjectNodesCompanion extends UpdateCompanion<ProjectNode> {
@@ -2529,6 +3020,7 @@ class ProjectNodesCompanion extends UpdateCompanion<ProjectNode> {
   final Value<String?> linkedEntityId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const ProjectNodesCompanion({
     this.id = const Value.absent(),
@@ -2539,6 +3031,7 @@ class ProjectNodesCompanion extends UpdateCompanion<ProjectNode> {
     this.linkedEntityId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ProjectNodesCompanion.insert({
@@ -2550,6 +3043,7 @@ class ProjectNodesCompanion extends UpdateCompanion<ProjectNode> {
     this.linkedEntityId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        projectId = Value(projectId),
@@ -2566,6 +3060,7 @@ class ProjectNodesCompanion extends UpdateCompanion<ProjectNode> {
     Expression<String>? linkedEntityId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2577,6 +3072,7 @@ class ProjectNodesCompanion extends UpdateCompanion<ProjectNode> {
       if (linkedEntityId != null) 'linked_entity_id': linkedEntityId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2590,6 +3086,7 @@ class ProjectNodesCompanion extends UpdateCompanion<ProjectNode> {
     Value<String?>? linkedEntityId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return ProjectNodesCompanion(
@@ -2601,6 +3098,7 @@ class ProjectNodesCompanion extends UpdateCompanion<ProjectNode> {
       linkedEntityId: linkedEntityId ?? this.linkedEntityId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2634,6 +3132,9 @@ class ProjectNodesCompanion extends UpdateCompanion<ProjectNode> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2651,6 +3152,7 @@ class ProjectNodesCompanion extends UpdateCompanion<ProjectNode> {
           ..write('linkedEntityId: $linkedEntityId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2671,6 +3173,17 @@ class $ProjectNodeRelationsTable extends ProjectNodeRelations
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _workspaceIdMeta = const VerificationMeta(
+    'workspaceId',
+  );
+  @override
+  late final GeneratedColumn<String> workspaceId = GeneratedColumn<String>(
+    'workspace_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _projectIdMeta = const VerificationMeta(
     'projectId',
@@ -2715,13 +3228,50 @@ class $ProjectNodeRelationsTable extends ProjectNodeRelations
     requiredDuringInsert: false,
     defaultValue: const Constant('dependency'),
   );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    workspaceId,
     projectId,
     sourceNodeId,
     targetNodeId,
     type,
+    createdAt,
+    updatedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2739,6 +3289,15 @@ class $ProjectNodeRelationsTable extends ProjectNodeRelations
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
       context.missing(_idMeta);
+    }
+    if (data.containsKey('workspace_id')) {
+      context.handle(
+        _workspaceIdMeta,
+        workspaceId.isAcceptableOrUnknown(
+          data['workspace_id']!,
+          _workspaceIdMeta,
+        ),
+      );
     }
     if (data.containsKey('project_id')) {
       context.handle(
@@ -2776,6 +3335,24 @@ class $ProjectNodeRelationsTable extends ProjectNodeRelations
         type.isAcceptableOrUnknown(data['type']!, _typeMeta),
       );
     }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -2789,6 +3366,10 @@ class $ProjectNodeRelationsTable extends ProjectNodeRelations
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
+      workspaceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}workspace_id'],
+      ),
       projectId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}project_id'],
@@ -2805,6 +3386,18 @@ class $ProjectNodeRelationsTable extends ProjectNodeRelations
         DriftSqlType.string,
         data['${effectivePrefix}type'],
       )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -2817,35 +3410,67 @@ class $ProjectNodeRelationsTable extends ProjectNodeRelations
 class ProjectNodeRelation extends DataClass
     implements Insertable<ProjectNodeRelation> {
   final String id;
+  final String? workspaceId;
   final String projectId;
   final String sourceNodeId;
   final String targetNodeId;
   final String type;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final DateTime? deletedAt;
   const ProjectNodeRelation({
     required this.id,
+    this.workspaceId,
     required this.projectId,
     required this.sourceNodeId,
     required this.targetNodeId,
     required this.type,
+    this.createdAt,
+    this.updatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    if (!nullToAbsent || workspaceId != null) {
+      map['workspace_id'] = Variable<String>(workspaceId);
+    }
     map['project_id'] = Variable<String>(projectId);
     map['source_node_id'] = Variable<String>(sourceNodeId);
     map['target_node_id'] = Variable<String>(targetNodeId);
     map['type'] = Variable<String>(type);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<DateTime>(createdAt);
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
   ProjectNodeRelationsCompanion toCompanion(bool nullToAbsent) {
     return ProjectNodeRelationsCompanion(
       id: Value(id),
+      workspaceId: workspaceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(workspaceId),
       projectId: Value(projectId),
       sourceNodeId: Value(sourceNodeId),
       targetNodeId: Value(targetNodeId),
       type: Value(type),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -2856,10 +3481,14 @@ class ProjectNodeRelation extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ProjectNodeRelation(
       id: serializer.fromJson<String>(json['id']),
+      workspaceId: serializer.fromJson<String?>(json['workspaceId']),
       projectId: serializer.fromJson<String>(json['projectId']),
       sourceNodeId: serializer.fromJson<String>(json['sourceNodeId']),
       targetNodeId: serializer.fromJson<String>(json['targetNodeId']),
       type: serializer.fromJson<String>(json['type']),
+      createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -2867,29 +3496,44 @@ class ProjectNodeRelation extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'workspaceId': serializer.toJson<String?>(workspaceId),
       'projectId': serializer.toJson<String>(projectId),
       'sourceNodeId': serializer.toJson<String>(sourceNodeId),
       'targetNodeId': serializer.toJson<String>(targetNodeId),
       'type': serializer.toJson<String>(type),
+      'createdAt': serializer.toJson<DateTime?>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
   ProjectNodeRelation copyWith({
     String? id,
+    Value<String?> workspaceId = const Value.absent(),
     String? projectId,
     String? sourceNodeId,
     String? targetNodeId,
     String? type,
+    Value<DateTime?> createdAt = const Value.absent(),
+    Value<DateTime?> updatedAt = const Value.absent(),
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => ProjectNodeRelation(
     id: id ?? this.id,
+    workspaceId: workspaceId.present ? workspaceId.value : this.workspaceId,
     projectId: projectId ?? this.projectId,
     sourceNodeId: sourceNodeId ?? this.sourceNodeId,
     targetNodeId: targetNodeId ?? this.targetNodeId,
     type: type ?? this.type,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   ProjectNodeRelation copyWithCompanion(ProjectNodeRelationsCompanion data) {
     return ProjectNodeRelation(
       id: data.id.present ? data.id.value : this.id,
+      workspaceId: data.workspaceId.present
+          ? data.workspaceId.value
+          : this.workspaceId,
       projectId: data.projectId.present ? data.projectId.value : this.projectId,
       sourceNodeId: data.sourceNodeId.present
           ? data.sourceNodeId.value
@@ -2898,6 +3542,9 @@ class ProjectNodeRelation extends DataClass
           ? data.targetNodeId.value
           : this.targetNodeId,
       type: data.type.present ? data.type.value : this.type,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -2905,50 +3552,79 @@ class ProjectNodeRelation extends DataClass
   String toString() {
     return (StringBuffer('ProjectNodeRelation(')
           ..write('id: $id, ')
+          ..write('workspaceId: $workspaceId, ')
           ..write('projectId: $projectId, ')
           ..write('sourceNodeId: $sourceNodeId, ')
           ..write('targetNodeId: $targetNodeId, ')
-          ..write('type: $type')
+          ..write('type: $type, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, projectId, sourceNodeId, targetNodeId, type);
+  int get hashCode => Object.hash(
+    id,
+    workspaceId,
+    projectId,
+    sourceNodeId,
+    targetNodeId,
+    type,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ProjectNodeRelation &&
           other.id == this.id &&
+          other.workspaceId == this.workspaceId &&
           other.projectId == this.projectId &&
           other.sourceNodeId == this.sourceNodeId &&
           other.targetNodeId == this.targetNodeId &&
-          other.type == this.type);
+          other.type == this.type &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class ProjectNodeRelationsCompanion
     extends UpdateCompanion<ProjectNodeRelation> {
   final Value<String> id;
+  final Value<String?> workspaceId;
   final Value<String> projectId;
   final Value<String> sourceNodeId;
   final Value<String> targetNodeId;
   final Value<String> type;
+  final Value<DateTime?> createdAt;
+  final Value<DateTime?> updatedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const ProjectNodeRelationsCompanion({
     this.id = const Value.absent(),
+    this.workspaceId = const Value.absent(),
     this.projectId = const Value.absent(),
     this.sourceNodeId = const Value.absent(),
     this.targetNodeId = const Value.absent(),
     this.type = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ProjectNodeRelationsCompanion.insert({
     required String id,
+    this.workspaceId = const Value.absent(),
     required String projectId,
     required String sourceNodeId,
     required String targetNodeId,
     this.type = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        projectId = Value(projectId),
@@ -2956,36 +3632,52 @@ class ProjectNodeRelationsCompanion
        targetNodeId = Value(targetNodeId);
   static Insertable<ProjectNodeRelation> custom({
     Expression<String>? id,
+    Expression<String>? workspaceId,
     Expression<String>? projectId,
     Expression<String>? sourceNodeId,
     Expression<String>? targetNodeId,
     Expression<String>? type,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (workspaceId != null) 'workspace_id': workspaceId,
       if (projectId != null) 'project_id': projectId,
       if (sourceNodeId != null) 'source_node_id': sourceNodeId,
       if (targetNodeId != null) 'target_node_id': targetNodeId,
       if (type != null) 'type': type,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   ProjectNodeRelationsCompanion copyWith({
     Value<String>? id,
+    Value<String?>? workspaceId,
     Value<String>? projectId,
     Value<String>? sourceNodeId,
     Value<String>? targetNodeId,
     Value<String>? type,
+    Value<DateTime?>? createdAt,
+    Value<DateTime?>? updatedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return ProjectNodeRelationsCompanion(
       id: id ?? this.id,
+      workspaceId: workspaceId ?? this.workspaceId,
       projectId: projectId ?? this.projectId,
       sourceNodeId: sourceNodeId ?? this.sourceNodeId,
       targetNodeId: targetNodeId ?? this.targetNodeId,
       type: type ?? this.type,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2995,6 +3687,9 @@ class ProjectNodeRelationsCompanion
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<String>(id.value);
+    }
+    if (workspaceId.present) {
+      map['workspace_id'] = Variable<String>(workspaceId.value);
     }
     if (projectId.present) {
       map['project_id'] = Variable<String>(projectId.value);
@@ -3008,6 +3703,15 @@ class ProjectNodeRelationsCompanion
     if (type.present) {
       map['type'] = Variable<String>(type.value);
     }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3018,10 +3722,14 @@ class ProjectNodeRelationsCompanion
   String toString() {
     return (StringBuffer('ProjectNodeRelationsCompanion(')
           ..write('id: $id, ')
+          ..write('workspaceId: $workspaceId, ')
           ..write('projectId: $projectId, ')
           ..write('sourceNodeId: $sourceNodeId, ')
           ..write('targetNodeId: $targetNodeId, ')
           ..write('type: $type, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3189,6 +3897,17 @@ class $ContentItemsTable extends ContentItems
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3206,6 +3925,7 @@ class $ContentItemsTable extends ContentItems
     createdAt,
     updatedAt,
     archivedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3307,6 +4027,12 @@ class $ContentItemsTable extends ContentItems
         archivedAt.isAcceptableOrUnknown(data['archived_at']!, _archivedAtMeta),
       );
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -3382,6 +4108,10 @@ class $ContentItemsTable extends ContentItems
         DriftSqlType.dateTime,
         data['${effectivePrefix}archived_at'],
       ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -3417,6 +4147,7 @@ class ContentItemEntry extends DataClass
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? archivedAt;
+  final DateTime? deletedAt;
   const ContentItemEntry({
     required this.id,
     required this.workspaceId,
@@ -3433,6 +4164,7 @@ class ContentItemEntry extends DataClass
     required this.createdAt,
     required this.updatedAt,
     this.archivedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3474,6 +4206,9 @@ class ContentItemEntry extends DataClass
     if (!nullToAbsent || archivedAt != null) {
       map['archived_at'] = Variable<DateTime>(archivedAt);
     }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -3504,6 +4239,9 @@ class ContentItemEntry extends DataClass
       archivedAt: archivedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(archivedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -3534,6 +4272,7 @@ class ContentItemEntry extends DataClass
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       archivedAt: serializer.fromJson<DateTime?>(json['archivedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -3561,6 +4300,7 @@ class ContentItemEntry extends DataClass
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'archivedAt': serializer.toJson<DateTime?>(archivedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -3580,6 +4320,7 @@ class ContentItemEntry extends DataClass
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> archivedAt = const Value.absent(),
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => ContentItemEntry(
     id: id ?? this.id,
     workspaceId: workspaceId ?? this.workspaceId,
@@ -3596,6 +4337,7 @@ class ContentItemEntry extends DataClass
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   ContentItemEntry copyWithCompanion(ContentItemsCompanion data) {
     return ContentItemEntry(
@@ -3622,6 +4364,7 @@ class ContentItemEntry extends DataClass
       archivedAt: data.archivedAt.present
           ? data.archivedAt.value
           : this.archivedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -3642,7 +4385,8 @@ class ContentItemEntry extends DataClass
           ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('archivedAt: $archivedAt')
+          ..write('archivedAt: $archivedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -3664,6 +4408,7 @@ class ContentItemEntry extends DataClass
     createdAt,
     updatedAt,
     archivedAt,
+    deletedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -3683,7 +4428,8 @@ class ContentItemEntry extends DataClass
           other.notes == this.notes &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
-          other.archivedAt == this.archivedAt);
+          other.archivedAt == this.archivedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class ContentItemsCompanion extends UpdateCompanion<ContentItemEntry> {
@@ -3702,6 +4448,7 @@ class ContentItemsCompanion extends UpdateCompanion<ContentItemEntry> {
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> archivedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const ContentItemsCompanion({
     this.id = const Value.absent(),
@@ -3719,6 +4466,7 @@ class ContentItemsCompanion extends UpdateCompanion<ContentItemEntry> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.archivedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ContentItemsCompanion.insert({
@@ -3737,6 +4485,7 @@ class ContentItemsCompanion extends UpdateCompanion<ContentItemEntry> {
     required DateTime createdAt,
     required DateTime updatedAt,
     this.archivedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        workspaceId = Value(workspaceId),
@@ -3762,6 +4511,7 @@ class ContentItemsCompanion extends UpdateCompanion<ContentItemEntry> {
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? archivedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3780,6 +4530,7 @@ class ContentItemsCompanion extends UpdateCompanion<ContentItemEntry> {
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (archivedAt != null) 'archived_at': archivedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3800,6 +4551,7 @@ class ContentItemsCompanion extends UpdateCompanion<ContentItemEntry> {
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? archivedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return ContentItemsCompanion(
@@ -3818,6 +4570,7 @@ class ContentItemsCompanion extends UpdateCompanion<ContentItemEntry> {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       archivedAt: archivedAt ?? this.archivedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3876,6 +4629,9 @@ class ContentItemsCompanion extends UpdateCompanion<ContentItemEntry> {
     if (archivedAt.present) {
       map['archived_at'] = Variable<DateTime>(archivedAt.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3900,6 +4656,7 @@ class ContentItemsCompanion extends UpdateCompanion<ContentItemEntry> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('archivedAt: $archivedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3912,6 +4669,26 @@ class $ContentChannelsTable extends ContentChannels
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ContentChannelsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _workspaceIdMeta = const VerificationMeta(
+    'workspaceId',
+  );
+  @override
+  late final GeneratedColumn<String> workspaceId = GeneratedColumn<String>(
+    'workspace_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _contentItemIdMeta = const VerificationMeta(
     'contentItemId',
   );
@@ -3943,8 +4720,50 @@ class $ContentChannelsTable extends ContentChannels
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
-  List<GeneratedColumn> get $columns => [contentItemId, channelId, role];
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    workspaceId,
+    contentItemId,
+    channelId,
+    role,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3957,6 +4776,22 @@ class $ContentChannelsTable extends ContentChannels
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('workspace_id')) {
+      context.handle(
+        _workspaceIdMeta,
+        workspaceId.isAcceptableOrUnknown(
+          data['workspace_id']!,
+          _workspaceIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_workspaceIdMeta);
+    }
     if (data.containsKey('content_item_id')) {
       context.handle(
         _contentItemIdMeta,
@@ -3982,15 +4817,41 @@ class $ContentChannelsTable extends ContentChannels
         role.isAcceptableOrUnknown(data['role']!, _roleMeta),
       );
     }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {contentItemId, channelId};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   ContentChannel map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ContentChannel(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      workspaceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}workspace_id'],
+      )!,
       contentItemId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}content_item_id'],
@@ -4003,6 +4864,18 @@ class $ContentChannelsTable extends ContentChannels
         DriftSqlType.string,
         data['${effectivePrefix}role'],
       ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -4013,30 +4886,62 @@ class $ContentChannelsTable extends ContentChannels
 }
 
 class ContentChannel extends DataClass implements Insertable<ContentChannel> {
+  final String id;
+  final String workspaceId;
   final String contentItemId;
   final String channelId;
   final String? role;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final DateTime? deletedAt;
   const ContentChannel({
+    required this.id,
+    required this.workspaceId,
     required this.contentItemId,
     required this.channelId,
     this.role,
+    this.createdAt,
+    this.updatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['workspace_id'] = Variable<String>(workspaceId);
     map['content_item_id'] = Variable<String>(contentItemId);
     map['channel_id'] = Variable<String>(channelId);
     if (!nullToAbsent || role != null) {
       map['role'] = Variable<String>(role);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<DateTime>(createdAt);
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     return map;
   }
 
   ContentChannelsCompanion toCompanion(bool nullToAbsent) {
     return ContentChannelsCompanion(
+      id: Value(id),
+      workspaceId: Value(workspaceId),
       contentItemId: Value(contentItemId),
       channelId: Value(channelId),
       role: role == null && nullToAbsent ? const Value.absent() : Value(role),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -4046,103 +4951,186 @@ class ContentChannel extends DataClass implements Insertable<ContentChannel> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ContentChannel(
+      id: serializer.fromJson<String>(json['id']),
+      workspaceId: serializer.fromJson<String>(json['workspaceId']),
       contentItemId: serializer.fromJson<String>(json['contentItemId']),
       channelId: serializer.fromJson<String>(json['channelId']),
       role: serializer.fromJson<String?>(json['role']),
+      createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'workspaceId': serializer.toJson<String>(workspaceId),
       'contentItemId': serializer.toJson<String>(contentItemId),
       'channelId': serializer.toJson<String>(channelId),
       'role': serializer.toJson<String?>(role),
+      'createdAt': serializer.toJson<DateTime?>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
   ContentChannel copyWith({
+    String? id,
+    String? workspaceId,
     String? contentItemId,
     String? channelId,
     Value<String?> role = const Value.absent(),
+    Value<DateTime?> createdAt = const Value.absent(),
+    Value<DateTime?> updatedAt = const Value.absent(),
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => ContentChannel(
+    id: id ?? this.id,
+    workspaceId: workspaceId ?? this.workspaceId,
     contentItemId: contentItemId ?? this.contentItemId,
     channelId: channelId ?? this.channelId,
     role: role.present ? role.value : this.role,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   ContentChannel copyWithCompanion(ContentChannelsCompanion data) {
     return ContentChannel(
+      id: data.id.present ? data.id.value : this.id,
+      workspaceId: data.workspaceId.present
+          ? data.workspaceId.value
+          : this.workspaceId,
       contentItemId: data.contentItemId.present
           ? data.contentItemId.value
           : this.contentItemId,
       channelId: data.channelId.present ? data.channelId.value : this.channelId,
       role: data.role.present ? data.role.value : this.role,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('ContentChannel(')
+          ..write('id: $id, ')
+          ..write('workspaceId: $workspaceId, ')
           ..write('contentItemId: $contentItemId, ')
           ..write('channelId: $channelId, ')
-          ..write('role: $role')
+          ..write('role: $role, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(contentItemId, channelId, role);
+  int get hashCode => Object.hash(
+    id,
+    workspaceId,
+    contentItemId,
+    channelId,
+    role,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ContentChannel &&
+          other.id == this.id &&
+          other.workspaceId == this.workspaceId &&
           other.contentItemId == this.contentItemId &&
           other.channelId == this.channelId &&
-          other.role == this.role);
+          other.role == this.role &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class ContentChannelsCompanion extends UpdateCompanion<ContentChannel> {
+  final Value<String> id;
+  final Value<String> workspaceId;
   final Value<String> contentItemId;
   final Value<String> channelId;
   final Value<String?> role;
+  final Value<DateTime?> createdAt;
+  final Value<DateTime?> updatedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const ContentChannelsCompanion({
+    this.id = const Value.absent(),
+    this.workspaceId = const Value.absent(),
     this.contentItemId = const Value.absent(),
     this.channelId = const Value.absent(),
     this.role = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ContentChannelsCompanion.insert({
+    required String id,
+    required String workspaceId,
     required String contentItemId,
     required String channelId,
     this.role = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : contentItemId = Value(contentItemId),
+  }) : id = Value(id),
+       workspaceId = Value(workspaceId),
+       contentItemId = Value(contentItemId),
        channelId = Value(channelId);
   static Insertable<ContentChannel> custom({
+    Expression<String>? id,
+    Expression<String>? workspaceId,
     Expression<String>? contentItemId,
     Expression<String>? channelId,
     Expression<String>? role,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (workspaceId != null) 'workspace_id': workspaceId,
       if (contentItemId != null) 'content_item_id': contentItemId,
       if (channelId != null) 'channel_id': channelId,
       if (role != null) 'role': role,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   ContentChannelsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? workspaceId,
     Value<String>? contentItemId,
     Value<String>? channelId,
     Value<String?>? role,
+    Value<DateTime?>? createdAt,
+    Value<DateTime?>? updatedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return ContentChannelsCompanion(
+      id: id ?? this.id,
+      workspaceId: workspaceId ?? this.workspaceId,
       contentItemId: contentItemId ?? this.contentItemId,
       channelId: channelId ?? this.channelId,
       role: role ?? this.role,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4150,6 +5138,12 @@ class ContentChannelsCompanion extends UpdateCompanion<ContentChannel> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (workspaceId.present) {
+      map['workspace_id'] = Variable<String>(workspaceId.value);
+    }
     if (contentItemId.present) {
       map['content_item_id'] = Variable<String>(contentItemId.value);
     }
@@ -4158,6 +5152,15 @@ class ContentChannelsCompanion extends UpdateCompanion<ContentChannel> {
     }
     if (role.present) {
       map['role'] = Variable<String>(role.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -4168,9 +5171,14 @@ class ContentChannelsCompanion extends UpdateCompanion<ContentChannel> {
   @override
   String toString() {
     return (StringBuffer('ContentChannelsCompanion(')
+          ..write('id: $id, ')
+          ..write('workspaceId: $workspaceId, ')
           ..write('contentItemId: $contentItemId, ')
           ..write('channelId: $channelId, ')
           ..write('role: $role, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4329,6 +5337,17 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskEntry> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4345,6 +5364,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskEntry> {
     campaignId,
     createdAt,
     updatedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4449,6 +5469,12 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskEntry> {
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -4518,6 +5544,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, TaskEntry> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -4547,6 +5577,7 @@ class TaskEntry extends DataClass implements Insertable<TaskEntry> {
   final String? campaignId;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? deletedAt;
   const TaskEntry({
     required this.id,
     required this.workspaceId,
@@ -4562,6 +5593,7 @@ class TaskEntry extends DataClass implements Insertable<TaskEntry> {
     this.campaignId,
     required this.createdAt,
     required this.updatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4600,6 +5632,9 @@ class TaskEntry extends DataClass implements Insertable<TaskEntry> {
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -4631,6 +5666,9 @@ class TaskEntry extends DataClass implements Insertable<TaskEntry> {
           : Value(campaignId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -4658,6 +5696,7 @@ class TaskEntry extends DataClass implements Insertable<TaskEntry> {
       campaignId: serializer.fromJson<String?>(json['campaignId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -4682,6 +5721,7 @@ class TaskEntry extends DataClass implements Insertable<TaskEntry> {
       'campaignId': serializer.toJson<String?>(campaignId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -4700,6 +5740,7 @@ class TaskEntry extends DataClass implements Insertable<TaskEntry> {
     Value<String?> campaignId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => TaskEntry(
     id: id ?? this.id,
     workspaceId: workspaceId ?? this.workspaceId,
@@ -4717,6 +5758,7 @@ class TaskEntry extends DataClass implements Insertable<TaskEntry> {
     campaignId: campaignId.present ? campaignId.value : this.campaignId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   TaskEntry copyWithCompanion(TasksCompanion data) {
     return TaskEntry(
@@ -4744,6 +5786,7 @@ class TaskEntry extends DataClass implements Insertable<TaskEntry> {
           : this.campaignId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -4763,7 +5806,8 @@ class TaskEntry extends DataClass implements Insertable<TaskEntry> {
           ..write('contentItemId: $contentItemId, ')
           ..write('campaignId: $campaignId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -4784,6 +5828,7 @@ class TaskEntry extends DataClass implements Insertable<TaskEntry> {
     campaignId,
     createdAt,
     updatedAt,
+    deletedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -4802,7 +5847,8 @@ class TaskEntry extends DataClass implements Insertable<TaskEntry> {
           other.contentItemId == this.contentItemId &&
           other.campaignId == this.campaignId &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class TasksCompanion extends UpdateCompanion<TaskEntry> {
@@ -4820,6 +5866,7 @@ class TasksCompanion extends UpdateCompanion<TaskEntry> {
   final Value<String?> campaignId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const TasksCompanion({
     this.id = const Value.absent(),
@@ -4836,6 +5883,7 @@ class TasksCompanion extends UpdateCompanion<TaskEntry> {
     this.campaignId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TasksCompanion.insert({
@@ -4853,6 +5901,7 @@ class TasksCompanion extends UpdateCompanion<TaskEntry> {
     this.campaignId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        workspaceId = Value(workspaceId),
@@ -4876,6 +5925,7 @@ class TasksCompanion extends UpdateCompanion<TaskEntry> {
     Expression<String>? campaignId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4893,6 +5943,7 @@ class TasksCompanion extends UpdateCompanion<TaskEntry> {
       if (campaignId != null) 'campaign_id': campaignId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4912,6 +5963,7 @@ class TasksCompanion extends UpdateCompanion<TaskEntry> {
     Value<String?>? campaignId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return TasksCompanion(
@@ -4929,6 +5981,7 @@ class TasksCompanion extends UpdateCompanion<TaskEntry> {
       campaignId: campaignId ?? this.campaignId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4982,6 +6035,9 @@ class TasksCompanion extends UpdateCompanion<TaskEntry> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5005,6 +6061,7 @@ class TasksCompanion extends UpdateCompanion<TaskEntry> {
           ..write('campaignId: $campaignId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5155,6 +6212,17 @@ class $SignalsTable extends Signals with TableInfo<$SignalsTable, SignalEntry> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5170,6 +6238,7 @@ class $SignalsTable extends Signals with TableInfo<$SignalsTable, SignalEntry> {
     convertedEntityId,
     createdAt,
     updatedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5274,6 +6343,12 @@ class $SignalsTable extends Signals with TableInfo<$SignalsTable, SignalEntry> {
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -5337,6 +6412,10 @@ class $SignalsTable extends Signals with TableInfo<$SignalsTable, SignalEntry> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -5363,6 +6442,7 @@ class SignalEntry extends DataClass implements Insertable<SignalEntry> {
   final String? convertedEntityId;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final DateTime? deletedAt;
   const SignalEntry({
     required this.id,
     required this.workspaceId,
@@ -5377,6 +6457,7 @@ class SignalEntry extends DataClass implements Insertable<SignalEntry> {
     this.convertedEntityId,
     required this.createdAt,
     required this.updatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5406,6 +6487,9 @@ class SignalEntry extends DataClass implements Insertable<SignalEntry> {
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -5434,6 +6518,9 @@ class SignalEntry extends DataClass implements Insertable<SignalEntry> {
           : Value(convertedEntityId),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -5462,6 +6549,7 @@ class SignalEntry extends DataClass implements Insertable<SignalEntry> {
       ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -5483,6 +6571,7 @@ class SignalEntry extends DataClass implements Insertable<SignalEntry> {
       'convertedEntityId': serializer.toJson<String?>(convertedEntityId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -5500,6 +6589,7 @@ class SignalEntry extends DataClass implements Insertable<SignalEntry> {
     Value<String?> convertedEntityId = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => SignalEntry(
     id: id ?? this.id,
     workspaceId: workspaceId ?? this.workspaceId,
@@ -5518,6 +6608,7 @@ class SignalEntry extends DataClass implements Insertable<SignalEntry> {
         : this.convertedEntityId,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   SignalEntry copyWithCompanion(SignalsCompanion data) {
     return SignalEntry(
@@ -5542,6 +6633,7 @@ class SignalEntry extends DataClass implements Insertable<SignalEntry> {
           : this.convertedEntityId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -5560,7 +6652,8 @@ class SignalEntry extends DataClass implements Insertable<SignalEntry> {
           ..write('convertedEntityType: $convertedEntityType, ')
           ..write('convertedEntityId: $convertedEntityId, ')
           ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -5580,6 +6673,7 @@ class SignalEntry extends DataClass implements Insertable<SignalEntry> {
     convertedEntityId,
     createdAt,
     updatedAt,
+    deletedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -5597,7 +6691,8 @@ class SignalEntry extends DataClass implements Insertable<SignalEntry> {
           other.convertedEntityType == this.convertedEntityType &&
           other.convertedEntityId == this.convertedEntityId &&
           other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class SignalsCompanion extends UpdateCompanion<SignalEntry> {
@@ -5614,6 +6709,7 @@ class SignalsCompanion extends UpdateCompanion<SignalEntry> {
   final Value<String?> convertedEntityId;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const SignalsCompanion({
     this.id = const Value.absent(),
@@ -5629,6 +6725,7 @@ class SignalsCompanion extends UpdateCompanion<SignalEntry> {
     this.convertedEntityId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SignalsCompanion.insert({
@@ -5645,6 +6742,7 @@ class SignalsCompanion extends UpdateCompanion<SignalEntry> {
     this.convertedEntityId = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        workspaceId = Value(workspaceId),
@@ -5666,6 +6764,7 @@ class SignalsCompanion extends UpdateCompanion<SignalEntry> {
     Expression<String>? convertedEntityId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5683,6 +6782,7 @@ class SignalsCompanion extends UpdateCompanion<SignalEntry> {
       if (convertedEntityId != null) 'converted_entity_id': convertedEntityId,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5701,6 +6801,7 @@ class SignalsCompanion extends UpdateCompanion<SignalEntry> {
     Value<String?>? convertedEntityId,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return SignalsCompanion(
@@ -5717,6 +6818,7 @@ class SignalsCompanion extends UpdateCompanion<SignalEntry> {
       convertedEntityId: convertedEntityId ?? this.convertedEntityId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5767,6 +6869,9 @@ class SignalsCompanion extends UpdateCompanion<SignalEntry> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5789,6 +6894,7 @@ class SignalsCompanion extends UpdateCompanion<SignalEntry> {
           ..write('convertedEntityId: $convertedEntityId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5917,6 +7023,17 @@ class $CampaignsTable extends Campaigns
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5930,6 +7047,7 @@ class $CampaignsTable extends Campaigns
     createdAt,
     updatedAt,
     archivedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6019,6 +7137,12 @@ class $CampaignsTable extends Campaigns
         archivedAt.isAcceptableOrUnknown(data['archived_at']!, _archivedAtMeta),
       );
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -6074,6 +7198,10 @@ class $CampaignsTable extends Campaigns
         DriftSqlType.dateTime,
         data['${effectivePrefix}archived_at'],
       ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -6098,6 +7226,7 @@ class CampaignEntry extends DataClass implements Insertable<CampaignEntry> {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? archivedAt;
+  final DateTime? deletedAt;
   const CampaignEntry({
     required this.id,
     required this.workspaceId,
@@ -6110,6 +7239,7 @@ class CampaignEntry extends DataClass implements Insertable<CampaignEntry> {
     required this.createdAt,
     required this.updatedAt,
     this.archivedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6137,6 +7267,9 @@ class CampaignEntry extends DataClass implements Insertable<CampaignEntry> {
     if (!nullToAbsent || archivedAt != null) {
       map['archived_at'] = Variable<DateTime>(archivedAt);
     }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -6161,6 +7294,9 @@ class CampaignEntry extends DataClass implements Insertable<CampaignEntry> {
       archivedAt: archivedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(archivedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -6183,6 +7319,7 @@ class CampaignEntry extends DataClass implements Insertable<CampaignEntry> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       archivedAt: serializer.fromJson<DateTime?>(json['archivedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -6202,6 +7339,7 @@ class CampaignEntry extends DataClass implements Insertable<CampaignEntry> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'archivedAt': serializer.toJson<DateTime?>(archivedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -6217,6 +7355,7 @@ class CampaignEntry extends DataClass implements Insertable<CampaignEntry> {
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> archivedAt = const Value.absent(),
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => CampaignEntry(
     id: id ?? this.id,
     workspaceId: workspaceId ?? this.workspaceId,
@@ -6231,6 +7370,7 @@ class CampaignEntry extends DataClass implements Insertable<CampaignEntry> {
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     archivedAt: archivedAt.present ? archivedAt.value : this.archivedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   CampaignEntry copyWithCompanion(CampaignsCompanion data) {
     return CampaignEntry(
@@ -6253,6 +7393,7 @@ class CampaignEntry extends DataClass implements Insertable<CampaignEntry> {
       archivedAt: data.archivedAt.present
           ? data.archivedAt.value
           : this.archivedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -6269,7 +7410,8 @@ class CampaignEntry extends DataClass implements Insertable<CampaignEntry> {
           ..write('primaryChannelId: $primaryChannelId, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('archivedAt: $archivedAt')
+          ..write('archivedAt: $archivedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -6287,6 +7429,7 @@ class CampaignEntry extends DataClass implements Insertable<CampaignEntry> {
     createdAt,
     updatedAt,
     archivedAt,
+    deletedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -6302,7 +7445,8 @@ class CampaignEntry extends DataClass implements Insertable<CampaignEntry> {
           other.primaryChannelId == this.primaryChannelId &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
-          other.archivedAt == this.archivedAt);
+          other.archivedAt == this.archivedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class CampaignsCompanion extends UpdateCompanion<CampaignEntry> {
@@ -6317,6 +7461,7 @@ class CampaignsCompanion extends UpdateCompanion<CampaignEntry> {
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> archivedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const CampaignsCompanion({
     this.id = const Value.absent(),
@@ -6330,6 +7475,7 @@ class CampaignsCompanion extends UpdateCompanion<CampaignEntry> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.archivedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CampaignsCompanion.insert({
@@ -6344,6 +7490,7 @@ class CampaignsCompanion extends UpdateCompanion<CampaignEntry> {
     required DateTime createdAt,
     required DateTime updatedAt,
     this.archivedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        workspaceId = Value(workspaceId),
@@ -6363,6 +7510,7 @@ class CampaignsCompanion extends UpdateCompanion<CampaignEntry> {
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? archivedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -6377,6 +7525,7 @@ class CampaignsCompanion extends UpdateCompanion<CampaignEntry> {
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (archivedAt != null) 'archived_at': archivedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -6393,6 +7542,7 @@ class CampaignsCompanion extends UpdateCompanion<CampaignEntry> {
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? archivedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return CampaignsCompanion(
@@ -6407,6 +7557,7 @@ class CampaignsCompanion extends UpdateCompanion<CampaignEntry> {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       archivedAt: archivedAt ?? this.archivedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6449,6 +7600,9 @@ class CampaignsCompanion extends UpdateCompanion<CampaignEntry> {
     if (archivedAt.present) {
       map['archived_at'] = Variable<DateTime>(archivedAt.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6469,6 +7623,7 @@ class CampaignsCompanion extends UpdateCompanion<CampaignEntry> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('archivedAt: $archivedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6489,6 +7644,17 @@ class $CampaignItemsTable extends CampaignItems
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _workspaceIdMeta = const VerificationMeta(
+    'workspaceId',
+  );
+  @override
+  late final GeneratedColumn<String> workspaceId = GeneratedColumn<String>(
+    'workspace_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _campaignIdMeta = const VerificationMeta(
     'campaignId',
@@ -6536,13 +7702,50 @@ class $CampaignItemsTable extends CampaignItems
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    workspaceId,
     campaignId,
     entityType,
     entityId,
     sortOrder,
+    createdAt,
+    updatedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6560,6 +7763,15 @@ class $CampaignItemsTable extends CampaignItems
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
       context.missing(_idMeta);
+    }
+    if (data.containsKey('workspace_id')) {
+      context.handle(
+        _workspaceIdMeta,
+        workspaceId.isAcceptableOrUnknown(
+          data['workspace_id']!,
+          _workspaceIdMeta,
+        ),
+      );
     }
     if (data.containsKey('campaign_id')) {
       context.handle(
@@ -6583,6 +7795,24 @@ class $CampaignItemsTable extends CampaignItems
         sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
       );
     }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -6596,6 +7826,10 @@ class $CampaignItemsTable extends CampaignItems
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
+      workspaceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}workspace_id'],
+      ),
       campaignId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}campaign_id'],
@@ -6614,6 +7848,18 @@ class $CampaignItemsTable extends CampaignItems
         DriftSqlType.int,
         data['${effectivePrefix}sort_order'],
       )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -6631,21 +7877,32 @@ class $CampaignItemsTable extends CampaignItems
 class CampaignItemEntry extends DataClass
     implements Insertable<CampaignItemEntry> {
   final String id;
+  final String? workspaceId;
   final String campaignId;
   final CampaignItemEntityType entityType;
   final String entityId;
   final int sortOrder;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final DateTime? deletedAt;
   const CampaignItemEntry({
     required this.id,
+    this.workspaceId,
     required this.campaignId,
     required this.entityType,
     required this.entityId,
     required this.sortOrder,
+    this.createdAt,
+    this.updatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    if (!nullToAbsent || workspaceId != null) {
+      map['workspace_id'] = Variable<String>(workspaceId);
+    }
     map['campaign_id'] = Variable<String>(campaignId);
     {
       map['entity_type'] = Variable<String>(
@@ -6654,16 +7911,37 @@ class CampaignItemEntry extends DataClass
     }
     map['entity_id'] = Variable<String>(entityId);
     map['sort_order'] = Variable<int>(sortOrder);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<DateTime>(createdAt);
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
   CampaignItemsCompanion toCompanion(bool nullToAbsent) {
     return CampaignItemsCompanion(
       id: Value(id),
+      workspaceId: workspaceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(workspaceId),
       campaignId: Value(campaignId),
       entityType: Value(entityType),
       entityId: Value(entityId),
       sortOrder: Value(sortOrder),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -6674,12 +7952,16 @@ class CampaignItemEntry extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CampaignItemEntry(
       id: serializer.fromJson<String>(json['id']),
+      workspaceId: serializer.fromJson<String?>(json['workspaceId']),
       campaignId: serializer.fromJson<String>(json['campaignId']),
       entityType: $CampaignItemsTable.$converterentityType.fromJson(
         serializer.fromJson<String>(json['entityType']),
       ),
       entityId: serializer.fromJson<String>(json['entityId']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -6687,31 +7969,46 @@ class CampaignItemEntry extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'workspaceId': serializer.toJson<String?>(workspaceId),
       'campaignId': serializer.toJson<String>(campaignId),
       'entityType': serializer.toJson<String>(
         $CampaignItemsTable.$converterentityType.toJson(entityType),
       ),
       'entityId': serializer.toJson<String>(entityId),
       'sortOrder': serializer.toJson<int>(sortOrder),
+      'createdAt': serializer.toJson<DateTime?>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
   CampaignItemEntry copyWith({
     String? id,
+    Value<String?> workspaceId = const Value.absent(),
     String? campaignId,
     CampaignItemEntityType? entityType,
     String? entityId,
     int? sortOrder,
+    Value<DateTime?> createdAt = const Value.absent(),
+    Value<DateTime?> updatedAt = const Value.absent(),
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => CampaignItemEntry(
     id: id ?? this.id,
+    workspaceId: workspaceId.present ? workspaceId.value : this.workspaceId,
     campaignId: campaignId ?? this.campaignId,
     entityType: entityType ?? this.entityType,
     entityId: entityId ?? this.entityId,
     sortOrder: sortOrder ?? this.sortOrder,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   CampaignItemEntry copyWithCompanion(CampaignItemsCompanion data) {
     return CampaignItemEntry(
       id: data.id.present ? data.id.value : this.id,
+      workspaceId: data.workspaceId.present
+          ? data.workspaceId.value
+          : this.workspaceId,
       campaignId: data.campaignId.present
           ? data.campaignId.value
           : this.campaignId,
@@ -6720,6 +8017,9 @@ class CampaignItemEntry extends DataClass
           : this.entityType,
       entityId: data.entityId.present ? data.entityId.value : this.entityId,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -6727,49 +8027,78 @@ class CampaignItemEntry extends DataClass
   String toString() {
     return (StringBuffer('CampaignItemEntry(')
           ..write('id: $id, ')
+          ..write('workspaceId: $workspaceId, ')
           ..write('campaignId: $campaignId, ')
           ..write('entityType: $entityType, ')
           ..write('entityId: $entityId, ')
-          ..write('sortOrder: $sortOrder')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, campaignId, entityType, entityId, sortOrder);
+  int get hashCode => Object.hash(
+    id,
+    workspaceId,
+    campaignId,
+    entityType,
+    entityId,
+    sortOrder,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is CampaignItemEntry &&
           other.id == this.id &&
+          other.workspaceId == this.workspaceId &&
           other.campaignId == this.campaignId &&
           other.entityType == this.entityType &&
           other.entityId == this.entityId &&
-          other.sortOrder == this.sortOrder);
+          other.sortOrder == this.sortOrder &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class CampaignItemsCompanion extends UpdateCompanion<CampaignItemEntry> {
   final Value<String> id;
+  final Value<String?> workspaceId;
   final Value<String> campaignId;
   final Value<CampaignItemEntityType> entityType;
   final Value<String> entityId;
   final Value<int> sortOrder;
+  final Value<DateTime?> createdAt;
+  final Value<DateTime?> updatedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const CampaignItemsCompanion({
     this.id = const Value.absent(),
+    this.workspaceId = const Value.absent(),
     this.campaignId = const Value.absent(),
     this.entityType = const Value.absent(),
     this.entityId = const Value.absent(),
     this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CampaignItemsCompanion.insert({
     required String id,
+    this.workspaceId = const Value.absent(),
     required String campaignId,
     required CampaignItemEntityType entityType,
     required String entityId,
     this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        campaignId = Value(campaignId),
@@ -6777,36 +8106,52 @@ class CampaignItemsCompanion extends UpdateCompanion<CampaignItemEntry> {
        entityId = Value(entityId);
   static Insertable<CampaignItemEntry> custom({
     Expression<String>? id,
+    Expression<String>? workspaceId,
     Expression<String>? campaignId,
     Expression<String>? entityType,
     Expression<String>? entityId,
     Expression<int>? sortOrder,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (workspaceId != null) 'workspace_id': workspaceId,
       if (campaignId != null) 'campaign_id': campaignId,
       if (entityType != null) 'entity_type': entityType,
       if (entityId != null) 'entity_id': entityId,
       if (sortOrder != null) 'sort_order': sortOrder,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   CampaignItemsCompanion copyWith({
     Value<String>? id,
+    Value<String?>? workspaceId,
     Value<String>? campaignId,
     Value<CampaignItemEntityType>? entityType,
     Value<String>? entityId,
     Value<int>? sortOrder,
+    Value<DateTime?>? createdAt,
+    Value<DateTime?>? updatedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return CampaignItemsCompanion(
       id: id ?? this.id,
+      workspaceId: workspaceId ?? this.workspaceId,
       campaignId: campaignId ?? this.campaignId,
       entityType: entityType ?? this.entityType,
       entityId: entityId ?? this.entityId,
       sortOrder: sortOrder ?? this.sortOrder,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -6816,6 +8161,9 @@ class CampaignItemsCompanion extends UpdateCompanion<CampaignItemEntry> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<String>(id.value);
+    }
+    if (workspaceId.present) {
+      map['workspace_id'] = Variable<String>(workspaceId.value);
     }
     if (campaignId.present) {
       map['campaign_id'] = Variable<String>(campaignId.value);
@@ -6831,6 +8179,15 @@ class CampaignItemsCompanion extends UpdateCompanion<CampaignItemEntry> {
     if (sortOrder.present) {
       map['sort_order'] = Variable<int>(sortOrder.value);
     }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -6841,10 +8198,14 @@ class CampaignItemsCompanion extends UpdateCompanion<CampaignItemEntry> {
   String toString() {
     return (StringBuffer('CampaignItemsCompanion(')
           ..write('id: $id, ')
+          ..write('workspaceId: $workspaceId, ')
           ..write('campaignId: $campaignId, ')
           ..write('entityType: $entityType, ')
           ..write('entityId: $entityId, ')
           ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6928,6 +8289,28 @@ class $ChannelRelationsTable extends ChannelRelations
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6937,6 +8320,8 @@ class $ChannelRelationsTable extends ChannelRelations
     type,
     label,
     createdAt,
+    updatedAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -7002,6 +8387,18 @@ class $ChannelRelationsTable extends ChannelRelations
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -7041,6 +8438,14 @@ class $ChannelRelationsTable extends ChannelRelations
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -7063,6 +8468,8 @@ class ChannelRelation extends DataClass implements Insertable<ChannelRelation> {
   final ChannelRelationType type;
   final String? label;
   final DateTime createdAt;
+  final DateTime? updatedAt;
+  final DateTime? deletedAt;
   const ChannelRelation({
     required this.id,
     required this.workspaceId,
@@ -7071,6 +8478,8 @@ class ChannelRelation extends DataClass implements Insertable<ChannelRelation> {
     required this.type,
     this.label,
     required this.createdAt,
+    this.updatedAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -7088,6 +8497,12 @@ class ChannelRelation extends DataClass implements Insertable<ChannelRelation> {
       map['label'] = Variable<String>(label);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -7102,6 +8517,12 @@ class ChannelRelation extends DataClass implements Insertable<ChannelRelation> {
           ? const Value.absent()
           : Value(label),
       createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -7120,6 +8541,8 @@ class ChannelRelation extends DataClass implements Insertable<ChannelRelation> {
       ),
       label: serializer.fromJson<String?>(json['label']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -7135,6 +8558,8 @@ class ChannelRelation extends DataClass implements Insertable<ChannelRelation> {
       ),
       'label': serializer.toJson<String?>(label),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -7146,6 +8571,8 @@ class ChannelRelation extends DataClass implements Insertable<ChannelRelation> {
     ChannelRelationType? type,
     Value<String?> label = const Value.absent(),
     DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => ChannelRelation(
     id: id ?? this.id,
     workspaceId: workspaceId ?? this.workspaceId,
@@ -7154,6 +8581,8 @@ class ChannelRelation extends DataClass implements Insertable<ChannelRelation> {
     type: type ?? this.type,
     label: label.present ? label.value : this.label,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   ChannelRelation copyWithCompanion(ChannelRelationsCompanion data) {
     return ChannelRelation(
@@ -7170,6 +8599,8 @@ class ChannelRelation extends DataClass implements Insertable<ChannelRelation> {
       type: data.type.present ? data.type.value : this.type,
       label: data.label.present ? data.label.value : this.label,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -7182,7 +8613,9 @@ class ChannelRelation extends DataClass implements Insertable<ChannelRelation> {
           ..write('targetChannelId: $targetChannelId, ')
           ..write('type: $type, ')
           ..write('label: $label, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -7196,6 +8629,8 @@ class ChannelRelation extends DataClass implements Insertable<ChannelRelation> {
     type,
     label,
     createdAt,
+    updatedAt,
+    deletedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -7207,7 +8642,9 @@ class ChannelRelation extends DataClass implements Insertable<ChannelRelation> {
           other.targetChannelId == this.targetChannelId &&
           other.type == this.type &&
           other.label == this.label &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class ChannelRelationsCompanion extends UpdateCompanion<ChannelRelation> {
@@ -7218,6 +8655,8 @@ class ChannelRelationsCompanion extends UpdateCompanion<ChannelRelation> {
   final Value<ChannelRelationType> type;
   final Value<String?> label;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
+  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const ChannelRelationsCompanion({
     this.id = const Value.absent(),
@@ -7227,6 +8666,8 @@ class ChannelRelationsCompanion extends UpdateCompanion<ChannelRelation> {
     this.type = const Value.absent(),
     this.label = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ChannelRelationsCompanion.insert({
@@ -7237,6 +8678,8 @@ class ChannelRelationsCompanion extends UpdateCompanion<ChannelRelation> {
     required ChannelRelationType type,
     this.label = const Value.absent(),
     required DateTime createdAt,
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        workspaceId = Value(workspaceId),
@@ -7252,6 +8695,8 @@ class ChannelRelationsCompanion extends UpdateCompanion<ChannelRelation> {
     Expression<String>? type,
     Expression<String>? label,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -7262,6 +8707,8 @@ class ChannelRelationsCompanion extends UpdateCompanion<ChannelRelation> {
       if (type != null) 'type': type,
       if (label != null) 'label': label,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -7274,6 +8721,8 @@ class ChannelRelationsCompanion extends UpdateCompanion<ChannelRelation> {
     Value<ChannelRelationType>? type,
     Value<String?>? label,
     Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
+    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return ChannelRelationsCompanion(
@@ -7284,6 +8733,8 @@ class ChannelRelationsCompanion extends UpdateCompanion<ChannelRelation> {
       type: type ?? this.type,
       label: label ?? this.label,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -7314,6 +8765,12 @@ class ChannelRelationsCompanion extends UpdateCompanion<ChannelRelation> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -7330,6 +8787,8 @@ class ChannelRelationsCompanion extends UpdateCompanion<ChannelRelation> {
           ..write('type: $type, ')
           ..write('label: $label, ')
           ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7385,8 +8844,10 @@ typedef $$WorkspacesTableCreateCompanionBuilder =
       required String id,
       required String name,
       Value<String> description,
+      Value<String?> ownerId,
       required DateTime createdAt,
       required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$WorkspacesTableUpdateCompanionBuilder =
@@ -7394,8 +8855,10 @@ typedef $$WorkspacesTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> name,
       Value<String> description,
+      Value<String?> ownerId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -7423,6 +8886,11 @@ class $$WorkspacesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
@@ -7430,6 +8898,11 @@ class $$WorkspacesTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7458,6 +8931,11 @@ class $$WorkspacesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get ownerId => $composableBuilder(
+    column: $table.ownerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -7465,6 +8943,11 @@ class $$WorkspacesTableOrderingComposer
 
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -7489,11 +8972,17 @@ class $$WorkspacesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get ownerId =>
+      $composableBuilder(column: $table.ownerId, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$WorkspacesTableTableManager
@@ -7530,15 +9019,19 @@ class $$WorkspacesTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> description = const Value.absent(),
+                Value<String?> ownerId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkspacesCompanion(
                 id: id,
                 name: name,
                 description: description,
+                ownerId: ownerId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7546,15 +9039,19 @@ class $$WorkspacesTableTableManager
                 required String id,
                 required String name,
                 Value<String> description = const Value.absent(),
+                Value<String?> ownerId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkspacesCompanion.insert(
                 id: id,
                 name: name,
                 description: description,
+                ownerId: ownerId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -7598,6 +9095,7 @@ typedef $$ChannelsTableCreateCompanionBuilder =
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> archivedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$ChannelsTableUpdateCompanionBuilder =
@@ -7616,6 +9114,7 @@ typedef $$ChannelsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> archivedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -7698,6 +9197,11 @@ class $$ChannelsTableFilterComposer
     column: $table.archivedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ChannelsTableOrderingComposer
@@ -7778,6 +9282,11 @@ class $$ChannelsTableOrderingComposer
     column: $table.archivedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ChannelsTableAnnotationComposer
@@ -7838,6 +9347,9 @@ class $$ChannelsTableAnnotationComposer
     column: $table.archivedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$ChannelsTableTableManager
@@ -7885,6 +9397,7 @@ class $$ChannelsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> archivedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChannelsCompanion(
                 id: id,
@@ -7901,6 +9414,7 @@ class $$ChannelsTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archivedAt: archivedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7919,6 +9433,7 @@ class $$ChannelsTableTableManager
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> archivedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChannelsCompanion.insert(
                 id: id,
@@ -7935,6 +9450,7 @@ class $$ChannelsTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archivedAt: archivedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -7975,6 +9491,7 @@ typedef $$ProjectsTableCreateCompanionBuilder =
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> archivedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$ProjectsTableUpdateCompanionBuilder =
@@ -7990,6 +9507,7 @@ typedef $$ProjectsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> archivedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -8058,6 +9576,11 @@ class $$ProjectsTableFilterComposer
     column: $table.archivedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ProjectsTableOrderingComposer
@@ -8123,6 +9646,11 @@ class $$ProjectsTableOrderingComposer
     column: $table.archivedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ProjectsTableAnnotationComposer
@@ -8174,6 +9702,9 @@ class $$ProjectsTableAnnotationComposer
     column: $table.archivedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$ProjectsTableTableManager
@@ -8218,6 +9749,7 @@ class $$ProjectsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> archivedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectsCompanion(
                 id: id,
@@ -8231,6 +9763,7 @@ class $$ProjectsTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archivedAt: archivedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -8246,6 +9779,7 @@ class $$ProjectsTableTableManager
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> archivedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectsCompanion.insert(
                 id: id,
@@ -8259,6 +9793,7 @@ class $$ProjectsTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archivedAt: archivedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -8288,16 +9823,26 @@ typedef $$ProjectsTableProcessedTableManager =
     >;
 typedef $$ProjectChannelsTableCreateCompanionBuilder =
     ProjectChannelsCompanion Function({
+      required String id,
+      required String workspaceId,
       required String projectId,
       required String channelId,
       Value<String?> role,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$ProjectChannelsTableUpdateCompanionBuilder =
     ProjectChannelsCompanion Function({
+      Value<String> id,
+      Value<String> workspaceId,
       Value<String> projectId,
       Value<String> channelId,
       Value<String?> role,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -8310,6 +9855,16 @@ class $$ProjectChannelsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get projectId => $composableBuilder(
     column: $table.projectId,
     builder: (column) => ColumnFilters(column),
@@ -8324,6 +9879,21 @@ class $$ProjectChannelsTableFilterComposer
     column: $table.role,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ProjectChannelsTableOrderingComposer
@@ -8335,6 +9905,16 @@ class $$ProjectChannelsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get projectId => $composableBuilder(
     column: $table.projectId,
     builder: (column) => ColumnOrderings(column),
@@ -8349,6 +9929,21 @@ class $$ProjectChannelsTableOrderingComposer
     column: $table.role,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ProjectChannelsTableAnnotationComposer
@@ -8360,6 +9955,14 @@ class $$ProjectChannelsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get projectId =>
       $composableBuilder(column: $table.projectId, builder: (column) => column);
 
@@ -8368,6 +9971,15 @@ class $$ProjectChannelsTableAnnotationComposer
 
   GeneratedColumn<String> get role =>
       $composableBuilder(column: $table.role, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$ProjectChannelsTableTableManager
@@ -8407,26 +10019,46 @@ class $$ProjectChannelsTableTableManager
               $$ProjectChannelsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
+                Value<String> id = const Value.absent(),
+                Value<String> workspaceId = const Value.absent(),
                 Value<String> projectId = const Value.absent(),
                 Value<String> channelId = const Value.absent(),
                 Value<String?> role = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectChannelsCompanion(
+                id: id,
+                workspaceId: workspaceId,
                 projectId: projectId,
                 channelId: channelId,
                 role: role,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
+                required String id,
+                required String workspaceId,
                 required String projectId,
                 required String channelId,
                 Value<String?> role = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectChannelsCompanion.insert(
+                id: id,
+                workspaceId: workspaceId,
                 projectId: projectId,
                 channelId: channelId,
                 role: role,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -8464,6 +10096,7 @@ typedef $$ProjectNodesTableCreateCompanionBuilder =
       Value<String?> linkedEntityId,
       required DateTime createdAt,
       required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$ProjectNodesTableUpdateCompanionBuilder =
@@ -8476,6 +10109,7 @@ typedef $$ProjectNodesTableUpdateCompanionBuilder =
       Value<String?> linkedEntityId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -8528,6 +10162,11 @@ class $$ProjectNodesTableFilterComposer
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ProjectNodesTableOrderingComposer
@@ -8578,6 +10217,11 @@ class $$ProjectNodesTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ProjectNodesTableAnnotationComposer
@@ -8616,6 +10260,9 @@ class $$ProjectNodesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$ProjectNodesTableTableManager
@@ -8657,6 +10304,7 @@ class $$ProjectNodesTableTableManager
                 Value<String?> linkedEntityId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectNodesCompanion(
                 id: id,
@@ -8667,6 +10315,7 @@ class $$ProjectNodesTableTableManager
                 linkedEntityId: linkedEntityId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -8679,6 +10328,7 @@ class $$ProjectNodesTableTableManager
                 Value<String?> linkedEntityId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectNodesCompanion.insert(
                 id: id,
@@ -8689,6 +10339,7 @@ class $$ProjectNodesTableTableManager
                 linkedEntityId: linkedEntityId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -8719,19 +10370,27 @@ typedef $$ProjectNodesTableProcessedTableManager =
 typedef $$ProjectNodeRelationsTableCreateCompanionBuilder =
     ProjectNodeRelationsCompanion Function({
       required String id,
+      Value<String?> workspaceId,
       required String projectId,
       required String sourceNodeId,
       required String targetNodeId,
       Value<String> type,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$ProjectNodeRelationsTableUpdateCompanionBuilder =
     ProjectNodeRelationsCompanion Function({
       Value<String> id,
+      Value<String?> workspaceId,
       Value<String> projectId,
       Value<String> sourceNodeId,
       Value<String> targetNodeId,
       Value<String> type,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -8746,6 +10405,11 @@ class $$ProjectNodeRelationsTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8768,6 +10432,21 @@ class $$ProjectNodeRelationsTableFilterComposer
     column: $table.type,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ProjectNodeRelationsTableOrderingComposer
@@ -8781,6 +10460,11 @@ class $$ProjectNodeRelationsTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -8803,6 +10487,21 @@ class $$ProjectNodeRelationsTableOrderingComposer
     column: $table.type,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ProjectNodeRelationsTableAnnotationComposer
@@ -8816,6 +10515,11 @@ class $$ProjectNodeRelationsTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get projectId =>
       $composableBuilder(column: $table.projectId, builder: (column) => column);
@@ -8832,6 +10536,15 @@ class $$ProjectNodeRelationsTableAnnotationComposer
 
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$ProjectNodeRelationsTableTableManager
@@ -8878,33 +10591,49 @@ class $$ProjectNodeRelationsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
+                Value<String?> workspaceId = const Value.absent(),
                 Value<String> projectId = const Value.absent(),
                 Value<String> sourceNodeId = const Value.absent(),
                 Value<String> targetNodeId = const Value.absent(),
                 Value<String> type = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectNodeRelationsCompanion(
                 id: id,
+                workspaceId: workspaceId,
                 projectId: projectId,
                 sourceNodeId: sourceNodeId,
                 targetNodeId: targetNodeId,
                 type: type,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String id,
+                Value<String?> workspaceId = const Value.absent(),
                 required String projectId,
                 required String sourceNodeId,
                 required String targetNodeId,
                 Value<String> type = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectNodeRelationsCompanion.insert(
                 id: id,
+                workspaceId: workspaceId,
                 projectId: projectId,
                 sourceNodeId: sourceNodeId,
                 targetNodeId: targetNodeId,
                 type: type,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -8953,6 +10682,7 @@ typedef $$ContentItemsTableCreateCompanionBuilder =
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> archivedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$ContentItemsTableUpdateCompanionBuilder =
@@ -8972,6 +10702,7 @@ typedef $$ContentItemsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> archivedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -9061,6 +10792,11 @@ class $$ContentItemsTableFilterComposer
     column: $table.archivedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ContentItemsTableOrderingComposer
@@ -9146,6 +10882,11 @@ class $$ContentItemsTableOrderingComposer
     column: $table.archivedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ContentItemsTableAnnotationComposer
@@ -9209,6 +10950,9 @@ class $$ContentItemsTableAnnotationComposer
     column: $table.archivedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$ContentItemsTableTableManager
@@ -9257,6 +11001,7 @@ class $$ContentItemsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> archivedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ContentItemsCompanion(
                 id: id,
@@ -9274,6 +11019,7 @@ class $$ContentItemsTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archivedAt: archivedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -9293,6 +11039,7 @@ class $$ContentItemsTableTableManager
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> archivedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ContentItemsCompanion.insert(
                 id: id,
@@ -9310,6 +11057,7 @@ class $$ContentItemsTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archivedAt: archivedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -9339,16 +11087,26 @@ typedef $$ContentItemsTableProcessedTableManager =
     >;
 typedef $$ContentChannelsTableCreateCompanionBuilder =
     ContentChannelsCompanion Function({
+      required String id,
+      required String workspaceId,
       required String contentItemId,
       required String channelId,
       Value<String?> role,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$ContentChannelsTableUpdateCompanionBuilder =
     ContentChannelsCompanion Function({
+      Value<String> id,
+      Value<String> workspaceId,
       Value<String> contentItemId,
       Value<String> channelId,
       Value<String?> role,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -9361,6 +11119,16 @@ class $$ContentChannelsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get contentItemId => $composableBuilder(
     column: $table.contentItemId,
     builder: (column) => ColumnFilters(column),
@@ -9375,6 +11143,21 @@ class $$ContentChannelsTableFilterComposer
     column: $table.role,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ContentChannelsTableOrderingComposer
@@ -9386,6 +11169,16 @@ class $$ContentChannelsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get contentItemId => $composableBuilder(
     column: $table.contentItemId,
     builder: (column) => ColumnOrderings(column),
@@ -9400,6 +11193,21 @@ class $$ContentChannelsTableOrderingComposer
     column: $table.role,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ContentChannelsTableAnnotationComposer
@@ -9411,6 +11219,14 @@ class $$ContentChannelsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get contentItemId => $composableBuilder(
     column: $table.contentItemId,
     builder: (column) => column,
@@ -9421,6 +11237,15 @@ class $$ContentChannelsTableAnnotationComposer
 
   GeneratedColumn<String> get role =>
       $composableBuilder(column: $table.role, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$ContentChannelsTableTableManager
@@ -9460,26 +11285,46 @@ class $$ContentChannelsTableTableManager
               $$ContentChannelsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
+                Value<String> id = const Value.absent(),
+                Value<String> workspaceId = const Value.absent(),
                 Value<String> contentItemId = const Value.absent(),
                 Value<String> channelId = const Value.absent(),
                 Value<String?> role = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ContentChannelsCompanion(
+                id: id,
+                workspaceId: workspaceId,
                 contentItemId: contentItemId,
                 channelId: channelId,
                 role: role,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
+                required String id,
+                required String workspaceId,
                 required String contentItemId,
                 required String channelId,
                 Value<String?> role = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ContentChannelsCompanion.insert(
+                id: id,
+                workspaceId: workspaceId,
                 contentItemId: contentItemId,
                 channelId: channelId,
                 role: role,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -9523,6 +11368,7 @@ typedef $$TasksTableCreateCompanionBuilder =
       Value<String?> campaignId,
       required DateTime createdAt,
       required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$TasksTableUpdateCompanionBuilder =
@@ -9541,6 +11387,7 @@ typedef $$TasksTableUpdateCompanionBuilder =
       Value<String?> campaignId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -9623,6 +11470,11 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$TasksTableOrderingComposer
@@ -9703,6 +11555,11 @@ class $$TasksTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TasksTableAnnotationComposer
@@ -9765,6 +11622,9 @@ class $$TasksTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$TasksTableTableManager
@@ -9809,6 +11669,7 @@ class $$TasksTableTableManager
                 Value<String?> campaignId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion(
                 id: id,
@@ -9825,6 +11686,7 @@ class $$TasksTableTableManager
                 campaignId: campaignId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -9843,6 +11705,7 @@ class $$TasksTableTableManager
                 Value<String?> campaignId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TasksCompanion.insert(
                 id: id,
@@ -9859,6 +11722,7 @@ class $$TasksTableTableManager
                 campaignId: campaignId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -9898,6 +11762,7 @@ typedef $$SignalsTableCreateCompanionBuilder =
       Value<String?> convertedEntityId,
       required DateTime createdAt,
       required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$SignalsTableUpdateCompanionBuilder =
@@ -9915,6 +11780,7 @@ typedef $$SignalsTableUpdateCompanionBuilder =
       Value<String?> convertedEntityId,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -9992,6 +11858,11 @@ class $$SignalsTableFilterComposer
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SignalsTableOrderingComposer
@@ -10067,6 +11938,11 @@ class $$SignalsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SignalsTableAnnotationComposer
@@ -10124,6 +12000,9 @@ class $$SignalsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$SignalsTableTableManager
@@ -10170,6 +12049,7 @@ class $$SignalsTableTableManager
                 Value<String?> convertedEntityId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SignalsCompanion(
                 id: id,
@@ -10185,6 +12065,7 @@ class $$SignalsTableTableManager
                 convertedEntityId: convertedEntityId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10202,6 +12083,7 @@ class $$SignalsTableTableManager
                 Value<String?> convertedEntityId = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SignalsCompanion.insert(
                 id: id,
@@ -10217,6 +12099,7 @@ class $$SignalsTableTableManager
                 convertedEntityId: convertedEntityId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -10254,6 +12137,7 @@ typedef $$CampaignsTableCreateCompanionBuilder =
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> archivedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$CampaignsTableUpdateCompanionBuilder =
@@ -10269,6 +12153,7 @@ typedef $$CampaignsTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> archivedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -10336,6 +12221,11 @@ class $$CampaignsTableFilterComposer
     column: $table.archivedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$CampaignsTableOrderingComposer
@@ -10401,6 +12291,11 @@ class $$CampaignsTableOrderingComposer
     column: $table.archivedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CampaignsTableAnnotationComposer
@@ -10452,6 +12347,9 @@ class $$CampaignsTableAnnotationComposer
     column: $table.archivedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$CampaignsTableTableManager
@@ -10496,6 +12394,7 @@ class $$CampaignsTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> archivedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CampaignsCompanion(
                 id: id,
@@ -10509,6 +12408,7 @@ class $$CampaignsTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archivedAt: archivedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10524,6 +12424,7 @@ class $$CampaignsTableTableManager
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> archivedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CampaignsCompanion.insert(
                 id: id,
@@ -10537,6 +12438,7 @@ class $$CampaignsTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 archivedAt: archivedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -10567,19 +12469,27 @@ typedef $$CampaignsTableProcessedTableManager =
 typedef $$CampaignItemsTableCreateCompanionBuilder =
     CampaignItemsCompanion Function({
       required String id,
+      Value<String?> workspaceId,
       required String campaignId,
       required CampaignItemEntityType entityType,
       required String entityId,
       Value<int> sortOrder,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$CampaignItemsTableUpdateCompanionBuilder =
     CampaignItemsCompanion Function({
       Value<String> id,
+      Value<String?> workspaceId,
       Value<String> campaignId,
       Value<CampaignItemEntityType> entityType,
       Value<String> entityId,
       Value<int> sortOrder,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -10594,6 +12504,11 @@ class $$CampaignItemsTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10621,6 +12536,21 @@ class $$CampaignItemsTableFilterComposer
     column: $table.sortOrder,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$CampaignItemsTableOrderingComposer
@@ -10634,6 +12564,11 @@ class $$CampaignItemsTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -10656,6 +12591,21 @@ class $$CampaignItemsTableOrderingComposer
     column: $table.sortOrder,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CampaignItemsTableAnnotationComposer
@@ -10669,6 +12619,11 @@ class $$CampaignItemsTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get workspaceId => $composableBuilder(
+    column: $table.workspaceId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get campaignId => $composableBuilder(
     column: $table.campaignId,
@@ -10686,6 +12641,15 @@ class $$CampaignItemsTableAnnotationComposer
 
   GeneratedColumn<int> get sortOrder =>
       $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$CampaignItemsTableTableManager
@@ -10724,33 +12688,49 @@ class $$CampaignItemsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
+                Value<String?> workspaceId = const Value.absent(),
                 Value<String> campaignId = const Value.absent(),
                 Value<CampaignItemEntityType> entityType = const Value.absent(),
                 Value<String> entityId = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CampaignItemsCompanion(
                 id: id,
+                workspaceId: workspaceId,
                 campaignId: campaignId,
                 entityType: entityType,
                 entityId: entityId,
                 sortOrder: sortOrder,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String id,
+                Value<String?> workspaceId = const Value.absent(),
                 required String campaignId,
                 required CampaignItemEntityType entityType,
                 required String entityId,
                 Value<int> sortOrder = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CampaignItemsCompanion.insert(
                 id: id,
+                workspaceId: workspaceId,
                 campaignId: campaignId,
                 entityType: entityType,
                 entityId: entityId,
                 sortOrder: sortOrder,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -10787,6 +12767,8 @@ typedef $$ChannelRelationsTableCreateCompanionBuilder =
       required ChannelRelationType type,
       Value<String?> label,
       required DateTime createdAt,
+      Value<DateTime?> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$ChannelRelationsTableUpdateCompanionBuilder =
@@ -10798,6 +12780,8 @@ typedef $$ChannelRelationsTableUpdateCompanionBuilder =
       Value<ChannelRelationType> type,
       Value<String?> label,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
+      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -10849,6 +12833,16 @@ class $$ChannelRelationsTableFilterComposer
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ChannelRelationsTableOrderingComposer
@@ -10894,6 +12888,16 @@ class $$ChannelRelationsTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ChannelRelationsTableAnnotationComposer
@@ -10931,6 +12935,12 @@ class $$ChannelRelationsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$ChannelRelationsTableTableManager
@@ -10977,6 +12987,8 @@ class $$ChannelRelationsTableTableManager
                 Value<ChannelRelationType> type = const Value.absent(),
                 Value<String?> label = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChannelRelationsCompanion(
                 id: id,
@@ -10986,6 +12998,8 @@ class $$ChannelRelationsTableTableManager
                 type: type,
                 label: label,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -10997,6 +13011,8 @@ class $$ChannelRelationsTableTableManager
                 required ChannelRelationType type,
                 Value<String?> label = const Value.absent(),
                 required DateTime createdAt,
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ChannelRelationsCompanion.insert(
                 id: id,
@@ -11006,6 +13022,8 @@ class $$ChannelRelationsTableTableManager
                 type: type,
                 label: label,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
