@@ -80,7 +80,7 @@ export default function TimeRoom() {
       </div>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key={tab} {...tabContentEnter}>
-          {tab === "calendario" && <Calendar variant="financas" />}
+          {tab === "calendario" && <Calendar variant="mensal" />}
           {tab === "agenda" && <Calendar variant="agenda" />}
           {tab === "linha-do-tempo" && <LinhaDoTempo />}
         </motion.div>

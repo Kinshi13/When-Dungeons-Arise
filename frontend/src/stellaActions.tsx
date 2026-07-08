@@ -26,7 +26,7 @@ export function buildStellaActions(section: string | null, navigate: ReturnType<
         label: "Novo evento",
         icon: <CalendarIcon width={20} height={20} />,
         priority: 2,
-        execute: () => navigateToQuickAction(navigate, "/sala-do-tempo/agenda", "novo-evento"),
+        execute: () => navigateToQuickAction(navigate, "/sala-do-tempo/calendario", "novo-evento"),
       },
       {
         id: "ir-hoje",
@@ -108,7 +108,7 @@ export function buildStellaActions(section: string | null, navigate: ReturnType<
       label: "Novo evento",
       icon: <CalendarIcon width={20} height={20} />,
       priority: 0,
-      execute: () => navigateToQuickAction(navigate, "/sala-do-tempo/agenda", "novo-evento"),
+      execute: () => navigateToQuickAction(navigate, "/sala-do-tempo/calendario", "novo-evento"),
     },
   ];
 }

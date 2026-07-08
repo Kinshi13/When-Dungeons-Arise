@@ -11,6 +11,36 @@ export type CalendarEntry =
   | { kind: "holiday"; id: string; holiday: Holiday }
   | { kind: "birthday"; id: string; reminder: Reminder; year: number };
 
+// Filtro de categoria em Tempo (Calendário e Linha do Tempo) — seção 6 do
+// spec Stella Founds. Feriado e aniversário não têm chip próprio (o spec só
+// pede Tudo/Tarefas/Eventos/Reuniões/Finanças); entram em "Eventos" por
+// serem, semanticamente, eventos do dia.
+export type TimeFilter = "tudo" | "tarefas" | "eventos" | "reunioes" | "financas";
+
+export const TIME_FILTER_ORDER: TimeFilter[] = ["tudo", "tarefas", "eventos", "reunioes", "financas"];
+
+export const TIME_FILTER_LABEL: Record<TimeFilter, string> = {
+  tudo: "Tudo",
+  tarefas: "Tarefas",
+  eventos: "Eventos",
+  reunioes: "Reuniões",
+  financas: "Finanças",
+};
+
+export function matchesTimeFilter(entry: CalendarEntry, filter: TimeFilter): boolean {
+  if (filter === "tudo") return true;
+  if (entry.kind === "bill") return filter === "financas";
+  if (filter === "financas") return false;
+  if (entry.kind === "holiday" || entry.kind === "birthday") return filter === "eventos";
+  if (filter === "tarefas") return entry.reminder.type === "TAREFA";
+  if (filter === "reunioes") return entry.reminder.type === "REUNIAO";
+  return entry.reminder.type === "OUTRO";
+}
+
+export function filterEntries(entries: CalendarEntry[], filter: TimeFilter): CalendarEntry[] {
+  return entries.filter((entry) => matchesTimeFilter(entry, filter));
+}
+
 // Contas aparecem no dia do vencimento (pendentes) ou no dia em que foram
 // pagas/recebidas — nunca nos dois ao mesmo tempo.
 function billMarkerDate(bill: Bill): { key: string; marker: "vence" | "paga" | "recebida" } {

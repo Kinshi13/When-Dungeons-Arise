@@ -2,14 +2,19 @@ import { useMemo, useRef, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { api, type ReminderType } from "../api";
-import { toDateKey, type CalendarEntry } from "../core/domain/calendarEntries";
+import { toDateKey, filterEntries, type CalendarEntry, type TimeFilter } from "../core/domain/calendarEntries";
 import { useCalendarData } from "../useCalendarData";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, TrashIcon } from "../icons";
 import { playSfx } from "../sound";
 import { useQuickAction } from "../useQuickAction";
+import TimeFilterBar from "../components/TimeFilterBar";
+import { EntryRow, dayLabel } from "../components/TimelineEntryRow";
 
 interface CalendarProps {
-  variant?: "financas" | "agenda";
+  // "mensal": grade do mês (Mês). "agenda": lista cronológica só do mês em
+  // foco, a partir de hoje se for o mês atual (Agenda) — mesma fusão de
+  // dados dos dois, only o modo de exibição muda.
+  variant?: "mensal" | "agenda";
 }
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -46,7 +51,7 @@ function buildMonthGrid(year: number, month: number) {
   return cells;
 }
 
-export default function Calendar({ variant = "financas" }: CalendarProps) {
+export default function Calendar({ variant = "mensal" }: CalendarProps) {
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -57,15 +62,38 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
   const [isBirthday, setIsBirthday] = useState(false);
   const [birthYear, setBirthYear] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<TimeFilter>("tudo");
   const titleInputRef = useRef<HTMLInputElement>(null);
 
-  const { entriesByDay, reload: load } = useCalendarData(variant, year);
+  const { entriesByDay, reload: load } = useCalendarData(year);
 
   useQuickAction("novo-evento", () => titleInputRef.current?.focus());
 
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month]);
   const todayKey = toDateKey(today);
-  const dayEntries = entriesByDay.get(selectedDay) ?? [];
+  const dayEntries = filterEntries(entriesByDay.get(selectedDay) ?? [], filter);
+
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowKey = toDateKey(tomorrow);
+  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
+
+  // Modo "agenda": só os dias do mês em foco, a partir de hoje se for o mês
+  // atual (senão do dia 1) — a mesma navegação de mês do modo "mensal",
+  // só que em lista em vez de grade.
+  const agendaDays = useMemo(() => {
+    if (variant !== "agenda") return [];
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const startDay = isCurrentMonth ? today.getDate() : 1;
+    const days: { key: string; entries: CalendarEntry[] }[] = [];
+    for (let d = startDay; d <= daysInMonth; d++) {
+      const key = toDateKey(new Date(year, month, d));
+      const entries = filterEntries(entriesByDay.get(key) ?? [], filter);
+      if (entries.length > 0) days.push({ key, entries });
+    }
+    return days;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variant, year, month, isCurrentMonth, entriesByDay, filter]);
 
   function goPrevMonth() {
     if (month === 0) {
@@ -141,6 +169,23 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
           ))}
         </div>
 
+        <TimeFilterBar value={filter} onChange={setFilter} />
+
+        {variant === "agenda" ? (
+          <div className="timeline">
+            {isCurrentMonth && <div className="timeline-now">AGORA</div>}
+            {agendaDays.map(({ key, entries }) => (
+              <div key={key} className="timeline-day">
+                <div className="timeline-day-label">{dayLabel(key, todayKey, tomorrowKey)}</div>
+                {entries.map((entry) => (
+                  <EntryRow key={entry.id} entry={entry} />
+                ))}
+              </div>
+            ))}
+            {agendaDays.length === 0 && <p className="hint">Nada marcado pro resto do mês.</p>}
+          </div>
+        ) : (
+          <>
         <div className="weekday-row">
           {WEEKDAYS.map((w) => (
             <span key={w}>{w}</span>
@@ -151,7 +196,7 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
           {grid.map((date, i) => {
             if (!date) return <div key={i} className="day-cell empty" />;
             const key = toDateKey(date);
-            const dayItems = entriesByDay.get(key) ?? [];
+            const dayItems = filterEntries(entriesByDay.get(key) ?? [], filter);
             const isToday = key === todayKey;
             const isSelected = key === selectedDay;
             return (
@@ -195,8 +240,11 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
             );
           })}
         </div>
+          </>
+        )}
       </div>
 
+      {variant === "mensal" && (
       <AnimatePresence mode="wait">
         <motion.section
           key={selectedDay}
@@ -325,16 +373,10 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
               <option value="OUTRO">Evento</option>
             </select>
           )}
-          {variant === "agenda" && (
-            <label className="recurring-check">
-              <input
-                type="checkbox"
-                checked={isBirthday}
-                onChange={(e) => setIsBirthday(e.target.checked)}
-              />
-              🎂 Marcar como aniversário (avisa 20, 15, 10, 5 dias antes e na véspera, todo ano)
-            </label>
-          )}
+          <label className="recurring-check">
+            <input type="checkbox" checked={isBirthday} onChange={(e) => setIsBirthday(e.target.checked)} />
+            🎂 Marcar como aniversário (avisa 20, 15, 10, 5 dias antes e na véspera, todo ano)
+          </label>
           <button type="submit" className="icon-btn primary" aria-label="Adicionar lembrete">
             <PlusIcon />
           </button>
@@ -342,6 +384,7 @@ export default function Calendar({ variant = "financas" }: CalendarProps) {
         {error && <p className="error">{error}</p>}
         </motion.section>
       </AnimatePresence>
+      )}
     </div>
   );
 }
