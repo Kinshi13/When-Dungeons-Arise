@@ -14,6 +14,8 @@ class ChannelStar extends StatelessWidget {
     required this.onTap,
     this.size = 16,
     this.showLabel = true,
+    this.onHover,
+    this.muted = false,
   });
 
   final Channel channel;
@@ -22,55 +24,83 @@ class ChannelStar extends StatelessWidget {
   final double size;
   final bool showLabel;
 
+  /// Fires on desktop mouse enter/exit — used by the network map to drive
+  /// the "hover a star to highlight its connections" behavior.
+  final ValueChanged<bool>? onHover;
+
+  /// True when another star is focused (hovered/selected) and this one
+  /// isn't related to it — dims it further without hiding it.
+  final bool muted;
+
   @override
   Widget build(BuildContext context) {
-    final dimmed = channel.status == ChannelStatus.paused;
+    final pausedDim = channel.status == ChannelStatus.paused;
+    final emphasized = selected;
 
-    return Semantics(
+    final star = Semantics(
       button: true,
       selected: selected,
       label: '${channel.name}, ${channel.status.label}',
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(BakaRadii.md),
-        child: AnimatedContainer(
-          duration: BakaMotion.fast,
-          curve: BakaMotion.standard,
-          padding: const EdgeInsets.symmetric(horizontal: BakaSpacing.sm, vertical: BakaSpacing.xs),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(BakaRadii.md),
-            color: selected ? channel.color.withValues(alpha: 0.12) : Colors.transparent,
-            border: Border.all(
-              color: selected ? channel.color : Colors.transparent,
-              width: 1,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Opacity(
-                opacity: dimmed ? 0.4 : 1,
-                child: StarNode(
-                  color: channel.color,
-                  size: size,
-                  state: channel.status == ChannelStatus.active
-                      ? StarNodeState.inProgress
-                      : StarNodeState.planned,
-                ),
+      child: Tooltip(
+        message: '${channel.name} — ${channel.niche}\n${channel.objective}',
+        waitDuration: const Duration(milliseconds: 400),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(BakaRadii.md),
+          child: AnimatedContainer(
+            duration: BakaMotion.fast,
+            curve: BakaMotion.standard,
+            constraints: const BoxConstraints(minHeight: 40),
+            padding: const EdgeInsets.symmetric(horizontal: BakaSpacing.sm, vertical: BakaSpacing.sm),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(BakaRadii.md),
+              color: emphasized ? channel.color.withValues(alpha: 0.12) : Colors.transparent,
+              border: Border.all(
+                color: emphasized ? channel.color : Colors.transparent,
+                width: 1,
               ),
-              if (showLabel) ...[
-                const SizedBox(width: BakaSpacing.xs),
-                Text(
-                  channel.name,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: dimmed ? BakaColors.textTertiary : BakaColors.starWhite,
+              boxShadow: emphasized ? BakaShadows.focusGlow(channel.color, opacity: 0.3) : null,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Opacity(
+                  opacity: pausedDim ? 0.4 : 1,
+                  child: StarNode(
+                    color: channel.color,
+                    size: size,
+                    state: channel.status == ChannelStatus.active
+                        ? StarNodeState.inProgress
+                        : StarNodeState.planned,
                   ),
                 ),
+                if (showLabel) ...[
+                  const SizedBox(width: BakaSpacing.xs),
+                  Text(
+                    channel.name,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: pausedDim ? BakaColors.textTertiary : BakaColors.starWhite,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
+    );
+
+    final animatedStar = AnimatedOpacity(
+      duration: BakaMotion.fast,
+      opacity: muted ? 0.35 : 1,
+      child: star,
+    );
+
+    if (onHover == null) return animatedStar;
+    return MouseRegion(
+      onEnter: (_) => onHover!(true),
+      onExit: (_) => onHover!(false),
+      child: animatedStar,
     );
   }
 }

@@ -1,5 +1,7 @@
 export 'baka_bottom_nav.dart';
 export 'baka_sidebar.dart';
+export 'baka_studio_mark.dart';
+export 'channel_context_panel.dart';
 export 'channel_star.dart';
 export 'constellation_line.dart';
 export 'cosmic_section_header.dart';

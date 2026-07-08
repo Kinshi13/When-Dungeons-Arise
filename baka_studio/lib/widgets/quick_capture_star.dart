@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../core/theme/theme.dart';
+import 'baka_studio_mark.dart';
 
-/// The global quick-capture entry point — a discreet star-shaped FAB.
-/// Visual identity is intentionally distinct from the bottom nav icons so
-/// it always reads as "add something now" wherever it appears.
+/// The global quick-capture entry point. Deliberately built from the same
+/// constellation mark used in the sidebar and splash rather than a stock
+/// Material icon, with a soft radial fill and thin outer ring — so it reads
+/// as "a star you tap," not a generic FAB with an icon glued on.
 class QuickCaptureStar extends StatelessWidget {
   const QuickCaptureStar({super.key, required this.onPressed, this.mini = false});
 
@@ -17,9 +19,8 @@ class QuickCaptureStar extends StatelessWidget {
     return Tooltip(
       message: 'Captura rápida',
       child: Material(
-        color: BakaColors.stellarBlue,
+        color: Colors.transparent,
         shape: const CircleBorder(),
-        elevation: 0,
         child: InkWell(
           onTap: onPressed,
           customBorder: const CircleBorder(),
@@ -29,9 +30,17 @@ class QuickCaptureStar extends StatelessWidget {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              boxShadow: BakaShadows.focusGlow(BakaColors.stellarBlue, opacity: 0.4),
+              gradient: RadialGradient(
+                colors: [
+                  Color.lerp(BakaColors.stellarBlue, BakaColors.starWhite, 0.18)!,
+                  BakaColors.stellarBlue,
+                ],
+                radius: 0.85,
+              ),
+              border: Border.all(color: BakaColors.starWhite.withValues(alpha: 0.35), width: 1),
+              boxShadow: BakaShadows.focusGlow(BakaColors.stellarBlue, opacity: 0.45),
             ),
-            child: Icon(Icons.auto_awesome, color: BakaColors.midnightVoid, size: mini ? 22 : 26),
+            child: BakaStudioMark(size: mini ? 22 : 26, color: BakaColors.midnightVoid),
           ),
         ),
       ),

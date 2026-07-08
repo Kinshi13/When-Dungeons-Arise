@@ -266,7 +266,7 @@ class _KanbanColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget column = Container(
-      width: 260,
+      width: 296,
       padding: const EdgeInsets.all(BakaSpacing.sm),
       decoration: BoxDecoration(
         color: BakaColors.deepOrbit,
@@ -280,7 +280,7 @@ class _KanbanColumn extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: BakaSpacing.xs, vertical: BakaSpacing.xs),
             child: Row(
               children: [
-                Expanded(child: Text(stage.label, style: Theme.of(context).textTheme.titleSmall)),
+                Expanded(child: Text(stage.label, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600))),
                 Text('${items.length}', style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
@@ -302,7 +302,7 @@ class _KanbanColumn extends StatelessWidget {
                       if (!allowDragDrop) return card;
                       return Draggable<ContentItem>(
                         data: item,
-                        feedback: SizedBox(width: 232, child: Opacity(opacity: 0.9, child: card)),
+                        feedback: SizedBox(width: 268, child: Opacity(opacity: 0.9, child: card)),
                         childWhenDragging: Opacity(opacity: 0.3, child: card),
                         child: card,
                       );

@@ -20,12 +20,19 @@ class AppSectionInfo {
     required this.subtitle,
     required this.icon,
     required this.selectedIcon,
+    this.shortLabel,
   });
 
   final String title;
   final String subtitle;
   final IconData icon;
   final IconData selectedIcon;
+
+  /// Optional short label for tight destinations (mobile bottom nav).
+  final String? shortLabel;
+
+  /// [shortLabel] when set, otherwise [title].
+  String get navLabel => shortLabel ?? title;
 }
 
 const Map<AppSection, AppSectionInfo> appSections = {
@@ -34,6 +41,7 @@ const Map<AppSection, AppSectionInfo> appSections = {
     subtitle: 'Visão geral',
     icon: Icons.explore_outlined,
     selectedIcon: Icons.explore,
+    shortLabel: 'Início',
   ),
   AppSection.channels: AppSectionInfo(
     title: 'Canais',

@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:provider/provider.dart';
 
 import '../../core/navigation.dart';
 import '../../core/theme/theme.dart';
+import '../../data/models/content_item.dart';
 import '../../state/app_state.dart';
 import '../../widgets/widgets.dart';
 import '../campaigns/campaigns_screen.dart';
@@ -35,7 +38,7 @@ class _AppShellState extends State<AppShell> {
 
   Widget _buildScreen(AppSection section) {
     return switch (section) {
-      AppSection.observatory => const ObservatoryScreen(),
+      AppSection.observatory => ObservatoryScreen(onNavigate: _select),
       AppSection.channels => const ChannelsScreen(),
       AppSection.projects => const ProjectsScreen(),
       AppSection.content => const ContentScreen(),
@@ -93,7 +96,9 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final pendingSignals = context.watch<AppState>().pendingSignalsCount;
+    final appState = context.watch<AppState>();
+    final pendingSignals = appState.pendingSignalsCount;
+    final showStarfield = appState.showStarfield;
 
     if (width >= BakaBreakpoints.desktop) {
       return _DesktopShell(
@@ -103,6 +108,7 @@ class _AppShellState extends State<AppShell> {
         onToggleCollapsed: () => setState(() => _sidebarCollapsed = !_sidebarCollapsed),
         pendingSignals: pendingSignals,
         onQuickCapture: _openQuickCapture,
+        showStarfield: showStarfield,
         body: _buildScreen(_selected),
       );
     }
@@ -113,6 +119,7 @@ class _AppShellState extends State<AppShell> {
         onSelect: _select,
         pendingSignals: pendingSignals,
         onQuickCapture: _openQuickCapture,
+        showStarfield: showStarfield,
         body: _buildScreen(_selected),
       );
     }
@@ -123,19 +130,61 @@ class _AppShellState extends State<AppShell> {
       onMore: _openMoreSheet,
       pendingSignals: pendingSignals,
       onQuickCapture: _openQuickCapture,
+      showStarfield: showStarfield,
       body: _buildScreen(_selected),
     );
   }
 }
 
+/// A single result surfaced by the topbar search. Kept intentionally small:
+/// this phase only wires up navigation to real matches, not a full command
+/// palette (creating tasks, etc.) — no pretend functionality.
+class _SearchResult {
+  const _SearchResult({required this.label, required this.sublabel, required this.section, this.channelId});
+
+  final String label;
+  final String sublabel;
+  final AppSection section;
+  final String? channelId;
+}
+
+List<_SearchResult> _searchResults(AppState state, String query) {
+  if (query.trim().isEmpty) return const [];
+  final q = query.toLowerCase();
+  final results = <_SearchResult>[
+    for (final channel in state.channels)
+      if (channel.name.toLowerCase().contains(q))
+        _SearchResult(label: channel.name, sublabel: 'Canal · ${channel.niche}', section: AppSection.channels, channelId: channel.id),
+    for (final project in state.projects)
+      if (project.name.toLowerCase().contains(q))
+        _SearchResult(label: project.name, sublabel: 'Constelação', section: AppSection.projects),
+    for (final content in state.contentItems)
+      if (content.title.toLowerCase().contains(q))
+        _SearchResult(label: content.title, sublabel: 'Produção · ${content.stage.label}', section: AppSection.content),
+  ];
+  return results.take(8).toList();
+}
+
 class _Topbar extends StatelessWidget {
-  const _Topbar({required this.pendingSignals, required this.onQuickCapture});
+  const _Topbar({
+    required this.pendingSignals,
+    required this.onQuickCapture,
+    required this.onNavigate,
+    required this.searchFocusNode,
+    required this.searchController,
+  });
 
   final int pendingSignals;
   final VoidCallback onQuickCapture;
+  final ValueChanged<AppSection> onNavigate;
+  final FocusNode searchFocusNode;
+  final TextEditingController searchController;
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    final isApple = defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.iOS;
+
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: BakaSpacing.lg),
@@ -145,22 +194,72 @@ class _Topbar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 360),
-              child: TextField(
-                decoration: InputDecoration(
-                  isDense: true,
-                  hintText: 'Buscar canais, projetos, produções…',
-                  prefixIcon: const Icon(Icons.search, size: 20),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(BakaRadii.pill)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(BakaRadii.pill), borderSide: const BorderSide(color: BakaColors.borderSubtle)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(BakaRadii.pill), borderSide: const BorderSide(color: BakaColors.stellarBlue)),
-                ),
-              ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 260),
+            child: Autocomplete<_SearchResult>(
+              focusNode: searchFocusNode,
+              textEditingController: searchController,
+              displayStringForOption: (r) => r.label,
+              optionsBuilder: (value) => _searchResults(state, value.text),
+              onSelected: (result) {
+                if (result.channelId != null) state.selectChannel(result.channelId);
+                onNavigate(result.section);
+              },
+              fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+                return TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: 'Buscar em tudo…',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    suffixIcon: Padding(
+                      padding: const EdgeInsets.only(right: BakaSpacing.sm),
+                      child: Center(
+                        widthFactor: 1,
+                        child: _ShortcutHint(label: isApple ? '⌘K' : 'Ctrl+K'),
+                      ),
+                    ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(BakaRadii.pill)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(BakaRadii.pill), borderSide: const BorderSide(color: BakaColors.borderSubtle)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(BakaRadii.pill), borderSide: const BorderSide(color: BakaColors.stellarBlue)),
+                  ),
+                );
+              },
+              optionsViewBuilder: (context, onSelected, options) {
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: Material(
+                    color: BakaColors.nebulaSlate,
+                    borderRadius: BorderRadius.circular(BakaRadii.md),
+                    elevation: 0,
+                    child: Container(
+                      width: 320,
+                      constraints: const BoxConstraints(maxHeight: 320),
+                      padding: const EdgeInsets.symmetric(vertical: BakaSpacing.xs),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(BakaRadii.md),
+                        border: Border.all(color: BakaColors.borderSubtle),
+                      ),
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+                          for (final option in options)
+                            ListTile(
+                              dense: true,
+                              title: Text(option.label, style: Theme.of(context).textTheme.bodyMedium),
+                              subtitle: Text(option.sublabel, style: Theme.of(context).textTheme.bodySmall),
+                              onTap: () => onSelected(option),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
-          const SizedBox(width: BakaSpacing.md),
+          const Spacer(),
           IconButton(
             tooltip: 'Captura rápida',
             onPressed: onQuickCapture,
@@ -171,7 +270,7 @@ class _Topbar extends StatelessWidget {
             children: [
               IconButton(
                 tooltip: 'Sinais',
-                onPressed: () {},
+                onPressed: () => onNavigate(AppSection.signals),
                 icon: const Icon(Icons.graphic_eq),
               ),
               if (pendingSignals > 0)
@@ -198,7 +297,48 @@ class _Topbar extends StatelessWidget {
   }
 }
 
-class _DesktopShell extends StatelessWidget {
+/// Places the very low-density [StellarBackground] behind a screen's content
+/// — only in the content pane, never behind the sidebar/topbar chrome — so
+/// stars only ever show through empty space between cards, never compete
+/// with dense text.
+class _ScreenBackdrop extends StatelessWidget {
+  const _ScreenBackdrop({required this.show, required this.child});
+
+  final bool show;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!show) return child;
+    return Stack(
+      children: [
+        const Positioned.fill(child: StellarBackground(density: 40)),
+        child,
+      ],
+    );
+  }
+}
+
+class _ShortcutHint extends StatelessWidget {
+  const _ShortcutHint({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: BakaColors.nebulaSlateHigh,
+        borderRadius: BorderRadius.circular(BakaRadii.sm),
+        border: Border.all(color: BakaColors.borderSubtle),
+      ),
+      child: Text(label, style: const TextStyle(fontSize: 10, color: BakaColors.textSecondary, fontWeight: FontWeight.w600)),
+    );
+  }
+}
+
+class _DesktopShell extends StatefulWidget {
   const _DesktopShell({
     required this.selected,
     required this.onSelect,
@@ -206,6 +346,7 @@ class _DesktopShell extends StatelessWidget {
     required this.onToggleCollapsed,
     required this.pendingSignals,
     required this.onQuickCapture,
+    required this.showStarfield,
     required this.body,
   });
 
@@ -215,29 +356,61 @@ class _DesktopShell extends StatelessWidget {
   final VoidCallback onToggleCollapsed;
   final int pendingSignals;
   final VoidCallback onQuickCapture;
+  final bool showStarfield;
   final Widget body;
 
   @override
+  State<_DesktopShell> createState() => _DesktopShellState();
+}
+
+class _DesktopShellState extends State<_DesktopShell> {
+  final FocusNode _searchFocusNode = FocusNode();
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchFocusNode.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Row(
-        children: [
-          BakaSidebar(
-            selected: selected,
-            onSelect: onSelect,
-            collapsed: collapsed,
-            onToggleCollapsed: onToggleCollapsed,
-            pendingSignals: pendingSignals,
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyK, control: true): _searchFocusNode.requestFocus,
+        const SingleActivator(LogicalKeyboardKey.keyK, meta: true): _searchFocusNode.requestFocus,
+      },
+      child: Focus(
+        autofocus: true,
+        canRequestFocus: false,
+        child: Scaffold(
+          body: Row(
+            children: [
+              BakaSidebar(
+                selected: widget.selected,
+                onSelect: widget.onSelect,
+                collapsed: widget.collapsed,
+                onToggleCollapsed: widget.onToggleCollapsed,
+                pendingSignals: widget.pendingSignals,
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    _Topbar(
+                      pendingSignals: widget.pendingSignals,
+                      onQuickCapture: widget.onQuickCapture,
+                      onNavigate: widget.onSelect,
+                      searchFocusNode: _searchFocusNode,
+                      searchController: _searchController,
+                    ),
+                    Expanded(child: _ScreenBackdrop(show: widget.showStarfield, child: widget.body)),
+                  ],
+                ),
+              ),
+            ],
           ),
-          Expanded(
-            child: Column(
-              children: [
-                _Topbar(pendingSignals: pendingSignals, onQuickCapture: onQuickCapture),
-                Expanded(child: body),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -249,6 +422,7 @@ class _TabletShell extends StatelessWidget {
     required this.onSelect,
     required this.pendingSignals,
     required this.onQuickCapture,
+    required this.showStarfield,
     required this.body,
   });
 
@@ -256,6 +430,7 @@ class _TabletShell extends StatelessWidget {
   final ValueChanged<AppSection> onSelect;
   final int pendingSignals;
   final VoidCallback onQuickCapture;
+  final bool showStarfield;
   final Widget body;
 
   @override
@@ -269,7 +444,7 @@ class _TabletShell extends StatelessWidget {
             labelType: NavigationRailLabelType.selected,
             leading: const Padding(
               padding: EdgeInsets.symmetric(vertical: BakaSpacing.md),
-              child: Icon(Icons.auto_awesome, color: BakaColors.stellarBlue),
+              child: BakaStudioMark(size: 22),
             ),
             destinations: [
               for (final section in desktopSections)
@@ -285,7 +460,7 @@ class _TabletShell extends StatelessWidget {
             ],
           ),
           const VerticalDivider(width: 1),
-          Expanded(child: body),
+          Expanded(child: _ScreenBackdrop(show: showStarfield, child: body)),
         ],
       ),
       floatingActionButton: QuickCaptureStar(onPressed: onQuickCapture),
@@ -300,6 +475,7 @@ class _MobileShell extends StatelessWidget {
     required this.onMore,
     required this.pendingSignals,
     required this.onQuickCapture,
+    required this.showStarfield,
     required this.body,
   });
 
@@ -308,6 +484,7 @@ class _MobileShell extends StatelessWidget {
   final VoidCallback onMore;
   final int pendingSignals;
   final VoidCallback onQuickCapture;
+  final bool showStarfield;
   final Widget body;
 
   @override
@@ -317,10 +494,14 @@ class _MobileShell extends StatelessWidget {
       appBar: AppBar(
         title: Text(info.title),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.search)),
+          IconButton(
+            tooltip: 'Buscar em tudo',
+            onPressed: () => showSearch(context: context, delegate: _AppSearchDelegate(onNavigate: onSelect)),
+            icon: const Icon(Icons.search),
+          ),
         ],
       ),
-      body: body,
+      body: _ScreenBackdrop(show: showStarfield, child: body),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: QuickCaptureStar(onPressed: onQuickCapture),
       bottomNavigationBar: BakaBottomNav(
@@ -331,4 +512,54 @@ class _MobileShell extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AppSearchDelegate extends SearchDelegate<void> {
+  _AppSearchDelegate({required this.onNavigate}) : super(searchFieldLabel: 'Buscar em tudo…');
+
+  final ValueChanged<AppSection> onNavigate;
+
+  @override
+  List<Widget> buildActions(BuildContext context) => [
+    if (query.isNotEmpty) IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
+  ];
+
+  @override
+  Widget buildLeading(BuildContext context) => IconButton(
+    icon: const Icon(Icons.arrow_back),
+    onPressed: () => close(context, null),
+  );
+
+  Widget _buildList(BuildContext context) {
+    final state = context.read<AppState>();
+    final results = _searchResults(state, query);
+    if (results.isEmpty) {
+      return Center(
+        child: Text(
+          query.isEmpty ? 'Digite para buscar canais, projetos e produções.' : 'Nada encontrado.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      );
+    }
+    return ListView(
+      children: [
+        for (final result in results)
+          ListTile(
+            title: Text(result.label),
+            subtitle: Text(result.sublabel),
+            onTap: () {
+              if (result.channelId != null) state.selectChannel(result.channelId);
+              onNavigate(result.section);
+              close(context, null);
+            },
+          ),
+      ],
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) => _buildList(context);
+
+  @override
+  Widget buildSuggestions(BuildContext context) => _buildList(context);
 }

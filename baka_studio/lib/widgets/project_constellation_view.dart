@@ -57,14 +57,15 @@ class ProjectConstellationView extends StatelessWidget {
 
     const columnWidth = 168.0;
     const rowHeight = 64.0;
+    const outerPadding = 24.0;
     final maxRows = itemsByLevel.values.map((l) => l.length).reduce((a, b) => a > b ? a : b);
-    final height = maxRows * rowHeight + 40;
-    final width = (maxLevel + 1) * columnWidth;
+    final contentHeight = maxRows * rowHeight + 40;
+    final contentWidth = (maxLevel + 1) * columnWidth;
 
     final positions = <String, Offset>{};
     itemsByLevel.forEach((level, ids) {
       final totalHeight = ids.length * rowHeight;
-      final startY = (height - totalHeight) / 2;
+      final startY = (contentHeight - totalHeight) / 2;
       for (var i = 0; i < ids.length; i++) {
         positions[ids[i]] = Offset(
           level * columnWidth + columnWidth / 2,
@@ -84,41 +85,63 @@ class ProjectConstellationView extends StatelessWidget {
             ),
     ];
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: Stack(
-          children: [
-            Positioned.fill(child: ConstellationLine(edges: edges)),
-            for (final item in project.items)
-              Positioned(
-                left: positions[item.id]!.dx - columnWidth / 2 + 8,
-                top: positions[item.id]!.dy - 20,
-                width: columnWidth - 16,
-                child: Column(
-                  children: [
-                    StarNode(
-                      color: accentColor,
-                      size: 18,
-                      state: _starStateFor(item.state),
-                      label: item.title,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.title,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: BakaColors.starWhite),
-                    ),
-                  ],
-                ),
+    final diagram = SizedBox(
+      width: contentWidth,
+      height: contentHeight,
+      child: Stack(
+        children: [
+          Positioned.fill(child: ConstellationLine(edges: edges)),
+          for (final item in project.items)
+            Positioned(
+              left: positions[item.id]!.dx - columnWidth / 2 + 8,
+              top: positions[item.id]!.dy - 20,
+              width: columnWidth - 16,
+              child: Column(
+                children: [
+                  StarNode(
+                    color: accentColor,
+                    size: 18,
+                    state: _starStateFor(item.state),
+                    label: item.title,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.title,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: BakaColors.starWhite),
+                  ),
+                ],
               ),
-          ],
-        ),
+            ),
+        ],
       ),
+    );
+
+    // Auto-fit: when the diagram is narrower than the available canvas it's
+    // centered with breathing room instead of hugging the top-left corner;
+    // once it's wider than the canvas it falls back to horizontal scrolling.
+    // This Stack/Positioned layout is a natural fit for an InteractiveViewer
+    // wrapper later (pan/zoom/reset) — no rework needed, just wrap [diagram].
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth - outerPadding * 2;
+        final availableHeight = contentHeight + outerPadding * 2;
+
+        if (contentWidth <= availableWidth) {
+          return SizedBox(
+            height: availableHeight,
+            child: Center(child: diagram),
+          );
+        }
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: outerPadding, vertical: outerPadding),
+          child: diagram,
+        );
+      },
     );
   }
 }

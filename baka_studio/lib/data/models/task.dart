@@ -11,7 +11,7 @@ class DailyTask {
 
   final String id;
   final String title;
-  final DateTime dueDate;
+  DateTime dueDate;
   final String? channelId;
   bool done;
 

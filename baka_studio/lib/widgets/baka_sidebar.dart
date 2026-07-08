@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/navigation.dart';
 import '../core/theme/theme.dart';
+import 'baka_studio_mark.dart';
 
 /// Collapsible desktop sidebar. Selection is marked with a left accent bar
 /// plus a color/weight change — no game-menu styling, no heavy glow.
@@ -88,7 +89,7 @@ class _Header extends StatelessWidget {
               color: BakaColors.nebulaSlate,
               borderRadius: BorderRadius.circular(BakaRadii.sm),
             ),
-            child: const Icon(Icons.auto_awesome, size: 18, color: BakaColors.stellarBlue),
+            child: const BakaStudioMark(size: 20),
           ),
           if (!collapsed) ...[
             const SizedBox(width: BakaSpacing.sm),

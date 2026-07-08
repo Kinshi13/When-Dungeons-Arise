@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/theme.dart';
 import '../../data/seed/seed_data.dart';
+import '../../state/app_state.dart';
 import '../../widgets/cosmic_section_header.dart';
 import '../../widgets/stellar_card.dart';
 
@@ -14,11 +16,11 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _reduceMotion = false;
-  bool _starfield = true;
   bool _notifications = true;
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
     return SingleChildScrollView(
       padding: const EdgeInsets.all(BakaSpacing.lg),
       child: Column(
@@ -44,8 +46,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SwitchListTile(
                   title: const Text('Fundo estelar'),
                   subtitle: const Text('Exibir estrelas discretas no plano de fundo'),
-                  value: _starfield,
-                  onChanged: (v) => setState(() => _starfield = v),
+                  value: state.showStarfield,
+                  onChanged: state.setShowStarfield,
                 ),
                 const Divider(height: 1),
                 SwitchListTile(

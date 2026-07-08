@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../data/models/campaign.dart';
 import '../data/models/channel.dart';
+import '../data/models/channel_link.dart';
 import '../data/models/content_item.dart';
 import '../data/models/orbit_event.dart';
 import '../data/models/project.dart';
@@ -34,6 +35,13 @@ class AppState extends ChangeNotifier {
 
   String? selectedChannelId;
 
+  bool showStarfield = true;
+
+  void setShowStarfield(bool value) {
+    showStarfield = value;
+    notifyListeners();
+  }
+
   Channel? channelById(String? id) {
     if (id == null) return null;
     for (final c in channels) {
@@ -51,6 +59,14 @@ class AppState extends ChangeNotifier {
     return projects.where((p) => p.channelIds.contains(channelId)).toList();
   }
 
+  /// Real count of projects shared between two channels — used to back up a
+  /// [ChannelLink] with actual numbers instead of a decorative line.
+  int sharedProjectsCount(String channelIdA, String channelIdB) {
+    return projects
+        .where((p) => p.channelIds.contains(channelIdA) && p.channelIds.contains(channelIdB))
+        .length;
+  }
+
   List<ContentItem> contentForChannel(String channelId) {
     return contentItems.where((c) => c.channelId == channelId).toList();
   }
@@ -65,6 +81,12 @@ class AppState extends ChangeNotifier {
   void toggleTask(String id) {
     final task = dailyTasks.firstWhere((t) => t.id == id);
     task.done = !task.done;
+    notifyListeners();
+  }
+
+  void rescheduleTask(String id, DateTime newDate) {
+    final task = dailyTasks.firstWhere((t) => t.id == id);
+    task.dueDate = newDate;
     notifyListeners();
   }
 
@@ -102,5 +124,20 @@ class AppState extends ChangeNotifier {
   void addSignal(Signal signal) {
     signals.insert(0, signal);
     notifyListeners();
+  }
+
+  /// Creates a new, empty constellation — the "+ Nova constelação" action.
+  Project createProject(String name) {
+    final project = Project(
+      id: 'proj_${DateTime.now().microsecondsSinceEpoch}',
+      name: name,
+      description: 'Constelação recém-criada.',
+      channelIds: const [],
+      status: ProjectStatus.planning,
+      items: const [],
+    );
+    projects.add(project);
+    notifyListeners();
+    return project;
   }
 }

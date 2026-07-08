@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/theme.dart';
+import '../../widgets/baka_studio_mark.dart';
 import '../../widgets/stellar_background.dart';
 import '../shell/app_shell.dart';
 
@@ -58,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const _SplashMark(),
+                    const BakaStudioMark(size: 72),
                     const SizedBox(height: BakaSpacing.md),
                     Text('Baka Studio', style: BakaTypography.wordmark.copyWith(fontSize: 24)),
                     const SizedBox(height: BakaSpacing.xxs),
@@ -72,63 +73,4 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       ),
     );
   }
-}
-
-/// Provisional mark: a small constellation forming a "B" out of connected
-/// points. Isolated in its own widget so it's a one-file swap once final
-/// brand art exists.
-class _SplashMark extends StatelessWidget {
-  const _SplashMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      width: 72,
-      height: 72,
-      child: CustomPaint(painter: _BakaMarkPainter()),
-    );
-  }
-}
-
-class _BakaMarkPainter extends CustomPainter {
-  const _BakaMarkPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Seven points loosely tracing a "B", connected like a constellation.
-    final points = [
-      Offset(size.width * 0.28, size.height * 0.12),
-      Offset(size.width * 0.28, size.height * 0.50),
-      Offset(size.width * 0.28, size.height * 0.88),
-      Offset(size.width * 0.68, size.height * 0.24),
-      Offset(size.width * 0.68, size.height * 0.50),
-      Offset(size.width * 0.68, size.height * 0.76),
-      Offset(size.width * 0.44, size.height * 0.50),
-    ];
-    const edges = [
-      [0, 1], [1, 2], [0, 3], [3, 6], [6, 1], [1, 4], [4, 6], [6, 5], [5, 2],
-    ];
-
-    final linePaint = Paint()
-      ..color = BakaColors.stellarBlue.withValues(alpha: 0.5)
-      ..strokeWidth = 1.4
-      ..style = PaintingStyle.stroke;
-
-    for (final edge in edges) {
-      canvas.drawLine(points[edge[0]], points[edge[1]], linePaint);
-    }
-
-    final dotPaint = Paint()..color = BakaColors.stellarBlue;
-    final glowPaint = Paint()
-      ..color = BakaColors.stellarBlue.withValues(alpha: 0.4)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-
-    for (final point in points) {
-      canvas.drawCircle(point, 4, glowPaint);
-      canvas.drawCircle(point, 2.2, dotPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _BakaMarkPainter oldDelegate) => false;
 }

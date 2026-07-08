@@ -6,6 +6,7 @@ import '../../data/models/channel.dart';
 import '../../data/models/content_item.dart';
 import '../../data/seed/seed_data.dart';
 import '../../state/app_state.dart';
+import '../../widgets/channel_context_panel.dart';
 import '../../widgets/channel_network_map.dart';
 import '../../widgets/cosmic_section_header.dart';
 import '../../widgets/star_node.dart';
@@ -47,7 +48,7 @@ class _ChannelsScreenState extends State<ChannelsScreen> {
           const SizedBox(height: BakaSpacing.lg),
           if (_view == _ChannelsView.cards)
             _ChannelsGrid(channels: state.channels)
-          else
+          else ...[
             StellarCard(
               child: ChannelNetworkMap(
                 height: 320,
@@ -57,6 +58,11 @@ class _ChannelsScreenState extends State<ChannelsScreen> {
                 onSelect: state.selectChannel,
               ),
             ),
+            if (state.selectedChannelId != null) ...[
+              const SizedBox(height: BakaSpacing.sm),
+              ChannelContextPanel(channelId: state.selectedChannelId!),
+            ],
+          ],
         ],
       ),
     );

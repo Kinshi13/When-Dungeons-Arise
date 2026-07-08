@@ -79,7 +79,7 @@ class _NavItem extends StatelessWidget {
     final info = section != null ? appSections[section]! : null;
     final color = selected ? BakaColors.stellarBlue : BakaColors.textSecondary;
     final displayIcon = selected ? (info?.selectedIcon ?? icon!) : (info?.icon ?? icon!);
-    final displayLabel = info?.title ?? label!;
+    final displayLabel = info?.navLabel ?? label!;
 
     return InkResponse(
       onTap: onTap,

@@ -62,7 +62,7 @@ abstract final class BakaTypography {
       ),
       titleSmall: TextStyle(
         fontSize: 13,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         height: 1.4,
         color: onSurface,
       ),
@@ -92,14 +92,14 @@ abstract final class BakaTypography {
       ),
       labelMedium: TextStyle(
         fontSize: 12,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         letterSpacing: 0.2,
         color: BakaColors.textSecondary,
       ),
       labelSmall: TextStyle(
         fontSize: 11,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.4,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0.3,
         color: BakaColors.textTertiary,
       ),
     );
@@ -116,8 +116,8 @@ abstract final class BakaTypography {
 
   static const TextStyle overline = TextStyle(
     fontSize: 11,
-    fontWeight: FontWeight.w700,
-    letterSpacing: 1.2,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 1.0,
     color: BakaColors.textTertiary,
   );
 }

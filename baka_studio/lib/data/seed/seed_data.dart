@@ -1,6 +1,7 @@
 import '../../core/theme/baka_colors.dart';
 import '../models/campaign.dart';
 import '../models/channel.dart';
+import '../models/channel_link.dart';
 import '../models/content_item.dart';
 import '../models/orbit_event.dart';
 import '../models/project.dart';
@@ -69,12 +70,29 @@ abstract final class SeedData {
   ];
 
   /// Curated channel-to-channel links for "Minha Rede" — only real
-  /// strategic relationships, not an all-to-all mesh.
-  static const List<List<String>> channelLinks = [
-    ['baka_code', 'baka_phone'],
-    ['baka_code', 'stella7'],
-    ['stella7', 'code_no_sekai'],
-    ['baka_code', 'robsonso'],
+  /// strategic relationships, not an all-to-all mesh. Each carries an
+  /// honest description of *why* the two channels are connected.
+  static const List<ChannelLink> channelLinks = [
+    ChannelLink(
+      channelIdA: 'baka_code',
+      channelIdB: 'baka_phone',
+      relation: 'Mesma vertical técnica — conteúdo cruzado sobre dev e mobile',
+    ),
+    ChannelLink(
+      channelIdA: 'baka_code',
+      channelIdB: 'stella7',
+      relation: 'Baka Studio documenta o processo de criação musical da Stella7',
+    ),
+    ChannelLink(
+      channelIdA: 'stella7',
+      channelIdB: 'code_no_sekai',
+      relation: 'Exploração de IA aplicada à composição musical',
+    ),
+    ChannelLink(
+      channelIdA: 'baka_code',
+      channelIdB: 'robsonso',
+      relation: 'Bastidores de desenvolvimento viram conteúdo de humor',
+    ),
   ];
 
   // Projects (constellations) ------------------------------------------------------------

@@ -1,7 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
+import '../core/theme/baka_motion.dart';
 import '../data/models/channel.dart';
+import '../data/models/channel_link.dart';
 import 'channel_star.dart';
 import 'constellation_line.dart';
 
@@ -18,7 +20,12 @@ const Map<String, Offset> _fixedLayout = {
 
 /// Shared "channels as connected stars" visualization used by both the
 /// Observatório ("Minha Rede") and the Canais screen ("Mapa da rede").
-class ChannelNetworkMap extends StatelessWidget {
+///
+/// Hovering (desktop) or selecting a star focuses it: its real connections
+/// (see [ChannelLink]) light up while unrelated stars and lines dim — the
+/// map never lights every connection at once, since not all channels are
+/// actually related.
+class ChannelNetworkMap extends StatefulWidget {
   const ChannelNetworkMap({
     super.key,
     required this.channels,
@@ -29,10 +36,17 @@ class ChannelNetworkMap extends StatelessWidget {
   });
 
   final List<Channel> channels;
-  final List<List<String>> links;
+  final List<ChannelLink> links;
   final String? selectedChannelId;
   final ValueChanged<String> onSelect;
   final double height;
+
+  @override
+  State<ChannelNetworkMap> createState() => _ChannelNetworkMapState();
+}
+
+class _ChannelNetworkMapState extends State<ChannelNetworkMap> {
+  String? _hoveredId;
 
   Offset _positionFor(String id, int index, int total, Size size) {
     final fixed = _fixedLayout[id];
@@ -46,31 +60,37 @@ class ChannelNetworkMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final focusId = _hoveredId ?? widget.selectedChannelId;
+
     return SizedBox(
-      height: height,
+      height: widget.height,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final size = Size(constraints.maxWidth, constraints.maxHeight);
           final positions = <String, Offset>{
-            for (var i = 0; i < channels.length; i++)
-              channels[i].id: _positionFor(channels[i].id, i, channels.length, size),
+            for (var i = 0; i < widget.channels.length; i++)
+              widget.channels[i].id: _positionFor(widget.channels[i].id, i, widget.channels.length, size),
           };
 
           final edges = <ConstellationEdge>[
-            for (final link in links)
-              if (positions[link[0]] != null && positions[link[1]] != null)
+            for (final link in widget.links)
+              if (positions[link.channelIdA] != null && positions[link.channelIdB] != null)
                 ConstellationEdge(
-                  start: positions[link[0]]!,
-                  end: positions[link[1]]!,
-                  dashed: selectedChannelId != null &&
-                      !link.contains(selectedChannelId),
+                  start: positions[link.channelIdA]!,
+                  end: positions[link.channelIdB]!,
+                  dashed: focusId != null && !link.involves(focusId),
                 ),
           ];
 
           return Stack(
             children: [
-              Positioned.fill(child: ConstellationLine(edges: edges)),
-              for (final channel in channels)
+              Positioned.fill(
+                child: AnimatedSwitcher(
+                  duration: BakaMotion.fast,
+                  child: ConstellationLine(key: ValueKey(focusId), edges: edges),
+                ),
+              ),
+              for (final channel in widget.channels)
                 Positioned(
                   left: positions[channel.id]!.dx,
                   top: positions[channel.id]!.dy,
@@ -78,8 +98,12 @@ class ChannelNetworkMap extends StatelessWidget {
                     translation: const Offset(-0.5, -0.5),
                     child: ChannelStar(
                       channel: channel,
-                      selected: channel.id == selectedChannelId,
-                      onTap: () => onSelect(channel.id),
+                      selected: channel.id == widget.selectedChannelId || channel.id == _hoveredId,
+                      muted: focusId != null &&
+                          channel.id != focusId &&
+                          !widget.links.any((l) => l.involves(focusId) && l.involves(channel.id)),
+                      onHover: (hovering) => setState(() => _hoveredId = hovering ? channel.id : null),
+                      onTap: () => widget.onSelect(channel.id),
                     ),
                   ),
                 ),

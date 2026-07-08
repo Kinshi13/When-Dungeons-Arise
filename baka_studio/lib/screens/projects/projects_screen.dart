@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +22,39 @@ class ProjectsScreen extends StatefulWidget {
 class _ProjectsScreenState extends State<ProjectsScreen> {
   _ProjectsView _view = _ProjectsView.cards;
   String? _mapProjectId;
+  final List<String> _recentProjectIds = [];
+
+  void _selectMapProject(String id) {
+    setState(() {
+      _mapProjectId = id;
+      _recentProjectIds.remove(id);
+      _recentProjectIds.insert(0, id);
+      if (_recentProjectIds.length > 4) _recentProjectIds.removeLast();
+    });
+  }
+
+  Future<void> _createProject(AppState state) async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Nova constelação'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: 'Nome do projeto'),
+          onSubmitted: (v) => Navigator.of(dialogContext).pop(v),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancelar')),
+          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(controller.text), child: const Text('Criar')),
+        ],
+      ),
+    );
+    if (name == null || name.trim().isEmpty) return;
+    final project = state.createProject(name.trim());
+    _selectMapProject(project.id);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,9 +62,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
     final projects = state.projects;
 
     if (projects.isEmpty) {
-      return const EmptyConstellationState(
+      return EmptyConstellationState(
         message: 'Nenhuma constelação foi formada ainda.',
         actionLabel: 'Criar projeto',
+        onAction: () => _createProject(state),
       );
     }
 
@@ -61,7 +96,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
             _ProjectsMap(
               projects: projects,
               selectedId: _mapProjectId!,
-              onSelect: (id) => setState(() => _mapProjectId = id),
+              recentIds: _recentProjectIds,
+              onSelect: _selectMapProject,
+              onCreate: () => _createProject(state),
               state: state,
             ),
         ],
@@ -167,30 +204,86 @@ class _ProjectsGrid extends StatelessWidget {
 }
 
 class _ProjectsMap extends StatelessWidget {
-  const _ProjectsMap({required this.projects, required this.selectedId, required this.onSelect, required this.state});
+  const _ProjectsMap({
+    required this.projects,
+    required this.selectedId,
+    required this.recentIds,
+    required this.onSelect,
+    required this.onCreate,
+    required this.state,
+  });
 
   final List<Project> projects;
   final String selectedId;
+  final List<String> recentIds;
   final ValueChanged<String> onSelect;
+  final VoidCallback onCreate;
   final AppState state;
 
   @override
   Widget build(BuildContext context) {
     final selected = projects.firstWhere((p) => p.id == selectedId);
+    final recents = [
+      for (final id in recentIds) if (id != selectedId) projects.where((p) => p.id == id).firstOrNull,
+    ].whereType<Project>().take(4).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Wrap(
-          spacing: BakaSpacing.xs,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: BakaSpacing.sm,
+          runSpacing: BakaSpacing.sm,
           children: [
-            for (final project in projects)
-              ChoiceChip(
-                label: Text(project.name),
-                selected: project.id == selectedId,
-                onSelected: (_) => onSelect(project.id),
+            SizedBox(
+              width: 260,
+              child: DropdownMenu<String>(
+                initialSelection: selectedId,
+                enableFilter: true,
+                enableSearch: true,
+                hintText: 'Selecionar constelação',
+                leadingIcon: const Icon(Icons.hub_outlined, size: 18),
+                inputDecorationTheme: InputDecorationTheme(
+                  isDense: true,
+                  filled: true,
+                  fillColor: BakaColors.nebulaSlate,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(BakaRadii.md)),
+                ),
+                menuStyle: MenuStyle(backgroundColor: WidgetStateProperty.all(BakaColors.nebulaSlate)),
+                dropdownMenuEntries: [
+                  for (final project in projects) DropdownMenuEntry(value: project.id, label: project.name),
+                ],
+                onSelected: (value) {
+                  if (value != null) onSelect(value);
+                },
               ),
+            ),
+            OutlinedButton.icon(
+              onPressed: onCreate,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Nova constelação'),
+            ),
           ],
         ),
+        if (recents.isNotEmpty) ...[
+          const SizedBox(height: BakaSpacing.sm),
+          Row(
+            children: [
+              Text('Recentes', style: Theme.of(context).textTheme.labelSmall),
+              const SizedBox(width: BakaSpacing.sm),
+              Expanded(
+                child: Wrap(
+                  spacing: BakaSpacing.xs,
+                  runSpacing: BakaSpacing.xs,
+                  children: [
+                    for (final project in recents)
+                      ActionChip(label: Text(project.name), onPressed: () => onSelect(project.id)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: BakaSpacing.md),
         StellarCard(
           child: ProjectConstellationView(project: selected, accentColor: _channelColor(selected, state)),

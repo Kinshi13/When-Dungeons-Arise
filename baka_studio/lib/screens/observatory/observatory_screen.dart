@@ -1,16 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/navigation.dart';
 import '../../core/theme/theme.dart';
 import '../../data/models/content_item.dart';
+import '../../data/models/project.dart';
+import '../../data/models/signal.dart';
+import '../../data/models/task.dart';
 import '../../data/seed/seed_data.dart';
 import '../../state/app_state.dart';
 import '../../widgets/channel_network_map.dart';
 import '../../widgets/widgets.dart';
 
+enum _AttentionKind { lateTask, lateContent, todayTask, upcomingPublication, importantSignal, blockedItem }
+
+class _AttentionEntry {
+  const _AttentionEntry({required this.kind, required this.title, required this.detail, this.task});
+
+  final _AttentionKind kind;
+  final String title;
+  final String detail;
+  final DailyTask? task;
+}
+
 /// "O que precisa da minha atenção agora?" — the home dashboard.
 class ObservatoryScreen extends StatelessWidget {
-  const ObservatoryScreen({super.key});
+  const ObservatoryScreen({super.key, required this.onNavigate});
+
+  final ValueChanged<AppSection> onNavigate;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +47,26 @@ class ObservatoryScreen extends StatelessWidget {
         .where((e) => e.type.name == 'publicacao' && e.date.isAfter(DateTime.now()))
         .toList()
       ..sort((a, b) => a.date.compareTo(b.date));
+    final soonPublications = upcomingPublications.where((e) => e.date.difference(DateTime.now()).inHours <= 48).toList();
+    final importantSignals = state.signals.where((s) => !s.processed && s.type == SignalType.bug).toList();
+    final blockedItems = <(Project, ProjectItem)>[
+      for (final project in state.projects)
+        if (project.status != ProjectStatus.done)
+          for (final item in project.items)
+            if (item.state == ProjectItemState.blocked) (project, item),
+    ];
+
+    final entries = <_AttentionEntry>[
+      for (final task in lateTasks) _AttentionEntry(kind: _AttentionKind.lateTask, title: task.title, detail: 'Atrasada', task: task),
+      for (final content in lateContent)
+        _AttentionEntry(kind: _AttentionKind.lateContent, title: content.title, detail: 'Produção atrasada · ${content.stage.label}'),
+      for (final signal in importantSignals) _AttentionEntry(kind: _AttentionKind.importantSignal, title: signal.text, detail: 'Sinal importante · Bug'),
+      for (final (project, item) in blockedItems)
+        _AttentionEntry(kind: _AttentionKind.blockedItem, title: item.title, detail: 'Bloqueado em "${project.name}"'),
+      for (final task in todayTasks) _AttentionEntry(kind: _AttentionKind.todayTask, title: task.title, detail: 'Hoje', task: task),
+      for (final event in soonPublications)
+        _AttentionEntry(kind: _AttentionKind.upcomingPublication, title: event.title, detail: 'Publicação em breve'),
+    ];
 
     final selectedChannel = state.channelById(state.selectedChannelId);
 
@@ -49,31 +86,13 @@ class ObservatoryScreen extends StatelessWidget {
           const SizedBox(height: BakaSpacing.xl),
           Text('Precisa da sua atenção', style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: BakaSpacing.sm),
-          if (lateTasks.isEmpty && lateContent.isEmpty && todayTasks.isEmpty)
+          if (entries.isEmpty)
             const StellarCard(child: Text('Tudo em dia — nenhuma pendência urgente.'))
           else
             Column(
               children: [
-                for (final task in lateTasks)
-                  _AttentionRow(
-                    color: BakaColors.danger,
-                    label: 'Atrasada',
-                    title: task.title,
-                    trailing: Checkbox(value: task.done, onChanged: (_) => state.toggleTask(task.id)),
-                  ),
-                for (final content in lateContent)
-                  _AttentionRow(
-                    color: BakaColors.danger,
-                    label: 'Produção atrasada · ${content.stage.label}',
-                    title: content.title,
-                  ),
-                for (final task in todayTasks)
-                  _AttentionRow(
-                    color: BakaColors.stellarBlue,
-                    label: 'Hoje',
-                    title: task.title,
-                    trailing: Checkbox(value: task.done, onChanged: (_) => state.toggleTask(task.id)),
-                  ),
+                for (final entry in entries)
+                  _AttentionRow(entry: entry, onNavigate: onNavigate),
               ],
             ),
           const SizedBox(height: BakaSpacing.xl),
@@ -99,7 +118,7 @@ class ObservatoryScreen extends StatelessWidget {
           ),
           if (selectedChannel != null) ...[
             const SizedBox(height: BakaSpacing.sm),
-            _ChannelContextPanel(channelId: selectedChannel.id),
+            ChannelContextPanel(channelId: selectedChannel.id),
           ],
           const SizedBox(height: BakaSpacing.xl),
           Text('Próximas publicações', style: Theme.of(context).textTheme.headlineSmall),
@@ -183,91 +202,100 @@ class _StatsRow extends StatelessWidget {
   }
 }
 
-class _AttentionRow extends StatelessWidget {
-  const _AttentionRow({required this.color, required this.label, required this.title, this.trailing});
+Color _colorForAttentionKind(_AttentionKind kind) => switch (kind) {
+  _AttentionKind.lateTask => BakaColors.danger,
+  _AttentionKind.lateContent => BakaColors.danger,
+  _AttentionKind.importantSignal => BakaColors.stellaRose,
+  _AttentionKind.blockedItem => BakaColors.warning,
+  _AttentionKind.todayTask => BakaColors.stellarBlue,
+  _AttentionKind.upcomingPublication => BakaColors.signalCyan,
+};
 
-  final Color color;
-  final String label;
-  final String title;
-  final Widget? trailing;
+IconData _iconForAttentionKind(_AttentionKind kind) => switch (kind) {
+  _AttentionKind.lateTask => Icons.event_busy,
+  _AttentionKind.lateContent => Icons.movie_creation_outlined,
+  _AttentionKind.importantSignal => Icons.bug_report_outlined,
+  _AttentionKind.blockedItem => Icons.block,
+  _AttentionKind.todayTask => Icons.today_outlined,
+  _AttentionKind.upcomingPublication => Icons.send_outlined,
+};
+
+class _AttentionRow extends StatelessWidget {
+  const _AttentionRow({required this.entry, required this.onNavigate});
+
+  final _AttentionEntry entry;
+  final ValueChanged<AppSection> onNavigate;
+
+  Future<void> _reschedule(BuildContext context) async {
+    final state = context.read<AppState>();
+    final task = entry.task!;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: task.dueDate.isBefore(DateTime.now()) ? DateTime.now() : task.dueDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) state.rescheduleTask(task.id, picked);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final color = _colorForAttentionKind(entry.kind);
+    final state = context.read<AppState>();
+
+    final menuItems = <PopupMenuEntry<String>>[
+      switch (entry.kind) {
+        _AttentionKind.lateTask || _AttentionKind.todayTask => const PopupMenuItem(value: 'reschedule', child: Text('Reagendar')),
+        _AttentionKind.lateContent => const PopupMenuItem(value: 'open_content', child: Text('Abrir em Produções')),
+        _AttentionKind.importantSignal => const PopupMenuItem(value: 'open_signals', child: Text('Abrir em Sinais')),
+        _AttentionKind.blockedItem => const PopupMenuItem(value: 'open_projects', child: Text('Abrir em Constelações')),
+        _AttentionKind.upcomingPublication => const PopupMenuItem(value: 'open_orbit', child: Text('Ver na Órbita')),
+      },
+    ];
+
     return Padding(
       padding: const EdgeInsets.only(bottom: BakaSpacing.xs),
       child: StellarCard(
         padding: const EdgeInsets.symmetric(horizontal: BakaSpacing.md, vertical: BakaSpacing.sm),
         child: Row(
           children: [
-            Container(width: 4, height: 32, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(BakaRadii.pill))),
+            Icon(_iconForAttentionKind(entry.kind), size: 18, color: color),
             const SizedBox(width: BakaSpacing.sm),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: BakaTypography.overline.copyWith(color: color)),
-                  Text(title, style: Theme.of(context).textTheme.bodyLarge),
+                  Text(entry.detail, style: BakaTypography.overline.copyWith(color: color)),
+                  Text(entry.title, style: Theme.of(context).textTheme.bodyLarge),
                 ],
               ),
             ),
-            ?trailing,
+            if (entry.task != null)
+              Checkbox(value: entry.task!.done, onChanged: (_) => state.toggleTask(entry.task!.id)),
+            PopupMenuButton<String>(
+              tooltip: 'Mais ações',
+              icon: const Icon(Icons.more_vert, size: 18, color: BakaColors.textSecondary),
+              color: BakaColors.nebulaSlate,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(BakaRadii.md)),
+              itemBuilder: (context) => menuItems,
+              onSelected: (value) {
+                switch (value) {
+                  case 'reschedule':
+                    _reschedule(context);
+                  case 'open_content':
+                    onNavigate(AppSection.content);
+                  case 'open_signals':
+                    onNavigate(AppSection.signals);
+                  case 'open_projects':
+                    onNavigate(AppSection.projects);
+                  case 'open_orbit':
+                    onNavigate(AppSection.orbit);
+                }
+              },
+            ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ChannelContextPanel extends StatelessWidget {
-  const _ChannelContextPanel({required this.channelId});
-
-  final String channelId;
-
-  @override
-  Widget build(BuildContext context) {
-    final state = context.watch<AppState>();
-    final channel = state.channelById(channelId)!;
-    final projects = state.projectsForChannel(channelId);
-    final content = state.contentForChannel(channelId)
-        .where((c) => c.stage != ContentStage.publicado && c.stage != ContentStage.arquivado)
-        .toList();
-
-    return StellarCard(
-      accentColor: channel.color,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(channel.name, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 2),
-          Text(channel.objective, style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(height: BakaSpacing.sm),
-          Wrap(spacing: BakaSpacing.md, runSpacing: BakaSpacing.xs, children: [
-            _MiniStat(label: 'Projetos ativos', value: '${projects.length}'),
-            _MiniStat(label: 'Em produção', value: '${content.length}'),
-            if (channel.nextPublication != null)
-              _MiniStat(label: 'Próxima publicação', value: channel.nextPublication!),
-          ]),
-        ],
-      ),
-    );
-  }
-}
-
-class _MiniStat extends StatelessWidget {
-  const _MiniStat({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(label, style: Theme.of(context).textTheme.labelSmall),
-        Text(value, style: Theme.of(context).textTheme.bodyMedium),
-      ],
     );
   }
 }

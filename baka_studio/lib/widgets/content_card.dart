@@ -2,12 +2,28 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/theme.dart';
 import '../data/models/content_item.dart';
+import 'star_node.dart';
 import 'stellar_card.dart';
 
 Color colorForPriority(ContentPriority priority) => switch (priority) {
   ContentPriority.low => BakaColors.textTertiary,
   ContentPriority.medium => BakaColors.warning,
   ContentPriority.high => BakaColors.danger,
+};
+
+/// Maps a production's pipeline stage onto the shared star-node vocabulary,
+/// so a card visually "lights up" the same way a finished project item
+/// does once it's published.
+StarNodeState _starStateForStage(ContentStage stage) => switch (stage) {
+  ContentStage.publicado => StarNodeState.done,
+  ContentStage.prontoParaGravar ||
+  ContentStage.gravando ||
+  ContentStage.editando ||
+  ContentStage.thumb ||
+  ContentStage.revisao ||
+  ContentStage.agendado => StarNodeState.inProgress,
+  ContentStage.inbox || ContentStage.ideia || ContentStage.pesquisa || ContentStage.roteiro => StarNodeState.planned,
+  ContentStage.arquivado => StarNodeState.future,
 };
 
 /// A single production card — shown in list, card-grid, and Kanban layouts.
@@ -48,7 +64,19 @@ class ContentCard extends StatelessWidget {
           const SizedBox(height: BakaSpacing.xs),
           Row(
             children: [
-              Container(width: 8, height: 8, decoration: BoxDecoration(color: channelColor, shape: BoxShape.circle)),
+              AnimatedSwitcher(
+                duration: BakaMotion.base,
+                transitionBuilder: (child, animation) => ScaleTransition(
+                  scale: animation,
+                  child: FadeTransition(opacity: animation, child: child),
+                ),
+                child: StarNode(
+                  key: ValueKey(item.stage),
+                  color: channelColor,
+                  size: 12,
+                  state: _starStateForStage(item.stage),
+                ),
+              ),
               const SizedBox(width: 6),
               Expanded(child: Text(channelName, style: textTheme.bodySmall, overflow: TextOverflow.ellipsis)),
             ],
