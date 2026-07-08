@@ -121,6 +121,12 @@ export default function Bills() {
     await load();
   }
 
+  async function handleStopRecurring(bill: Bill) {
+    if (!bill.recurrenceId) return;
+    await api.financeRules.stop(bill.recurrenceId);
+    await load();
+  }
+
   async function handleTogglePriority(bill: Bill) {
     await api.bills.update(bill.id, { priority: !bill.priority });
     await load();
@@ -242,6 +248,15 @@ export default function Bills() {
               {!bill.recurring && (
                 <button className="icon-btn" onClick={() => handleToggleRecurring(bill)} aria-label="Tornar recorrente mensal">
                   Recorrente
+                </button>
+              )}
+              {bill.recurring && bill.recurrenceId && (
+                <button
+                  className="icon-btn"
+                  onClick={() => handleStopRecurring(bill)}
+                  aria-label="Parar recorrência (não gera mais meses futuros)"
+                >
+                  Parar recorrência
                 </button>
               )}
               <button className="icon-btn" onClick={() => handleToggleSettle(bill)} aria-label="Marcar como paga">

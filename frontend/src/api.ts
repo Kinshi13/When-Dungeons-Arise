@@ -1,8 +1,8 @@
 import { createId, table } from "./core/repositories/storage";
 import { saveFile, loadFile, deleteFile } from "./core/repositories/blobStore";
 import { generateCoverThumbnail } from "./bookCovers";
-import { buildRecurringOccurrences } from "./core/domain/recurrence";
 import { buildInstallmentExpenses } from "./core/domain/installments";
+import { buildMissingRuleOccurrences, type RecurringFinanceRule } from "./core/domain/recurringFinanceRule";
 import {
   scheduleReminderNotification,
   cancelReminderNotification,
@@ -141,6 +141,7 @@ const reminderTable = table<Reminder>("reminders");
 const noteTable = table<Note>("notes");
 const expenseTable = table<Expense>("expenses");
 const billTable = table<Bill>("bills");
+const financeRuleTable = table<RecurringFinanceRule>("finance-rules");
 const documentTable = table<DocumentMeta>("documents");
 const readingProgressTable = table<ReadingProgress>("reading-progress");
 
@@ -185,6 +186,47 @@ function activeExpenses(): Expense[] {
 }
 function activeBills(): Bill[] {
   return billTable.list().filter((b) => !b.deleted);
+}
+function activeFinanceRules(): RecurringFinanceRule[] {
+  return financeRuleTable.list().filter((r) => !r.deleted);
+}
+
+// Janela corrida de geração: chamado a cada api.bills.list() (tela de Contas
+// é onde o usuário mais frequentemente entra) — barato o bastante (compara
+// só chaves de mês) pra rodar toda vez em vez de precisar de um agendador
+// próprio. Regras sem autoGenerate (ex.: recorrência parada) não geram mais
+// nada, mas as ocorrências já materializadas continuam existindo.
+async function ensureRuleOccurrences() {
+  for (const rule of activeFinanceRules()) {
+    if (!rule.autoGenerate) continue;
+    const existingForRule = activeBills().filter((b) => b.recurrenceId === rule.id);
+    const missing = buildMissingRuleOccurrences(rule, existingForRule, createId);
+    for (const occurrence of missing) {
+      billTable.insert(occurrence);
+      await scheduleBillNotifications(occurrence);
+    }
+  }
+}
+
+function createRuleFromBill(bill: Bill, interval: number, endDate?: string | null): RecurringFinanceRule {
+  const rule: RecurringFinanceRule = {
+    id: createId(),
+    title: bill.title,
+    amount: bill.amount,
+    type: bill.type,
+    kind: bill.kind,
+    priority: bill.priority,
+    dueDay: new Date(bill.dueDate).getDate(),
+    interval,
+    startDate: bill.dueDate,
+    endDate: endDate ?? null,
+    autoGenerate: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    deleted: false,
+  };
+  financeRuleTable.insert(rule);
+  return rule;
 }
 
 // DailySummary é só uma projeção de Expense — sempre recalculada na hora a
@@ -415,13 +457,15 @@ export const api = {
       computeDailySummaries(params).sort((a, b) => (a.date < b.date ? 1 : -1)),
   },
   bills: {
-    list: async () =>
-      [...activeBills()].sort((a, b) => {
+    list: async () => {
+      await ensureRuleOccurrences();
+      return [...activeBills()].sort((a, b) => {
         const aSettled = a.status !== "PENDENTE";
         const bSettled = b.status !== "PENDENTE";
         if (aSettled !== bSettled) return aSettled ? 1 : -1;
         return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-      }),
+      });
+    },
     create: async (data: {
       title: string;
       amount: number;
@@ -430,6 +474,8 @@ export const api = {
       kind?: BillKind;
       priority?: boolean;
       recurring?: boolean;
+      recurrenceInterval?: number;
+      recurrenceEndDate?: string | null;
     }) => {
       const bill: Bill = {
         id: createId(),
@@ -446,14 +492,20 @@ export const api = {
         updatedAt: new Date().toISOString(),
         deleted: false,
       };
+
+      if (bill.recurring) {
+        const rule = createRuleFromBill(bill, data.recurrenceInterval ?? 1, data.recurrenceEndDate);
+        bill.recurrenceId = rule.id;
+      }
+
       billTable.insert(bill);
       await scheduleBillNotifications(bill);
 
       if (bill.recurring) {
-        for (const occurrence of buildRecurringOccurrences(bill, createId)) {
-          const stamped = { ...occurrence, updatedAt: new Date().toISOString(), deleted: false };
-          billTable.insert(stamped);
-          await scheduleBillNotifications(stamped);
+        const rule = financeRuleTable.get(bill.recurrenceId!)!;
+        for (const occurrence of buildMissingRuleOccurrences(rule, [bill], createId)) {
+          billTable.insert(occurrence);
+          await scheduleBillNotifications(occurrence);
         }
       }
       await syncCalendarWidgetFromTables();
@@ -481,10 +533,11 @@ export const api = {
       }
 
       if (data.recurring && !existing.recurring) {
-        for (const occurrence of buildRecurringOccurrences(updated, createId)) {
-          const stamped = { ...occurrence, updatedAt: new Date().toISOString(), deleted: false };
-          billTable.insert(stamped);
-          await scheduleBillNotifications(stamped);
+        const rule = createRuleFromBill(updated, 1);
+        billTable.update(id, { recurrenceId: rule.id });
+        for (const occurrence of buildMissingRuleOccurrences(rule, [updated], createId)) {
+          billTable.insert(occurrence);
+          await scheduleBillNotifications(occurrence);
         }
       }
       await syncCalendarWidgetFromTables();
@@ -497,6 +550,16 @@ export const api = {
       await cancelBillNotifications(id);
       await syncCalendarWidgetFromTables();
       triggerSync();
+    },
+  },
+  financeRules: {
+    list: async () => activeFinanceRules(),
+    // "Parar recorrência" — a regra some, então ensureRuleOccurrences não
+    // gera mais ocorrências novas. As já materializadas continuam existindo
+    // (o usuário decide se quer excluí-las à parte); não é uma sincronização
+    // entre aparelhos ainda — regras ficam só no aparelho local por enquanto.
+    stop: async (id: string) => {
+      financeRuleTable.update(id, { autoGenerate: false, updatedAt: new Date().toISOString() });
     },
   },
   wallet: {
