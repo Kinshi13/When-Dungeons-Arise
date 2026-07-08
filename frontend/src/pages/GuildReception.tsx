@@ -1,12 +1,14 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import ThemesScreen from "../components/ThemesScreen";
+import ReceptionBackground from "../components/ReceptionBackground";
 import { playSfx } from "../sound";
 import { useVerticalSwipe } from "../useVerticalSwipe";
+import { useOverlayBackClose } from "../useOverlayBackClose";
 import { useSettings, isLofiTheme } from "../contexts/SettingsContext";
-import { HourglassIcon } from "../icons";
-import { FlowerDecorIcon, TabBellIcon, TabHomeCalendarIcon, TabCoinsIcon, TabGearIcon } from "../icons2";
+import { HourglassIcon, CalendarIcon, ChecklistIcon, InvoiceIcon, CheckIcon } from "../icons";
+import { FlowerDecorIcon, TabGearIcon } from "../icons2";
 import ClockScreen from "../components/ClockScreen";
 import WeatherWidget, { type WeatherWidgetHandle } from "../components/WeatherWidget";
 import WeatherScreen from "../components/WeatherScreen";
@@ -14,6 +16,8 @@ import { nextAlarm, type Alarm } from "../clockStore";
 import { api, type Bill, type Reminder } from "../api";
 import { getCachedPrimaryWeather, fetchPrimaryWeather, type WeatherInfo } from "../weather";
 import { buildHomeSummary } from "../core/domain/homeSummary";
+import { toDateKey } from "../core/domain/calendarEntries";
+import { greeting } from "../greeting";
 import { useQuickAction } from "../useQuickAction";
 
 // Phaser só baixa quando a Recepção realmente monta (ver phaser/ReceptionCanvas.tsx)
@@ -21,67 +25,6 @@ import { useQuickAction } from "../useQuickAction";
 const ReceptionCanvas = lazy(() => import("../phaser/ReceptionCanvas"));
 
 type ClockTab = "despertador" | "cronometro" | "temporizador";
-
-const CARD_SWIPE_ACTIVATION = 10;
-const CARD_SWIPE_THRESHOLD = 40;
-
-// Gesto horizontal só do card do Relógio: deslizar pra esquerda/direita abre
-// direto no Cronômetro/Temporizador em vez do Despertador. Precisa de
-// stopPropagation pra não competir com o swipe horizontal entre abas (que
-// escuta o mesmo eixo em .main, um nível acima) — sem isso os dois
-// disputariam o mesmo gesto.
-function useClockCardSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
-  const startX = useRef<number | null>(null);
-  const startY = useRef<number | null>(null);
-  const decided = useRef(false);
-
-  function onTouchStart(e: TouchEvent) {
-    startX.current = e.touches[0].clientX;
-    startY.current = e.touches[0].clientY;
-    decided.current = false;
-  }
-
-  function onTouchMove(e: TouchEvent) {
-    if (startX.current === null || startY.current === null) return;
-    // Precisa parar em TODO touchmove daqui em diante (não só no que decide)
-    // — mesmo raciocínio do useVerticalSwipe: a Recepção também escuta um
-    // gesto vertical no mesmo elemento, e um touchmove que escapasse sem
-    // stopPropagation deixaria ela decidir por conta própria mais tarde.
-    if (decided.current) {
-      e.stopPropagation();
-      return;
-    }
-    const dx = e.touches[0].clientX - startX.current;
-    const dy = e.touches[0].clientY - startY.current;
-    if (Math.abs(dx) < CARD_SWIPE_ACTIVATION || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    decided.current = true;
-    e.stopPropagation();
-  }
-
-  function onTouchEnd(e: TouchEvent) {
-    if (!decided.current || startX.current === null) {
-      startX.current = null;
-      startY.current = null;
-      return;
-    }
-    e.stopPropagation();
-    const dx = e.changedTouches[0].clientX - startX.current;
-    if (Math.abs(dx) > CARD_SWIPE_THRESHOLD) {
-      if (dx < 0) onSwipeLeft();
-      else onSwipeRight();
-    }
-    startX.current = null;
-    startY.current = null;
-    decided.current = false;
-  }
-
-  return { onTouchStart, onTouchMove, onTouchEnd };
-}
-
-function nextAlarmLabel(alarm: Alarm | null): string {
-  if (!alarm) return "Nenhum alarme";
-  return alarm.label ? `${alarm.time} · ${alarm.label}` : alarm.time;
-}
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -103,6 +46,7 @@ export default function GuildReception() {
   const [clockOpen, setClockOpen] = useState(false);
   const [clockTab, setClockTab] = useState<ClockTab>("despertador");
   const [weatherOpen, setWeatherOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [nextAlarmInfo, setNextAlarmInfo] = useState<Alarm | null>(() => nextAlarm());
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
@@ -115,20 +59,47 @@ export default function GuildReception() {
   const showPhaserScene = isLofi && animationLevel !== "reduzidas";
   const navigate = useNavigate();
 
-  // Derivados só pra exibição rápida nos cards de Mural/Tesouraria — reaproveita
-  // reminders/bills já buscados acima pro resumo, sem nenhuma lógica nova de
-  // negócio (a real fica em MissionList/TreasuryOverview).
-  const pendingMissionsCount = reminders.filter((r) => !r.done && !r.isBirthday).length;
-  const pendingBillsCount = bills.filter((b) => b.status === "PENDENTE").length;
-  const pendingBillsTotal = bills
-    .filter((b) => b.status === "PENDENTE")
-    .reduce((sum, b) => sum + b.amount, 0);
+  useOverlayBackClose(moreOpen, () => setMoreOpen(false));
 
-  // Card de resumo no topo: dados carregados uma vez ao entrar na Recepção
-  // (lembretes/contas não mudam por gesto aqui, só em Agenda/Contas — ao
-  // voltar pra essa tela o componente remonta e recarrega sozinho) e o clima
-  // é re-sincronizado nos mesmos pontos que já atualizavam a janelinha de
-  // Clima (fechar a tela de Clima / trocar de local).
+  useEffect(() => {
+    if (!moreOpen) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setMoreOpen(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [moreOpen]);
+
+  // Derivados só pra exibição rápida nos cards — reaproveita reminders/bills
+  // já buscados abaixo, sem nenhuma lógica nova de negócio (a real fica em
+  // MissionList/TreasuryOverview).
+  const pendingBillsCount = bills.filter((b) => b.status === "PENDENTE").length;
+  const pendingBillsTotal = bills.filter((b) => b.status === "PENDENTE").reduce((sum, b) => sum + b.amount, 0);
+
+  // "Hoje"/"Progresso": tudo com dateTime de hoje, exceto aniversário (esses
+  // já aparecem no card "Próximo" via homeSummary.highlight, sem duplicar aqui).
+  const todayKey = toDateKey(new Date());
+  const todayReminders = reminders.filter((r) => !r.isBirthday && toDateKey(new Date(r.dateTime)) === todayKey);
+  const todayTasksCount = todayReminders.filter((r) => r.type === "TAREFA").length;
+  const todayEventsCount = todayReminders.filter((r) => r.type === "OUTRO").length;
+  const todayMeetingsCount = todayReminders.filter((r) => r.type === "REUNIAO").length;
+  const todayBillsCount = bills.filter((b) => b.status === "PENDENTE" && toDateKey(new Date(b.dueDate)) === todayKey).length;
+  const todayDoneCount = todayReminders.filter((r) => r.done).length;
+
+  const todayTally = [
+    todayTasksCount > 0 ? `${todayTasksCount} tarefa${todayTasksCount > 1 ? "s" : ""}` : null,
+    todayEventsCount > 0 ? `${todayEventsCount} evento${todayEventsCount > 1 ? "s" : ""}` : null,
+    todayMeetingsCount > 0 ? `${todayMeetingsCount} reunião${todayMeetingsCount > 1 ? "ões" : ""}` : null,
+    todayBillsCount > 0 ? `${todayBillsCount} conta${todayBillsCount > 1 ? "s" : ""}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  // Dados carregados uma vez ao entrar na Recepção (lembretes/contas não
+  // mudam por gesto aqui, só em Agenda/Contas — ao voltar pra essa tela o
+  // componente remonta e recarrega sozinho) e o clima é re-sincronizado nos
+  // mesmos pontos que já atualizavam a janelinha de Clima (fechar a tela de
+  // Clima / trocar de local).
   useEffect(() => {
     api.reminders.list().then(setReminders);
     api.bills.list().then(setBills);
@@ -152,17 +123,13 @@ export default function GuildReception() {
 
   function openClock(tab: ClockTab) {
     playSfx("coin");
+    setMoreOpen(false);
     setClockTab(tab);
     setClockOpen(true);
   }
 
   useQuickAction("novo-alarme", () => openClock("despertador"));
   useQuickAction("novo-temporizador", () => openClock("temporizador"));
-
-  const clockCardSwipe = useClockCardSwipe(
-    () => openClock("cronometro"),
-    () => openClock("temporizador")
-  );
 
   // Deslizar pra cima abre o Relógio, pra baixo abre o Clima — o gesto de
   // fechar mora em cada tela (ver ClockScreen/WeatherScreen). Como as duas
@@ -189,6 +156,12 @@ export default function GuildReception() {
     <div className="page reception-page" {...verticalSwipe}>
       <h1 className="sr-only">Recepção da Guilda</h1>
 
+      {/* Camadas explícitas (Fase 7, etapa G): fundo, Phaser, cards/UI — nessa
+          ordem de empilhamento (ver --stella-reception-z-* em tokens.css).
+          Dock/Stella Core ficam acima de tudo isso por serem irmãos desta
+          página (renderizados por App.tsx), usando --z-dock. */}
+      {isLofi && <ReceptionBackground mode="gradient-fallback" />}
+
       {showPhaserScene && (
         <Suspense fallback={null}>
           <ReceptionCanvas
@@ -201,96 +174,89 @@ export default function GuildReception() {
       )}
 
       {isLofi ? (
-        <div className="reception-cards">
-          <motion.div className="reception-card reception-card-resumo" aria-live="polite" {...cardEnter(0)}>
-            <span className="reception-summary-title">Resumo</span>
-            {homeSummary.weather && (
-              <span className="reception-summary-row">
-                <span aria-hidden="true">{homeSummary.weather.icon}</span> {homeSummary.weather.text}
+        <>
+          <div className="reception-topbar">
+            <span className="reception-greeting">{greeting()}</span>
+            <button
+              className="reception-more-trigger"
+              aria-label="Mais opções"
+              aria-expanded={moreOpen}
+              onClick={() => {
+                playSfx("coin");
+                setMoreOpen((v) => !v);
+              }}
+            >
+              <TabGearIcon width={20} height={20} />
+            </button>
+          </div>
+
+          {/* 4 cards da Home (seção 9 do briefing Stella Founds): informação +
+              navegação juntas, cada um resolvendo "o que precisa da minha
+              atenção agora". Temas/Ajustes/Relógio saíram daqui — ver o menu
+              "Mais" abaixo, aberto pelo botão da barra superior. */}
+          <div className="reception-cards">
+            <motion.button
+              className="reception-card reception-card-proximo"
+              onClick={() => {
+                playSfx("coin");
+                navigate("/sala-do-tempo/calendario");
+              }}
+              {...cardEnter(0)}
+            >
+              <CalendarIcon width={20} height={20} />
+              <span className="reception-card-fn-label">Próximo</span>
+              <span className="reception-card-fn-hint">
+                {homeSummary.highlight?.text ?? homeSummary.alarm?.text ?? "Nada urgente por perto."}
               </span>
-            )}
-            {homeSummary.alarm && (
-              <span className="reception-summary-row">
-                <span aria-hidden="true">{homeSummary.alarm.icon}</span> {homeSummary.alarm.text}
+            </motion.button>
+
+            <motion.button
+              className="reception-card reception-card-hoje"
+              onClick={() => {
+                playSfx("coin");
+                navigate("/sala-do-tempo/tarefas/hoje");
+              }}
+              {...cardEnter(1)}
+            >
+              <ChecklistIcon width={20} height={20} />
+              <span className="reception-card-fn-label">Hoje</span>
+              <span className="reception-card-fn-hint">{todayTally || "Nada marcado por hoje"}</span>
+            </motion.button>
+
+            <motion.button
+              className="reception-card reception-card-atencao"
+              onClick={() => {
+                playSfx("coin");
+                navigate("/tesouraria/contas");
+              }}
+              {...cardEnter(2)}
+            >
+              <InvoiceIcon width={20} height={20} />
+              <span className="reception-card-fn-label">Atenção</span>
+              <span className="reception-card-fn-hint">
+                {pendingBillsCount === 0
+                  ? "Sem contas à vista"
+                  : `${pendingBillsCount} conta${pendingBillsCount > 1 ? "s" : ""} · ${formatBRL(pendingBillsTotal)}`}
               </span>
-            )}
-            {homeSummary.highlight ? (
-              <span className="reception-summary-row reception-summary-highlight">
-                <span aria-hidden="true">{homeSummary.highlight.icon}</span> {homeSummary.highlight.text}
+            </motion.button>
+
+            <motion.button
+              className="reception-card reception-card-progresso"
+              onClick={() => {
+                playSfx("coin");
+                navigate("/sala-do-tempo/tarefas");
+              }}
+              {...cardEnter(3)}
+            >
+              <CheckIcon width={20} height={20} />
+              <span className="reception-card-fn-label">Progresso</span>
+              <span className="reception-card-fn-hint">
+                {todayReminders.length > 0
+                  ? `${todayDoneCount} de ${todayReminders.length} atividades concluídas`
+                  : "Nada marcado por hoje"}
               </span>
-            ) : (
-              <span className="reception-summary-row reception-summary-empty">Nada urgente por perto.</span>
-            )}
-          </motion.div>
-
-          <motion.button
-            className="reception-card reception-card-mural"
-            onClick={() => {
-              playSfx("coin");
-              navigate("/sala-do-tempo/tarefas");
-            }}
-            {...cardEnter(1)}
-          >
-            <TabBellIcon width={22} height={22} />
-            <span className="reception-card-fn-label">Mural</span>
-            <span className="reception-card-fn-hint">
-              {pendingMissionsCount === 0 ? "Tudo em dia" : `${pendingMissionsCount} pendente${pendingMissionsCount > 1 ? "s" : ""}`}
-            </span>
-          </motion.button>
-
-          <motion.button
-            className="reception-card reception-card-tempo"
-            onClick={() => {
-              playSfx("coin");
-              navigate("/sala-do-tempo");
-            }}
-            {...cardEnter(2)}
-          >
-            <TabHomeCalendarIcon width={22} height={22} />
-            <span className="reception-card-fn-label">Sala do Tempo</span>
-            <span className="reception-card-fn-hint">
-              {homeSummary.highlight ? homeSummary.highlight.text : "Nada urgente"}
-            </span>
-          </motion.button>
-
-          <motion.button
-            className="reception-card reception-card-tesouraria"
-            onClick={() => {
-              playSfx("coin");
-              navigate("/tesouraria");
-            }}
-            {...cardEnter(3)}
-          >
-            <TabCoinsIcon width={22} height={22} />
-            <span className="reception-card-fn-label">Tesouraria</span>
-            <span className="reception-card-fn-hint">
-              {pendingBillsCount === 0 ? "Sem contas à vista" : `${pendingBillsCount} conta${pendingBillsCount > 1 ? "s" : ""} · ${formatBRL(pendingBillsTotal)}`}
-            </span>
-          </motion.button>
-
-          <motion.button
-            className="reception-card reception-card-temas"
-            onClick={() => {
-              playSfx("coin");
-              setThemesOpen(true);
-            }}
-            {...cardEnter(4)}
-          >
-            <FlowerDecorIcon className="reception-card-temas-flower" aria-hidden="true" />
-            <span className="reception-card-temas-label">Temas</span>
-          </motion.button>
-
-          <motion.button
-            className="reception-card reception-card-ajustes"
-            onClick={() => {
-              playSfx("coin");
-              navigate("/regras");
-            }}
-            {...cardEnter(5)}
-          >
-            <TabGearIcon width={22} height={22} />
-            <span className="reception-card-fn-label">Ajustes</span>
-          </motion.button>
+            </motion.button>
+          </div>
 
           <WeatherWidget
             ref={weatherWidgetRef}
@@ -300,18 +266,51 @@ export default function GuildReception() {
             }}
           />
 
-          <motion.button
-            className="reception-card reception-card-relogio"
-            aria-label="Relógio — deslize para cronômetro ou temporizador"
-            onClick={() => openClock("despertador")}
-            {...clockCardSwipe}
-            {...cardEnter(7)}
-          >
-            <HourglassIcon width={24} height={24} />
-            <span className="reception-card-relogio-label">{nextAlarmLabel(nextAlarmInfo)}</span>
-            <span className="reception-card-relogio-hint">Deslize p/ cronômetro/temporizador</span>
-          </motion.button>
-        </div>
+          {moreOpen && (
+            <div className="reception-more-backdrop" onClick={() => setMoreOpen(false)} aria-hidden="true" />
+          )}
+          <AnimatePresence>
+            {moreOpen && (
+              <motion.div
+                className="reception-more-menu"
+                role="menu"
+                initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                transition={{ type: "spring", stiffness: 420, damping: 30 }}
+              >
+                <button
+                  role="menuitem"
+                  className="reception-more-item"
+                  onClick={() => {
+                    playSfx("coin");
+                    setMoreOpen(false);
+                    setThemesOpen(true);
+                  }}
+                >
+                  <FlowerDecorIcon width={18} height={18} aria-hidden="true" />
+                  Temas
+                </button>
+                <button role="menuitem" className="reception-more-item" onClick={() => openClock("despertador")}>
+                  <HourglassIcon width={18} height={18} />
+                  Relógio
+                </button>
+                <button
+                  role="menuitem"
+                  className="reception-more-item"
+                  onClick={() => {
+                    playSfx("coin");
+                    setMoreOpen(false);
+                    navigate("/regras");
+                  }}
+                >
+                  <TabGearIcon width={18} height={18} />
+                  Ajustes
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </>
       ) : (
         <>
           {/* Balão de fala em branco já desenhado na arte de fundo (tema

@@ -1,13 +1,19 @@
 import Phaser from "phaser";
+import { STELLA_COLORS_HEX } from "../../core/design-system/colors";
 
 // Ambientação da Recepção: campo de estrelas piscando + linhas de
-// constelação que aparecem e somem entre pares próximos, sobre a ilustração
-// estática existente (que continua sendo HTML/CSS, não isto — ver item 5 do
-// spec: "a imagem estática... Phaser só pra cenário/partículas/hotspots").
-// Um "núcleo" central pulsante funciona como hotspot: ao tocar, emite um
-// evento no barramento do próprio jogo — nunca chama storage, navegação ou
-// regra de negócio diretamente (ver receptionBridge.ts e o item 2 do spec:
-// Phaser -> Action/Event -> Application Service).
+// constelação que aparecem e somem entre pares próximos, sobre o fundo
+// (ReceptionBackground, HTML/CSS — Phaser só pra cenário/partículas/
+// hotspots, nunca a composição da UI em si). Um "núcleo" central pulsante
+// funciona como hotspot: ao tocar, emite um evento no barramento do próprio
+// jogo — nunca chama storage, navegação ou regra de negócio diretamente
+// (ver receptionBridge.ts).
+//
+// Cores vêm do Design System (Fase 7, etapa G) — dourado pras estrelas/
+// linhas (mesmo tom das constelações decorativas do concept pack) e
+// lavanda pro núcleo, contrastando contra o novo céu claro (cream/sky-blue).
+// As cores antigas (creme sobre creme, azul-claro sobre azul-claro) foram
+// calibradas pro fundo escuro anterior e ficavam quase invisíveis aqui.
 const STAR_COUNT = 26;
 export const STELLA_HOTSPOT_TAP_EVENT = "stella:hotspot-tap";
 
@@ -31,8 +37,8 @@ export default class ReceptionScene extends Phaser.Scene {
       const x = Phaser.Math.Between(0, width);
       const y = Phaser.Math.Between(0, height * 0.55);
       const r = Phaser.Math.FloatBetween(0.8, 1.8);
-      const baseAlpha = Phaser.Math.FloatBetween(0.25, 0.7);
-      const star = this.add.circle(x, y, r, 0xf4e9c9, baseAlpha);
+      const baseAlpha = Phaser.Math.FloatBetween(0.3, 0.75);
+      const star = this.add.circle(x, y, r, STELLA_COLORS_HEX.gold, baseAlpha);
       this.stars.push({ gfx: star, baseAlpha });
 
       this.tweens.add({
@@ -49,7 +55,7 @@ export default class ReceptionScene extends Phaser.Scene {
     // Linhas de constelação: só entre estrelas próximas o bastante, desenhadas
     // uma vez (o campo não se move, só pisca) — leve, sem custo por frame.
     const lines = this.add.graphics();
-    lines.lineStyle(1, 0xf4e9c9, 0.12);
+    lines.lineStyle(1, STELLA_COLORS_HEX.gold, 0.22);
     for (let i = 0; i < this.stars.length; i++) {
       for (let j = i + 1; j < this.stars.length; j++) {
         const a = this.stars[i].gfx;
@@ -65,7 +71,7 @@ export default class ReceptionScene extends Phaser.Scene {
     // superior, longe da área dos cards flutuantes por baixo).
     const hotspotX = width * 0.82;
     const hotspotY = height * 0.14;
-    const core = this.add.circle(hotspotX, hotspotY, 7, 0x8fb3f5, 0.9);
+    const core = this.add.circle(hotspotX, hotspotY, 7, STELLA_COLORS_HEX.lavender, 0.9);
     core.setInteractive({ useHandCursor: true });
     core.on("pointerdown", () => {
       this.game.events.emit(STELLA_HOTSPOT_TAP_EVENT);

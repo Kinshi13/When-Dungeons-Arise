@@ -1,0 +1,13 @@
+/* Fundo da Recepção — só o modo "gradient-fallback" tem conteúdo real hoje
+   (ver ReceptionBackground.tsx). CSS puro, sem animação: reduced motion não
+   precisa de tratamento especial, e escala em qualquer tamanho de tela
+   (mobile/tablet/desktop) sem JS. */
+.reception-background {
+  position: absolute;
+  inset: 0;
+  z-index: var(--stella-reception-z-background);
+}
+
+.reception-background-gradient {
+  background: var(--stella-reception-gradient);
+}

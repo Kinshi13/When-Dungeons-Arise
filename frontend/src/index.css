@@ -78,7 +78,6 @@
   /* Gradientes por área — os mesmos matizes do Lo-fi claro, em versão
      escura e dessaturada (tons de cinza com um sussurro de cor). */
   --lofi-tesouraria: linear-gradient(165deg, #2e332c 0%, #383f35 55%, #42493d 100%);
-  --lofi-guilda: linear-gradient(165deg, #322e38 0%, #3c3644 55%, #463e50 100%);
   --lofi-tempo: linear-gradient(165deg, #2b3238 0%, #343d45 55%, #3d4852 100%);
   --lofi-ajustes: linear-gradient(165deg, #33302a 0%, #3e3932 55%, #48423a 100%);
   --lofi-biblioteca: linear-gradient(165deg, #34312a 0%, #403b31 55%, #4c4537 100%);
@@ -124,7 +123,6 @@
   /* Cores/gradientes por área — usados nos fundos flat de cada tela. */
   --lofi-mural: linear-gradient(165deg, #f6d9d1 0%, #e7b6ad 55%, #d99e91 100%);
   --lofi-tesouraria: linear-gradient(165deg, #eef2df 0%, #d3e0c2 55%, #b7cca4 100%);
-  --lofi-guilda: linear-gradient(165deg, #efe1f2 0%, #d9c3e0 55%, #c3a6cf 100%);
   --lofi-tempo: linear-gradient(165deg, #e3eef2 0%, #c2d9e3 55%, #a3c1d1 100%);
   --lofi-ajustes: linear-gradient(165deg, #efe6d8 0%, #ddcbaf 55%, #c7ad8a 100%);
   --lofi-diario: linear-gradient(165deg, #f6dde2 0%, #eec2ca 55%, #dda0ac 100%);
@@ -158,32 +156,10 @@
   background: radial-gradient(circle, rgba(255, 244, 224, 0.14), rgba(255, 244, 224, 0) 70%);
 }
 
-/* Ilustração da Recepção levemente escurecida na versão dark, pra não
-   estourar contra o resto da paleta. */
-[data-theme="claro"] .lofi-scene-photo-img {
-  filter: brightness(0.72) saturate(0.85);
-}
-
 .lofi-scene-tesouraria { background: var(--lofi-tesouraria); }
-.lofi-scene-guilda { background: var(--lofi-guilda); }
 .lofi-scene-tempo { background: var(--lofi-tempo); }
 .lofi-scene-ajustes { background: var(--lofi-ajustes); }
 .lofi-scene-biblioteca { background: var(--lofi-biblioteca); }
-
-/* Área com ilustração fixa (hoje só a Guilda) — sem o brilho ::after (a
-   ilustração já tem sua própria luz) e com a foto preenchendo a tela. */
-.lofi-scene-photo::after {
-  content: none;
-}
-
-.lofi-scene-photo-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top center;
-}
 
 /* Partículas ambiente opcionais (seção 27 do spec) — poeira nas áreas em
    geral, chuva só na Sala do Tempo. Só transform/opacity via @keyframes

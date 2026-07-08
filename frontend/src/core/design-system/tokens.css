@@ -73,9 +73,27 @@
   --stella-elevation-2: 0 8px 24px rgba(58, 63, 75, 0.32);
   --stella-glow-blue: 0 0 24px rgba(127, 174, 230, 0.35);
 
+  /* Gradiente atmosférico compartilhado (Fase 7, etapa G) — usado pelo
+     fundo "gradient-fallback" da Recepção (ver components/ReceptionBackground)
+     e pelo backdrop desfocado da tela de Temas (mesma identidade visual nos
+     dois lugares, um token só em vez de duas regras CSS iguais). */
+  --stella-reception-gradient: radial-gradient(120% 60% at 15% 100%, rgba(123, 97, 168, 0.18), transparent 60%),
+    linear-gradient(180deg, var(--stella-sky) 0%, var(--stella-cream) 55%, var(--stella-ivory) 100%);
+
   /* Motion — espelha DURATIONS de motion.ts (fast/standard) pra CSS puro
      (hover, focus) ficar no mesmo ritmo das transições em JS/framer-motion */
   --stella-duration-fast: 0.15s;
   --stella-duration-standard: 0.2s;
   --stella-ease: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* Camadas de empilhamento da Recepção (Fase 7, etapa G) — escopo local à
+     composição da Home, não fazem parte da escala --z-* de overlays globais
+     (--z-dock etc., ver index.css). Dock/Stella Core continuam usando
+     --z-dock: por serem irmãos de .reception-page (renderizados por
+     App.tsx, não filhos da página), já ficam acima de qualquer valor aqui
+     sem precisar entrar nesta escala local. */
+  --stella-reception-z-background: 0;
+  --stella-reception-z-phaser: 1;
+  --stella-reception-z-effects: 2;
+  --stella-reception-z-cards: 3;
 }

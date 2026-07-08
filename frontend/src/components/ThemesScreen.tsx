@@ -39,7 +39,11 @@ export default function ThemesScreen({ open, onClose }: ThemesScreenProps) {
             {...surface}
           >
             <div className="page-bg page-bg-blurred-strong" aria-hidden="true">
-              <img src={isLofiTheme(theme) ? "/lofi-guilda-bg.jpg" : "/guild-reception-bg.png"} alt="" />
+              {isLofiTheme(theme) ? (
+                <div className="page-bg-gradient-backdrop" />
+              ) : (
+                <img src="/guild-reception-bg.png" alt="" />
+              )}
             </div>
 
             <div className="note-fullscreen-content">

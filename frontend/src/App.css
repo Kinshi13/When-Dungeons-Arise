@@ -56,6 +56,18 @@
   transform: scale(1.12);
 }
 
+/* Backdrop da tela de Temas nos temas claros (lofi/claro/personalizado) —
+   mesma identidade do fundo da Recepção (--stella-reception-gradient), só
+   que o filter fica no próprio elemento (não em <img>, já que não há foto
+   aqui) pra reaproveitar o tratamento borrado/escurecido de .page-bg-blurred-strong. */
+.page-bg-gradient-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--stella-reception-gradient);
+  filter: blur(14px) brightness(0.5);
+  transform: scale(1.12);
+}
+
 .pixel-icon {
   image-rendering: pixelated;
   object-fit: contain;
@@ -2745,26 +2757,55 @@
   color: var(--text-muted);
 }
 
-/* Dashboard de cards flutuantes da Recepção (tema Lo-fi): Resumo ocupa a
-   linha inteira no topo; embaixo, um card por função do app (Mural, Sala do
-   Tempo, Tesouraria, Temas, Clima, Relógio) em grid uniforme 2 colunas — cada
-   card entra com uma pequena animação escalonada (ver cardEnter em
-   GuildReception.tsx) e "afunda" ao toque (whileTap), reforçando a sensação
-   de elemento físico e interativo, não só um botão plano. */
+/* 4 cards da Home (Fase 7, etapa G — Próximo/Hoje/Atenção/Progresso) em
+   grid uniforme 2 colunas — cada card entra com uma pequena animação
+   escalonada (ver cardEnter em GuildReception.tsx) e "afunda" ao toque
+   (whileTap), reforçando a sensação de elemento físico e interativo, não
+   só um botão plano. Visual: painel escuro translúcido (--stella-surface-
+   glass) sobre o fundo claro — mesmo padrão do mockup de referência e do
+   Stella Core, não um remanescente do tema escuro antigo. */
 /* Canvas do Phaser (ambientação — estrelas/constelação, ver ReceptionScene.ts):
-   fica atrás dos cards (z-index menor) e na frente da ilustração estática da
-   Guilda (que é renderizada por App.tsx num container SEPARADO, atrás desta
-   página inteira). Transparente, então a ilustração continua aparecendo por
-   baixo das partículas. */
+   fica atrás dos cards (z-index menor) e na frente do fundo (ReceptionBackground).
+   Transparente, então o fundo continua aparecendo por baixo das partículas. */
 .reception-phaser-canvas {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: var(--stella-reception-z-phaser);
 }
 
 .reception-phaser-canvas canvas {
   width: 100%;
   height: 100%;
+}
+
+.reception-topbar {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  left: 16px;
+  right: 16px;
+  z-index: var(--stella-reception-z-cards);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reception-greeting {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--stella-text-primary);
+}
+
+.reception-more-trigger {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--stella-surface-glass-border);
+  border-radius: var(--stella-radius-pill);
+  background: var(--stella-surface-glass);
+  color: var(--stella-text-on-glass);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
 .reception-cards {
@@ -2773,7 +2814,7 @@
   left: 16px;
   right: 16px;
   bottom: -8px;
-  z-index: 2;
+  z-index: var(--stella-reception-z-cards);
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
@@ -2781,11 +2822,13 @@
 }
 
 .reception-card {
-  border: none;
+  border: 1px solid var(--stella-surface-glass-border);
   border-radius: 20px;
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: 0 4px 14px rgba(20, 16, 12, 0.25);
+  background: var(--stella-surface-glass);
+  color: var(--stella-text-on-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--stella-elevation-1);
   cursor: pointer;
   text-align: left;
   padding: 12px 14px;
@@ -2793,16 +2836,11 @@
   flex-direction: column;
 }
 
-/* Cards de função (Mural, Sala do Tempo, Tesouraria, Temas, Clima, Relógio):
-   mesmo formato quadrado, ícone + nome + uma linha de dado rápido — repetido
-   pra cada área do app em vez de só 3 telas terem destaque na Recepção. */
-.reception-card-mural,
-.reception-card-tempo,
-.reception-card-tesouraria,
-.reception-card-temas,
-.reception-card-ajustes,
-.reception-cards .reception-card-clima,
-.reception-card-relogio {
+/* Os 4 cards: mesmo formato quadrado, ícone + nome + uma linha de dado rápido. */
+.reception-card-proximo,
+.reception-card-hoje,
+.reception-card-atencao,
+.reception-card-progresso {
   aspect-ratio: 1;
   align-items: center;
   justify-content: center;
@@ -2815,34 +2853,13 @@
 .reception-card-fn-label {
   font-family: var(--font-display);
   font-size: 0.85rem;
-  color: var(--text-h);
+  color: var(--stella-text-on-glass);
 }
 
 .reception-card-fn-hint {
   font-size: 0.62rem;
-  color: var(--text-muted);
+  color: var(--stella-text-on-glass-muted);
   line-height: 1.2;
-}
-
-.reception-card-temas-flower {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 44px;
-  height: 44px;
-  opacity: 0.9;
-}
-
-.reception-card-temas-label {
-  font-family: var(--font-display);
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-h);
-  z-index: 1;
-}
-
-.reception-cards .reception-card-clima {
-  z-index: auto;
 }
 
 .reception-card-clima-emoji {
@@ -2860,67 +2877,17 @@
 .reception-card-clima-now {
   font-family: var(--font-display);
   font-size: 0.95rem;
-  color: var(--text-h);
+  color: var(--stella-text-on-glass);
 }
 
 .reception-card-clima-desc {
   font-size: 0.68rem;
-  color: var(--text-muted);
+  color: var(--stella-text-on-glass-muted);
 }
 
 .reception-card-clima-minmax {
   font-size: 0.62rem;
-  color: var(--text-muted);
-}
-
-.reception-card-relogio-label {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  color: var(--text-h);
-}
-
-.reception-card-relogio-hint {
-  font-size: 0.6rem;
-  color: var(--text-muted);
-  line-height: 1.2;
-}
-
-/* Card de resumo — ocupa a linha inteira no topo do dashboard, com as
-   informações mais importantes de relance: clima atual, próximo alarme e o
-   compromisso mais urgente (lembrete, conta ou aniversário mais próximo). */
-.reception-card-resumo {
-  grid-column: 1 / -1;
-  align-items: center;
-  text-align: center;
-  gap: 3px;
-  padding: 10px 14px;
-}
-
-.reception-summary-title {
-  font-family: var(--font-display);
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 2px;
-}
-
-.reception-summary-row {
-  font-size: 0.78rem;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.reception-summary-highlight {
-  color: var(--text-h);
-  font-weight: 600;
-}
-
-.reception-summary-empty {
-  color: var(--text-muted);
+  color: var(--stella-text-on-glass-muted);
 }
 
 /* Fallback fora do grid (tema "Guilda", trancado): mesma janelinha
@@ -2934,7 +2901,62 @@
   gap: 10px;
   border-radius: 14px;
   padding: 8px 12px;
-  z-index: 2;
+  z-index: var(--stella-reception-z-cards);
+}
+
+/* Nos temas com a barra superior nova (.reception-topbar), 5% colide com a
+   saudação — desce a janelinha de clima pra ficar sempre abaixo dela. */
+[data-theme="lofi"] .reception-card-clima,
+[data-theme="claro"] .reception-card-clima,
+[data-theme="personalizado"] .reception-card-clima {
+  top: 64px;
+}
+
+/* Menu "Mais" (Temas/Ajustes/Relógio, saíram da grade principal — seção 9 do
+   briefing) — acima dos cards de propósito (precisa capturar clique fora
+   inclusive sobre eles). */
+.reception-more-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  background: transparent;
+}
+
+.reception-more-menu {
+  position: absolute;
+  top: calc(max(16px, env(safe-area-inset-top)) + 44px);
+  right: 16px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  border: 1px solid var(--stella-surface-glass-border);
+  border-radius: var(--stella-radius-md);
+  background: var(--stella-surface-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--stella-elevation-2);
+  overflow: hidden;
+  padding: var(--stella-space-1);
+}
+
+.reception-more-item {
+  display: flex;
+  align-items: center;
+  gap: var(--stella-space-2);
+  border: none;
+  border-radius: var(--stella-radius-sm);
+  background: transparent;
+  color: var(--stella-text-on-glass);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  padding: var(--stella-space-2) var(--stella-space-3);
+  cursor: pointer;
+  text-align: left;
+}
+
+.reception-more-item:active {
+  background: rgba(247, 229, 201, 0.12);
 }
 
 /* Tela de configuração do papel de parede (tema Lo-fi Personalizado) */

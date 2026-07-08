@@ -20,6 +20,7 @@ import { nextAlarm, type Alarm } from "./clockStore";
 import { getCachedPrimaryWeather, fetchPrimaryWeather, type WeatherInfo } from "./weather";
 import { buildHomeSummary } from "./core/domain/homeSummary";
 import { TabCoinsIcon, TabGuildIcon, TabHomeCalendarIcon, TabGearIcon, TabBookIcon } from "./icons2";
+import { greeting } from "./greeting";
 import "./DesktopApp.css";
 
 interface NavItem {
@@ -39,13 +40,6 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/biblioteca", label: "Biblioteca", Icon: TabBookIcon },
   { to: "/regras", label: "Ajustes", Icon: TabGearIcon },
 ];
-
-function greeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Bom dia";
-  if (hour < 18) return "Boa tarde";
-  return "Boa noite";
-}
 
 // Painel fixo à direita — a "secretária": mesmo resumo da Recepção
 // (buildHomeSummary), só que sempre visível, em qualquer tela, e com listas

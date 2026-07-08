@@ -79,12 +79,6 @@ function mainScreenKeyOf(pathname: string): string {
   return sectionOf(pathname) ?? pathname;
 }
 
-// Ilustração fixa por área no Lo-fi (em vez do gradiente flat) — hoje só a
-// Guilda tem uma, mas o mapa já fica pronto pra receber mais no futuro.
-const LOFI_SECTION_IMAGE: Record<string, string> = {
-  "lofi-scene-guilda": "/lofi-guilda-bg.jpg",
-};
-
 interface CustomWallpaperInfo {
   url: string;
   adjust: { zoom: number; offsetX: number; offsetY: number; blur: number };
@@ -121,24 +115,27 @@ function renderBackgroundContent(
 ) {
   if (isLofi) {
     const sceneClass = lofiSceneClass(pathname);
-    const image = LOFI_SECTION_IMAGE[sceneClass];
+
+    if (sceneClass === "lofi-scene-guilda") {
+      // A Recepção tem fundo próprio agora (ReceptionBackground, dentro de
+      // GuildReception.tsx — Fase 7, etapa G) — nada a desenhar aqui além do
+      // papel de parede custom do usuário, se houver (continua funcionando
+      // por cima do novo fundo, sem o gradiente/foto roxos de antes). Sem
+      // AmbientParticles: a ambientação da Recepção é o canvas do Phaser.
+      if (!customWallpaper) return null;
+      return (
+        <div className="lofi-scene lofi-scene-has-wallpaper" aria-hidden="true">
+          {renderWallpaperOverlay(customWallpaper)}
+        </div>
+      );
+    }
+
     // Suprime o brilho ::after quando tem papel de parede por cima — ele é
     // pensado pra iluminar o gradiente flat, não faz sentido sobre uma foto.
     const hasWallpaperClass = customWallpaper ? " lofi-scene-has-wallpaper" : "";
     // Chuva só combina com o tema noturno/lavanda da Sala do Tempo; as
     // demais áreas ganham a poeira flutuante genérica (seção 27 do spec).
     const particleKind = sceneClass === "lofi-scene-tempo" ? "rain" : "dust";
-    if (image) {
-      // Só a Guilda tem foto hoje — a ambientação dela vira o canvas do
-      // Phaser (ver ReceptionCanvas em GuildReception.tsx), não a poeira
-      // CSS genérica; por isso não entra AmbientParticles aqui.
-      return (
-        <div className={`lofi-scene ${sceneClass} lofi-scene-photo${hasWallpaperClass}`} aria-hidden="true">
-          <img src={image} alt="" className="lofi-scene-photo-img" />
-          {renderWallpaperOverlay(customWallpaper)}
-        </div>
-      );
-    }
     return (
       <div className={`lofi-scene ${sceneClass}${hasWallpaperClass}`} aria-hidden="true">
         {renderWallpaperOverlay(customWallpaper)}
