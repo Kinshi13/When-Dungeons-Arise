@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../db/app_database.dart';
 import '../repositories/local_settings_repository.dart';
+import '../repositories/sync_conflict_repository.dart';
 import '../repositories/sync_queue_repository.dart';
 import '../supabase/supabase_bootstrap.dart';
 import 'entity_sync_specs.dart';
@@ -36,11 +37,15 @@ const List<String> _pushOrder = [
 /// mudou remotamente (pull) — nunca o contrário de bloquear a UI, que
 /// sempre lê/escreve local primeiro.
 class SyncEngine {
-  SyncEngine(this._db) : _queue = SyncQueueRepository(_db), _localSettings = LocalSettingsRepository(_db);
+  SyncEngine(this._db)
+    : _queue = SyncQueueRepository(_db),
+      _localSettings = LocalSettingsRepository(_db),
+      _conflicts = SyncConflictRepository(_db);
 
   final AppDatabase _db;
   final SyncQueueRepository _queue;
   final LocalSettingsRepository _localSettings;
+  final SyncConflictRepository _conflicts;
 
   bool _running = false;
 
@@ -110,11 +115,11 @@ class SyncEngine {
     final pullStartedAt = DateTime.now();
 
     for (final tableEntry in remoteTableByEntityType.entries) {
-      final spec = entitySyncSpecs[tableEntry.key];
-      if (spec == null) continue;
+      final entityType = tableEntry.key;
+      if (!entitySyncSpecs.containsKey(entityType)) continue;
       final rows = await RemoteTableClient(client, tableEntry.value).pullSince(workspaceId: workspaceId, since: since);
       for (final row in rows) {
-        await spec.applyRemoteJson(_db, row);
+        await mergeRemoteRow(entityType, row);
       }
     }
 
@@ -123,6 +128,31 @@ class SyncEngine {
     // durante a janela da consulta — reaplicar uma linha já vista é seguro,
     // applyRemoteJson é idempotente por id/updated_at.
     await _localSettings.setLastPulledAt(workspaceId, pullStartedAt.subtract(const Duration(seconds: 5)));
+  }
+
+  /// Mescla uma única linha remota já pulled — separado de [pull] para ser
+  /// testável sem precisar de um cliente Supabase real: quem chama já tem o
+  /// json em mãos (seja de uma consulta de verdade, seja de um teste).
+  ///
+  /// Antes de aplicar (last-write-wins por `updated_at`), verifica se há
+  /// uma edição local ainda não enviada para a mesma entidade — se houver,
+  /// os dois lados mudaram desde o último sync conhecido, o que é
+  /// registrado em [SyncConflictRepository] para diagnóstico (a resolução
+  /// em si continua sendo last-write-wins, nunca fica pendente de decisão
+  /// do usuário nesta fase).
+  Future<void> mergeRemoteRow(String entityType, Map<String, dynamic> row) async {
+    final spec = entitySyncSpecs[entityType];
+    if (spec == null) return;
+    final entityId = row['id'] as String;
+
+    final pendingLocalEdit = await _queue.findPending(entityType, entityId);
+    if (pendingLocalEdit != null) {
+      final localJson = await spec.toRemoteJson(_db, pendingLocalEdit);
+      if (localJson != null) {
+        await _conflicts.record(entityType: entityType, entityId: entityId, localPayload: localJson, remotePayload: row);
+      }
+    }
+    await spec.applyRemoteJson(_db, row);
   }
 
   List<SyncQueueEntry> _sortByPushOrder(List<SyncQueueEntry> entries) {

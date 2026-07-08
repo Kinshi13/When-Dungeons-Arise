@@ -119,6 +119,21 @@ class SyncQueueRepository {
     return rows.where((r) => r.nextRetryAt == null || !r.nextRetryAt!.isAfter(now)).map(_fromRow).toList();
   }
 
+  /// Existe uma edição local ainda não sincronizada para esta entidade?
+  /// Usado pelo motor de pull para saber se uma linha remota recém-chegada
+  /// diverge de uma alteração local pendente — o sinal de conflito real
+  /// (seção 27): os dois lados mudaram desde o último sync conhecido.
+  Future<SyncQueueEntry?> findPending(String entityType, String entityId) async {
+    final row = await (_db.select(_db.syncQueueEntries)..where(
+          (e) =>
+              e.entityType.equals(entityType) &
+              e.entityId.equals(entityId) &
+              e.status.equalsValue(SyncQueueStatus.pending),
+        ))
+        .getSingleOrNull();
+    return row == null ? null : _fromRow(row);
+  }
+
   Stream<int> watchPendingCount() {
     final query = _db.selectOnly(_db.syncQueueEntries)
       ..addColumns([_db.syncQueueEntries.id.count()])
