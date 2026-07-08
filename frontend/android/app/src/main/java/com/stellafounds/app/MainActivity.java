@@ -1,4 +1,4 @@
-package com.lembretes.app;
+package com.stellafounds.app;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;

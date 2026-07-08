@@ -1,4 +1,4 @@
-package com.lembretes.app;
+package com.stellafounds.app;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -20,7 +20,7 @@ import org.json.JSONObject;
  */
 public class CalendarWidgetProvider extends AppWidgetProvider {
 
-    static final String PREFS_NAME = "com.lembretes.app.widget";
+    static final String PREFS_NAME = "com.stellafounds.app.widget";
     static final String KEY_MONTH_LABEL = "calendar_month_label";
     static final String KEY_CELLS_JSON = "calendar_cells_json";
     private static final int CELL_COUNT = 42;

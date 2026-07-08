@@ -2,8 +2,8 @@
 <resources>
     <string name="app_name">Lembretes</string>
     <string name="title_activity_main">Lembretes</string>
-    <string name="package_name">com.lembretes.app</string>
-    <string name="custom_url_scheme">com.lembretes.app</string>
+    <string name="package_name">com.stellafounds.app</string>
+    <string name="custom_url_scheme">com.stellafounds.app</string>
     <string name="widget_reminders_title">Próximos lembretes</string>
     <string name="widget_reminders_empty">Nenhum lembrete por aqui.</string>
     <string name="widget_reminders_description">Mostra seus próximos lembretes da Guilda.</string>

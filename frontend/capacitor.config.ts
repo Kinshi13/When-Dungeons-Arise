@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.lembretes.app",
+  appId: "com.stellafounds.app",
   appName: "Lembretes",
   webDir: "dist",
 };

@@ -1,4 +1,4 @@
-package com.lembretes.app;
+package com.stellafounds.app;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -28,7 +28,7 @@ import org.json.JSONObject;
  */
 public class CurrencyWidgetProvider extends AppWidgetProvider {
 
-    static final String PREFS_NAME = "com.lembretes.app.widget";
+    static final String PREFS_NAME = "com.stellafounds.app.widget";
     static final String KEY_PAIR = "currency_pair";
     static final String KEY_PAIR_LABEL = "currency_pair_label";
     static final String KEY_QUOTE_VALUE = "currency_quote_value";

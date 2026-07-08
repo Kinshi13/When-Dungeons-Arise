@@ -1,4 +1,4 @@
-package com.lembretes.app;
+package com.stellafounds.app;
 
 import android.content.Intent;
 import android.provider.Settings;

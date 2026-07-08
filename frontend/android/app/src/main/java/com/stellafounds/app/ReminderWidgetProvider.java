@@ -1,4 +1,4 @@
-package com.lembretes.app;
+package com.stellafounds.app;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -19,7 +19,7 @@ import org.json.JSONObject;
  */
 public class ReminderWidgetProvider extends AppWidgetProvider {
 
-    static final String PREFS_NAME = "com.lembretes.app.widget";
+    static final String PREFS_NAME = "com.stellafounds.app.widget";
     static final String KEY_ITEMS_JSON = "reminders_items_json";
     private static final int MAX_ROWS = 5;
 

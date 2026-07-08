@@ -18,7 +18,7 @@ interface NotificationBridgePluginApi {
 }
 
 // Ponte pro plugin nativo Android (AppNotificationListenerService +
-// NotificationBridgePlugin, em android/app/.../com/lembretes/app). Não existe
+// NotificationBridgePlugin, em android/app/.../com/stellafounds/app). Não existe
 // implementação web — fora do Android nativo caímos sempre nos dados de
 // exemplo abaixo.
 const NotificationBridge = registerPlugin<NotificationBridgePluginApi>("NotificationBridge");

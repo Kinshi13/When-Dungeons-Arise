@@ -23,7 +23,7 @@ interface WidgetBridgePluginApi {
 }
 
 // Ponte pro widgets nativos (ReminderWidgetProvider, CalendarWidgetProvider e
-// CurrencyWidgetProvider, em android/app/.../com/lembretes/app). Os widgets
+// CurrencyWidgetProvider, em android/app/.../com/stellafounds/app). Os widgets
 // rodam fora do WebView — não têm acesso ao localStorage, então toda vez que
 // os dados mudam mandamos um resumo pronto (só o que cabe na tela do widget)
 // pra guardar em SharedPreferences nativo e se redesenhar.
