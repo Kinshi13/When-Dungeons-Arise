@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import "./ReceptionBackground.css";
 import type { ReceptionBackgroundMode } from "../core/domain/receptionBackground";
 import { PRODUCTION_PARALLAX_LAYERS, validateProductionLayers } from "../core/domain/receptionLayerAssets";
@@ -80,16 +81,32 @@ export default function ReceptionBackground({ mode }: ReceptionBackgroundProps) 
   // GuildReception.tsx; "effects" fica desligado aqui de propósito (a
   // ilustração já traz atmosfera própria, uma camada extra de blend só
   // custaria composição sem ganho visual).
+  //
+  // Portalizado pro body (mesmo padrão do backdrop do Stella Core) e
+  // position:fixed cobrindo o viewport inteiro — sem isso, ficaria preso
+  // aos limites de .reception-page (que reserva espaço pra dock), deixando
+  // a barra flutuante sobre um vazio em vez de mostrar a ilustração
+  // through o vidro translúcido dela. z-index abaixo do .app (que é 1)
+  // garante que a imagem fica atrás de TUDO — inclusive da dock, que mora
+  // dentro do .app — sem competir com nada.
   if (effectiveMode === "static-art") {
-    return (
-      <div className="reception-background" aria-hidden="true">
+    const sky = parallaxTransform("sky");
+    // scale(1.08) além do cover — um leve zoom a mais, pedido explicitamente
+    // (a garota fica mais em destaque, e sobra uma margem extra pra cobrir
+    // qualquer variação de aspect ratio sem revelar borda). O transform do
+    // parallax de "sky" é concatenado na mesma string (não dá pra ter dois
+    // "transform" competindo no mesmo estilo inline).
+    const staticArtStyle = { transform: `scale(1.08) ${sky?.transform ?? ""}`.trim() };
+    return createPortal(
+      <div className="reception-background-fullscreen" aria-hidden="true">
         <img
           src="/reception/static-art.jpg"
           alt=""
           className="reception-background-static-art"
-          style={parallaxTransform("sky")}
+          style={staticArtStyle}
         />
-      </div>
+      </div>,
+      document.body
     );
   }
 

@@ -14,15 +14,30 @@
   background: var(--stella-reception-gradient);
 }
 
+/* Wrapper fixo cobrindo o viewport inteiro (portalizado pro body) — deixa
+   a ilustração aparecer também atrás da dock flutuante, não só dentro dos
+   limites de .reception-page. z-index abaixo do .app (z-index:1, ver
+   App.css) garante que fica atrás de tudo, dock incluída. */
+.reception-background-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 /* "static-art": ilustração full-canvas única — um <img> só, sem pilha de
-   camadas, bem mais barato de compor (ver ReceptionBackground.tsx). */
+   camadas, bem mais barato de compor (ver ReceptionBackground.tsx).
+   object-position focada na personagem (ela fica por volta de 45% da
+   altura da imagem original) — "top" cortava ela fora em telas mais
+   largas/baixas, onde cover precisa recortar verticalmente. */
 .reception-background-static-art {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: center 45%;
   pointer-events: none;
   user-select: none;
 }
