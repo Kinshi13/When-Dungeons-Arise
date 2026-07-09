@@ -66,12 +66,12 @@ export default function GuildReception() {
 
   // Parallax leve (Fase 7, etapa H) — mesma condição do Phaser: "Animações
   // reduzidas" desliga o rastreamento inteiro (nem escuta), não só zera o
-  // deslocamento. Cada camada PNG lê seu próprio parallaxTransform direto
-  // dentro de ReceptionBackground (pacote de assets v2) — só "constellations"
-  // (o canvas do Phaser) ainda precisa do estilo aqui, porque é um componente
-  // separado. O estilo é estático (calculado 1x, não muda por frame) — o
-  // movimento de verdade vem das custom properties --parallax-x/y que o
-  // hook escreve imperativamente no container a cada frame.
+  // deslocamento. Sky/effects leem seu próprio parallaxTransform direto
+  // dentro de ReceptionBackground — só "constellations" (o canvas do
+  // Phaser) precisa do estilo aqui, por ser um componente separado. O
+  // estilo é estático (calculado 1x, não muda por frame) — o movimento de
+  // verdade vem das custom properties --parallax-x/y que o hook escreve
+  // imperativamente no container a cada frame.
   const parallax = useReceptionParallax(pageRef, showPhaserScene);
   const constellationsStyle = parallaxTransform("constellations");
 
@@ -178,7 +178,13 @@ export default function GuildReception() {
           página (renderizados por App.tsx), usando --z-dock. Parallax leve
           (etapa H) aplicado só nas 2 camadas com elemento visual de verdade
           hoje — sky (o próprio gradiente) e constellations (o Phaser). */}
-      {isLofi && <ReceptionBackground mode="layered-parallax" />}
+      {/* "layered-parallax" volta quando houver asset de produção validado
+          (ver core/domain/receptionLayerAssets.ts) — o pacote v2 eram strips
+          de referência sem canvas compartilhado entre si, fragmentavam a
+          composição em vez de reconstruí-la. gradient-fallback é o visual
+          estável enquanto isso (mesmo assim já inclui o véu de "effects",
+          que não depende de registro com as outras camadas). */}
+      {isLofi && <ReceptionBackground mode="gradient-fallback" />}
 
       {showPhaserScene && (
         <Suspense fallback={null}>

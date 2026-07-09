@@ -44,13 +44,27 @@ describe("parallaxTransform", () => {
     }
   });
 
-  it("todas as 8 camadas do manifest estão habilitadas (arte real integrada)", () => {
-    expect(RECEPTION_LAYERS.every((l) => l.enabled)).toBe(true);
-    expect(RECEPTION_LAYERS).toHaveLength(8);
+  it("mantém os 8 slots do manifest (nenhum removido, mesmo sem asset de produção)", () => {
+    const ids = RECEPTION_LAYERS.map((l) => l.id);
+    expect(ids).toEqual([
+      "sky",
+      "architecture",
+      "constellations",
+      "midground",
+      "desk",
+      "effects",
+      "character",
+      "foreground",
+    ]);
   });
 
-  it("nenhuma camada ultrapassa o maior offset do manifest (foreground, 26px)", () => {
-    for (const layer of RECEPTION_LAYERS) {
+  it("só sky/constellations/effects estão habilitadas — as demais não têm asset de produção validado (rollback do pacote v2)", () => {
+    const enabledIds = RECEPTION_LAYERS.filter((l) => l.enabled).map((l) => l.id);
+    expect(enabledIds.sort()).toEqual(["constellations", "effects", "sky"]);
+  });
+
+  it("nenhuma camada habilitada ultrapassa o maior offset do manifest (foreground, 26px)", () => {
+    for (const layer of RECEPTION_LAYERS.filter((l) => l.enabled)) {
       const style = parallaxTransform(layer.id)!;
       const travel = Number(style.transform.match(/\* ([\d.]+)px/)![1]);
       expect(travel).toBeLessThanOrEqual(26);

@@ -1,7 +1,7 @@
-/* Fundo da Recepção — só o modo "gradient-fallback" tem conteúdo real hoje
-   (ver ReceptionBackground.tsx). CSS puro, sem animação: reduced motion não
-   precisa de tratamento especial, e escala em qualquer tamanho de tela
-   (mobile/tablet/desktop) sem JS. */
+/* Fundo da Recepção — gradient-fallback (base de cor) + effects (véu de luz
+   independente) são o visual estável hoje. CSS puro pro gradiente: reduced
+   motion não precisa de tratamento especial nele, e escala em qualquer
+   tamanho de tela (mobile/tablet/desktop) sem JS. */
 .reception-background {
   position: absolute;
   inset: 0;
@@ -9,32 +9,15 @@
 }
 
 .reception-background-gradient {
+  position: absolute;
+  inset: 0;
   background: var(--stella-reception-gradient);
 }
 
-/* Base de cor do modo layered-parallax — mesma paleta do gradient-fallback,
-   preenchendo o que as faixas PNG (mais baixas que a tela) não cobrem. */
-.reception-layer-base {
-  position: absolute;
-  inset: 0;
-}
-
-/* Faixas PNG (sky/architecture/midground/desk/foreground): largura 100%,
-   altura proporcional à imagem (nunca esticada pra cobrir a tela inteira —
-   ver o comentário em receptionLayerAssets.ts sobre por quê). pointer-
-   events:none pra nunca competir com cards/dock/Stella Core por cima. */
-.reception-layer-band {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: auto;
-  pointer-events: none;
-  user-select: none;
-}
-
 /* "effects" (partículas/luz): cobre a tela inteira e usa blend mode — zoom
-   nela não "quebra" a leitura do jeito que quebraria arquitetura/personagem,
-   então aqui cover é aceitável (ver receptionLayerAssets.ts). */
+   nela não "quebra" a leitura do jeito que quebraria uma cena com
+   arquitetura/personagem reconhecíveis, então cover é aceitável aqui (ver
+   receptionLayerAssets.ts). */
 .reception-layer-cover-blend {
   position: absolute;
   inset: 0;
@@ -51,20 +34,26 @@
   display: none;
 }
 
-/* Personagem: única camada com tamanho próprio (altura fixa em vh, nunca
-   esticada) — o wrapper centraliza horizontalmente sem transform (só
-   left:50%+translateX), deixando o <img> de dentro livre pra usar seu
-   transform só pro parallax. */
-.reception-layer-sprite-wrap {
+/* Composição em camadas de produção (validateProductionLayers) — todas as
+   camadas nascem no MESMO canvas compartilhado (ver
+   receptionLayerAssets.ts), então cover aqui preserva o registro entre
+   elas em vez de fragmentar a cena como o pacote de strips de referência
+   fazia. Vazia hoje (PRODUCTION_PARALLAX_LAYERS = []), pronta pra quando
+   a arte de produção chegar. */
+.reception-layer-canvas {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   pointer-events: none;
 }
 
-.reception-layer-sprite {
+.reception-layer-production {
+  position: absolute;
+  width: 100%;
   height: 100%;
-  width: auto;
-  display: block;
+  object-fit: cover;
+  pointer-events: none;
   user-select: none;
 }
