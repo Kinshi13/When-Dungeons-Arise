@@ -66,13 +66,13 @@ export default function GuildReception() {
 
   // Parallax leve (Fase 7, etapa H) — mesma condição do Phaser: "Animações
   // reduzidas" desliga o rastreamento inteiro (nem escuta), não só zera o
-  // deslocamento. Sky e constellations são as únicas camadas com elemento
-  // visual de verdade hoje (ver core/domain/receptionLayers.ts). O estilo é
-  // estático (calculado 1x, não muda por frame) — o movimento de verdade
-  // vem das custom properties --parallax-x/y que o hook escreve
-  // imperativamente no container a cada frame.
+  // deslocamento. Cada camada PNG lê seu próprio parallaxTransform direto
+  // dentro de ReceptionBackground (pacote de assets v2) — só "constellations"
+  // (o canvas do Phaser) ainda precisa do estilo aqui, porque é um componente
+  // separado. O estilo é estático (calculado 1x, não muda por frame) — o
+  // movimento de verdade vem das custom properties --parallax-x/y que o
+  // hook escreve imperativamente no container a cada frame.
   const parallax = useReceptionParallax(pageRef, showPhaserScene);
-  const skyStyle = parallaxTransform("sky");
   const constellationsStyle = parallaxTransform("constellations");
 
   useOverlayBackClose(moreOpen, () => setMoreOpen(false));
@@ -178,7 +178,7 @@ export default function GuildReception() {
           página (renderizados por App.tsx), usando --z-dock. Parallax leve
           (etapa H) aplicado só nas 2 camadas com elemento visual de verdade
           hoje — sky (o próprio gradiente) e constellations (o Phaser). */}
-      {isLofi && <ReceptionBackground mode="gradient-fallback" parallaxStyle={skyStyle} />}
+      {isLofi && <ReceptionBackground mode="layered-parallax" />}
 
       {showPhaserScene && (
         <Suspense fallback={null}>

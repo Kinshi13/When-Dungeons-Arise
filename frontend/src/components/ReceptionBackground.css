@@ -11,3 +11,60 @@
 .reception-background-gradient {
   background: var(--stella-reception-gradient);
 }
+
+/* Base de cor do modo layered-parallax — mesma paleta do gradient-fallback,
+   preenchendo o que as faixas PNG (mais baixas que a tela) não cobrem. */
+.reception-layer-base {
+  position: absolute;
+  inset: 0;
+}
+
+/* Faixas PNG (sky/architecture/midground/desk/foreground): largura 100%,
+   altura proporcional à imagem (nunca esticada pra cobrir a tela inteira —
+   ver o comentário em receptionLayerAssets.ts sobre por quê). pointer-
+   events:none pra nunca competir com cards/dock/Stella Core por cima. */
+.reception-layer-band {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* "effects" (partículas/luz): cobre a tela inteira e usa blend mode — zoom
+   nela não "quebra" a leitura do jeito que quebraria arquitetura/personagem,
+   então aqui cover é aceitável (ver receptionLayerAssets.ts). */
+.reception-layer-cover-blend {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Reduzidas: "effects" tem reducedMotionBehavior:"hidden" (ver
+   receptionLayers.ts) — some por completo, não fica só estático. */
+.no-animations .reception-layer-cover-blend {
+  display: none;
+}
+
+/* Personagem: única camada com tamanho próprio (altura fixa em vh, nunca
+   esticada) — o wrapper centraliza horizontalmente sem transform (só
+   left:50%+translateX), deixando o <img> de dentro livre pra usar seu
+   transform só pro parallax. */
+.reception-layer-sprite-wrap {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.reception-layer-sprite {
+  height: 100%;
+  width: auto;
+  display: block;
+  user-select: none;
+}
