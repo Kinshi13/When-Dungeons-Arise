@@ -14,6 +14,19 @@
   background: var(--stella-reception-gradient);
 }
 
+/* "static-art": ilustração full-canvas única — um <img> só, sem pilha de
+   camadas, bem mais barato de compor (ver ReceptionBackground.tsx). */
+.reception-background-static-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* "effects" (partículas/luz): cobre a tela inteira e usa blend mode — zoom
    nela não "quebra" a leitura do jeito que quebraria uma cena com
    arquitetura/personagem reconhecíveis, então cover é aceitável aqui (ver

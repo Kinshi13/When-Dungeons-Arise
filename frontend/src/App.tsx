@@ -1,15 +1,7 @@
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
-import { useEffect, useMemo, useState, type SVGProps, type ReactElement } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState, type SVGProps, type ReactElement } from "react";
 import { App as CapApp } from "@capacitor/app";
-import GuildReception from "./pages/GuildReception";
-import MissionBoard from "./pages/MissionBoard";
-import TimeRoom from "./pages/TimeRoom";
-import Treasury from "./pages/Treasury";
-import AdventureDiary from "./pages/AdventureDiary";
-import Library from "./pages/Library";
-import RulesBook from "./pages/RulesBook";
-import ReaderScreen from "./pages/ReaderScreen";
 import DueBillsPopup from "./components/DueBillsPopup";
 import AlarmRinger from "./components/AlarmRinger";
 import AmbientParticles from "./components/AmbientParticles";
@@ -35,6 +27,21 @@ import { onWallpaperChanged } from "./wallpaperEvents";
 import { playSfx } from "./sound";
 import { TabBellIcon, TabCoinsIcon, TabGuildIcon, TabHomeCalendarIcon, TabGearIcon, TabBookIcon } from "./icons2";
 import "./App.css";
+
+// Code-splitting por rota: cada tela só baixa/parseia quando o usuário
+// navega até ela, em vez de tudo entrar no bundle principal de largada.
+// ReaderScreen sozinho já puxa epubjs + pdfjs-dist (bibliotecas grandes) —
+// antes disso, TODO usuário pagava esse custo no primeiro carregamento
+// mesmo sem nunca abrir um livro. O Splash (mínimo 1.4s) cobre o instante
+// de carregamento da primeira tela sem precisar de fallback visível.
+const GuildReception = lazy(() => import("./pages/GuildReception"));
+const MissionBoard = lazy(() => import("./pages/MissionBoard"));
+const TimeRoom = lazy(() => import("./pages/TimeRoom"));
+const Treasury = lazy(() => import("./pages/Treasury"));
+const AdventureDiary = lazy(() => import("./pages/AdventureDiary"));
+const Library = lazy(() => import("./pages/Library"));
+const RulesBook = lazy(() => import("./pages/RulesBook"));
+const ReaderScreen = lazy(() => import("./pages/ReaderScreen"));
 
 const MotionNavLink = motion.create(NavLink);
 
@@ -373,9 +380,11 @@ function App() {
   if (isReader) {
     return (
       <MotionConfig reducedMotion={animationsEnabled ? "user" : "always"}>
-        <Routes>
-          <Route path="/leitor/:id" element={<ReaderScreen />} />
-        </Routes>
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/leitor/:id" element={<ReaderScreen />} />
+          </Routes>
+        </Suspense>
         <AlarmRinger />
       </MotionConfig>
     );
@@ -398,28 +407,30 @@ function App() {
         <main className="main">
           <AnimatePresence mode="sync" initial={false}>
             <motion.div key={mainScreenKeyOf(location.pathname)} className="screen-transition" {...transitionProps}>
-              <Routes location={location}>
-                <Route path="/" element={<GuildReception />} />
-                <Route path="/sala-do-tempo" element={<Navigate to="/sala-do-tempo/calendario" replace />} />
-                <Route path="/sala-do-tempo/calendario" element={<TimeRoom />} />
-                <Route path="/sala-do-tempo/agenda" element={<TimeRoom />} />
-                <Route path="/sala-do-tempo/linha-do-tempo" element={<TimeRoom />} />
-                <Route path="/sala-do-tempo/tarefas" element={<Navigate to="/sala-do-tempo/tarefas/hoje" replace />} />
-                <Route path="/sala-do-tempo/tarefas/hoje" element={<MissionBoard />} />
-                <Route path="/sala-do-tempo/tarefas/missoes" element={<MissionBoard />} />
-                <Route path="/sala-do-tempo/tarefas/caixa" element={<MissionBoard />} />
-                <Route path="/sala-do-tempo/diario" element={<Navigate to="/sala-do-tempo/diario/notas" replace />} />
-                <Route path="/sala-do-tempo/diario/notas" element={<AdventureDiary />} />
-                <Route path="/sala-do-tempo/diario/listas" element={<AdventureDiary />} />
-                <Route path="/tesouraria" element={<Navigate to="/tesouraria/visao-geral" replace />} />
-                <Route path="/tesouraria/visao-geral" element={<Treasury />} />
-                <Route path="/tesouraria/movimentos" element={<Treasury />} />
-                <Route path="/tesouraria/contas" element={<Treasury />} />
-                <Route path="/tesouraria/analises" element={<Treasury />} />
-                <Route path="/tesouraria/ferramentas" element={<Treasury />} />
-                <Route path="/biblioteca" element={<Library />} />
-                <Route path="/regras" element={<RulesBook />} />
-              </Routes>
+              <Suspense fallback={null}>
+                <Routes location={location}>
+                  <Route path="/" element={<GuildReception />} />
+                  <Route path="/sala-do-tempo" element={<Navigate to="/sala-do-tempo/calendario" replace />} />
+                  <Route path="/sala-do-tempo/calendario" element={<TimeRoom />} />
+                  <Route path="/sala-do-tempo/agenda" element={<TimeRoom />} />
+                  <Route path="/sala-do-tempo/linha-do-tempo" element={<TimeRoom />} />
+                  <Route path="/sala-do-tempo/tarefas" element={<Navigate to="/sala-do-tempo/tarefas/hoje" replace />} />
+                  <Route path="/sala-do-tempo/tarefas/hoje" element={<MissionBoard />} />
+                  <Route path="/sala-do-tempo/tarefas/missoes" element={<MissionBoard />} />
+                  <Route path="/sala-do-tempo/tarefas/caixa" element={<MissionBoard />} />
+                  <Route path="/sala-do-tempo/diario" element={<Navigate to="/sala-do-tempo/diario/notas" replace />} />
+                  <Route path="/sala-do-tempo/diario/notas" element={<AdventureDiary />} />
+                  <Route path="/sala-do-tempo/diario/listas" element={<AdventureDiary />} />
+                  <Route path="/tesouraria" element={<Navigate to="/tesouraria/visao-geral" replace />} />
+                  <Route path="/tesouraria/visao-geral" element={<Treasury />} />
+                  <Route path="/tesouraria/movimentos" element={<Treasury />} />
+                  <Route path="/tesouraria/contas" element={<Treasury />} />
+                  <Route path="/tesouraria/analises" element={<Treasury />} />
+                  <Route path="/tesouraria/ferramentas" element={<Treasury />} />
+                  <Route path="/biblioteca" element={<Library />} />
+                  <Route path="/regras" element={<RulesBook />} />
+                </Routes>
+              </Suspense>
             </motion.div>
           </AnimatePresence>
         </main>

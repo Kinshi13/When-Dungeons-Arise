@@ -151,8 +151,8 @@
   border: 1px solid var(--stella-surface-glass-border);
   border-radius: var(--stella-radius-md);
   background: var(--stella-surface-glass);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   box-shadow: var(--stella-elevation-1);
   color: var(--stella-text-on-glass);
   padding: var(--stella-space-2);

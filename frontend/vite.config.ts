@@ -39,4 +39,34 @@ export default defineConfig({
   server: {
     host: true,
   },
+  build: {
+    modulePreload: {
+      // O Vite, por padrão, injeta <link rel="modulepreload"> pra chunks
+      // grandes só porque são alcançáveis no grafo de dependências — mesmo
+      // sendo usados só por lazy() (leitor de epub/pdf, cliente Supabase do
+      // login). Isso fazia o navegador baixar ~1MB de biblioteca em TODO
+      // carregamento do app, mesmo sem o usuário nunca abrir um livro ou a
+      // tela de login. Excluir esses dois chunks aqui garante que só quem
+      // navega até a rota que realmente os importa paga esse custo.
+      resolveDependencies: (_filename, deps) =>
+        deps.filter((dep) => !dep.includes('reader-libs') && !dep.includes('supabase-client')),
+    },
+    rollupOptions: {
+      output: {
+        // Sem isso, o chunking automático do Rollup às vezes mistura
+        // dependências pesadas só usadas por rotas lazy (leitor de
+        // epub/pdf, Supabase do login) no MESMO chunk de módulos usados
+        // de forma eager (ícones da dock, importados direto em App.tsx)
+        // — aí o navegador faz modulepreload desse chunk gigante na
+        // largada, mesmo que o usuário nunca abra um livro ou a tela de
+        // login. Separar explicitamente garante que só quem realmente
+        // importa esses módulos (via lazy()) baixa esse peso.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('pdfjs-dist') || id.includes('epubjs')) return 'reader-libs';
+          if (id.includes('@supabase')) return 'supabase-client';
+        },
+      },
+    },
+  },
 })

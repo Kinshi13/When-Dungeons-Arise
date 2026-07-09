@@ -7,7 +7,7 @@ interface ReceptionBackgroundProps {
   mode: ReceptionBackgroundMode;
 }
 
-const IMPLEMENTED_MODES: ReceptionBackgroundMode[] = ["gradient-fallback", "layered-parallax"];
+const IMPLEMENTED_MODES: ReceptionBackgroundMode[] = ["gradient-fallback", "layered-parallax", "static-art"];
 
 // "effects" (partículas/luz) é independente da composição em camadas — não
 // precisa de registro/alinhamento com nada (é um véu de luz por cima da
@@ -68,6 +68,27 @@ export default function ReceptionBackground({ mode }: ReceptionBackgroundProps) 
           </div>
         )}
         <EffectsOverlay />
+      </div>
+    );
+  }
+
+  // "static-art": uma única ilustração full-canvas (ao contrário do pacote
+  // v2, este é o canvas de verdade — não um strip de referência). Um <img>
+  // só, object-fit:cover — bem mais barato de compor que a pilha de
+  // camadas PNG anterior. O parallax das estrelas continua vindo do canvas
+  // do Phaser (camada "constellations"), renderizado por cima em
+  // GuildReception.tsx; "effects" fica desligado aqui de propósito (a
+  // ilustração já traz atmosfera própria, uma camada extra de blend só
+  // custaria composição sem ganho visual).
+  if (effectiveMode === "static-art") {
+    return (
+      <div className="reception-background" aria-hidden="true">
+        <img
+          src="/reception/static-art.jpg"
+          alt=""
+          className="reception-background-static-art"
+          style={parallaxTransform("sky")}
+        />
       </div>
     );
   }

@@ -52,7 +52,7 @@
 }
 
 .page-bg-blurred-strong img {
-  filter: blur(14px) brightness(0.5);
+  filter: blur(8px) brightness(0.5);
   transform: scale(1.12);
 }
 
@@ -64,7 +64,7 @@
   position: absolute;
   inset: 0;
   background: var(--stella-reception-gradient);
-  filter: blur(14px) brightness(0.5);
+  filter: blur(8px) brightness(0.5);
   transform: scale(1.12);
 }
 
@@ -242,8 +242,8 @@
   border-radius: 24px;
   overflow: visible;
   background: color-mix(in srgb, var(--surface) 82%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
   border: 1px solid color-mix(in srgb, var(--border) 25%, transparent);
 }
@@ -2791,8 +2791,19 @@
 
 .reception-greeting {
   font-family: var(--font-display);
-  font-size: 1rem;
-  color: var(--stella-text-primary);
+  font-size: 0.85rem;
+  color: var(--stella-text-on-glass);
+  /* Pill de vidro (mesmo padrão do botão "Mais" e do chip de clima) — a
+     ilustração de fundo (static-art) já tem o logo "Stella Founds" desenhado
+     no canto superior esquerdo; um texto solto sem fundo nessa mesma área
+     ou ficava ilegível (varia de escuro a claro ao longo da imagem) ou
+     brigava visualmente com o logo. O painel separa os dois. */
+  background: var(--stella-surface-glass);
+  border: 1px solid var(--stella-surface-glass-border);
+  border-radius: var(--stella-radius-pill);
+  padding: 6px 12px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .reception-more-trigger {
@@ -2820,8 +2831,8 @@
   z-index: var(--stella-reception-z-cards);
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  max-width: 340px;
+  gap: 8px;
+  max-width: 260px;
   margin: 0 auto;
   justify-content: center;
 }
@@ -2831,12 +2842,12 @@
   border-radius: 20px;
   background: var(--stella-surface-glass);
   color: var(--stella-text-on-glass);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   box-shadow: var(--stella-elevation-1);
   cursor: pointer;
   text-align: left;
-  padding: 12px 14px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
 }
@@ -2860,22 +2871,22 @@
    o conteúdo funcional (label/hint), que continua sendo o protagonista. */
 .reception-card-accent {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 10px;
-  height: 10px;
+  top: 7px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
   opacity: 0.35;
   pointer-events: none;
 }
 
 .reception-card-fn-label {
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   color: var(--stella-text-on-glass);
 }
 
 .reception-card-fn-hint {
-  font-size: 0.62rem;
+  font-size: 0.56rem;
   color: var(--stella-text-on-glass-muted);
   line-height: 1.2;
 }
@@ -2951,8 +2962,8 @@
   border: 1px solid var(--stella-surface-glass-border);
   border-radius: var(--stella-radius-md);
   background: var(--stella-surface-glass);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   box-shadow: var(--stella-elevation-2);
   overflow: hidden;
   padding: var(--stella-space-1);
@@ -3383,8 +3394,8 @@
   align-items: center;
   justify-content: center;
   background: color-mix(in srgb, var(--surface) 82%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
 }
 

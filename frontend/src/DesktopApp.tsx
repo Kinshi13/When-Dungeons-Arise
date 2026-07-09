@@ -1,13 +1,5 @@
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState, type SVGProps, type ReactElement } from "react";
-import GuildReception from "./pages/GuildReception";
-import MissionBoard from "./pages/MissionBoard";
-import TimeRoom from "./pages/TimeRoom";
-import Treasury from "./pages/Treasury";
-import AdventureDiary from "./pages/AdventureDiary";
-import Library from "./pages/Library";
-import RulesBook from "./pages/RulesBook";
-import ReaderScreen from "./pages/ReaderScreen";
+import { lazy, Suspense, useEffect, useMemo, useState, type SVGProps, type ReactElement } from "react";
 import DueBillsPopup from "./components/DueBillsPopup";
 import AlarmRinger from "./components/AlarmRinger";
 import Splash from "./components/Splash";
@@ -22,6 +14,20 @@ import { buildHomeSummary } from "./core/domain/homeSummary";
 import { TabCoinsIcon, TabGuildIcon, TabHomeCalendarIcon, TabGearIcon, TabBookIcon } from "./icons2";
 import { greeting } from "./greeting";
 import "./DesktopApp.css";
+
+// Mesmo code-splitting por rota do App.tsx mobile — precisa ficar
+// consistente entre os dois: se um dos dois entry points ainda importar
+// uma tela de forma estática, o bundler junta o módulo no chunk comum e
+// anula o lazy() do outro lado (rolldown avisa isso como
+// INEFFECTIVE_DYNAMIC_IMPORT no build).
+const GuildReception = lazy(() => import("./pages/GuildReception"));
+const MissionBoard = lazy(() => import("./pages/MissionBoard"));
+const TimeRoom = lazy(() => import("./pages/TimeRoom"));
+const Treasury = lazy(() => import("./pages/Treasury"));
+const AdventureDiary = lazy(() => import("./pages/AdventureDiary"));
+const Library = lazy(() => import("./pages/Library"));
+const RulesBook = lazy(() => import("./pages/RulesBook"));
+const ReaderScreen = lazy(() => import("./pages/ReaderScreen"));
 
 interface NavItem {
   to: string;
@@ -181,9 +187,11 @@ function DesktopApp() {
 
   if (isReader) {
     return (
-      <Routes>
-        <Route path="/leitor/:id" element={<ReaderScreen />} />
-      </Routes>
+      <Suspense fallback={null}>
+        <Routes>
+          <Route path="/leitor/:id" element={<ReaderScreen />} />
+        </Routes>
+      </Suspense>
     );
   }
 
@@ -212,28 +220,30 @@ function DesktopApp() {
         <main className="desktop-main">
           <div className="app desktop-app-frame">
             <div className="main desktop-page-frame">
-              <Routes>
-                <Route path="/" element={<GuildReception />} />
-                <Route path="/sala-do-tempo" element={<Navigate to="/sala-do-tempo/calendario" replace />} />
-                <Route path="/sala-do-tempo/calendario" element={<TimeRoom />} />
-                <Route path="/sala-do-tempo/agenda" element={<TimeRoom />} />
-                <Route path="/sala-do-tempo/linha-do-tempo" element={<TimeRoom />} />
-                <Route path="/sala-do-tempo/tarefas" element={<Navigate to="/sala-do-tempo/tarefas/hoje" replace />} />
-                <Route path="/sala-do-tempo/tarefas/hoje" element={<MissionBoard />} />
-                <Route path="/sala-do-tempo/tarefas/missoes" element={<MissionBoard />} />
-                <Route path="/sala-do-tempo/tarefas/caixa" element={<MissionBoard />} />
-                <Route path="/sala-do-tempo/diario" element={<Navigate to="/sala-do-tempo/diario/notas" replace />} />
-                <Route path="/sala-do-tempo/diario/notas" element={<AdventureDiary />} />
-                <Route path="/sala-do-tempo/diario/listas" element={<AdventureDiary />} />
-                <Route path="/tesouraria" element={<Navigate to="/tesouraria/visao-geral" replace />} />
-                <Route path="/tesouraria/visao-geral" element={<Treasury />} />
-                <Route path="/tesouraria/movimentos" element={<Treasury />} />
-                <Route path="/tesouraria/contas" element={<Treasury />} />
-                <Route path="/tesouraria/analises" element={<Treasury />} />
-                <Route path="/tesouraria/ferramentas" element={<Treasury />} />
-                <Route path="/biblioteca" element={<Library />} />
-                <Route path="/regras" element={<RulesBook />} />
-              </Routes>
+              <Suspense fallback={null}>
+                <Routes>
+                  <Route path="/" element={<GuildReception />} />
+                  <Route path="/sala-do-tempo" element={<Navigate to="/sala-do-tempo/calendario" replace />} />
+                  <Route path="/sala-do-tempo/calendario" element={<TimeRoom />} />
+                  <Route path="/sala-do-tempo/agenda" element={<TimeRoom />} />
+                  <Route path="/sala-do-tempo/linha-do-tempo" element={<TimeRoom />} />
+                  <Route path="/sala-do-tempo/tarefas" element={<Navigate to="/sala-do-tempo/tarefas/hoje" replace />} />
+                  <Route path="/sala-do-tempo/tarefas/hoje" element={<MissionBoard />} />
+                  <Route path="/sala-do-tempo/tarefas/missoes" element={<MissionBoard />} />
+                  <Route path="/sala-do-tempo/tarefas/caixa" element={<MissionBoard />} />
+                  <Route path="/sala-do-tempo/diario" element={<Navigate to="/sala-do-tempo/diario/notas" replace />} />
+                  <Route path="/sala-do-tempo/diario/notas" element={<AdventureDiary />} />
+                  <Route path="/sala-do-tempo/diario/listas" element={<AdventureDiary />} />
+                  <Route path="/tesouraria" element={<Navigate to="/tesouraria/visao-geral" replace />} />
+                  <Route path="/tesouraria/visao-geral" element={<Treasury />} />
+                  <Route path="/tesouraria/movimentos" element={<Treasury />} />
+                  <Route path="/tesouraria/contas" element={<Treasury />} />
+                  <Route path="/tesouraria/analises" element={<Treasury />} />
+                  <Route path="/tesouraria/ferramentas" element={<Treasury />} />
+                  <Route path="/biblioteca" element={<Library />} />
+                  <Route path="/regras" element={<RulesBook />} />
+                </Routes>
+              </Suspense>
             </div>
           </div>
           <DueBillsPopup />

@@ -178,13 +178,12 @@ export default function GuildReception() {
           página (renderizados por App.tsx), usando --z-dock. Parallax leve
           (etapa H) aplicado só nas 2 camadas com elemento visual de verdade
           hoje — sky (o próprio gradiente) e constellations (o Phaser). */}
-      {/* "layered-parallax" volta quando houver asset de produção validado
-          (ver core/domain/receptionLayerAssets.ts) — o pacote v2 eram strips
-          de referência sem canvas compartilhado entre si, fragmentavam a
-          composição em vez de reconstruí-la. gradient-fallback é o visual
-          estável enquanto isso (mesmo assim já inclui o véu de "effects",
-          que não depende de registro com as outras camadas). */}
-      {isLofi && <ReceptionBackground mode="gradient-fallback" />}
+      {/* Ilustração full-canvas única (ver ReceptionBackground.tsx) — o
+          parallax das estrelas continua vindo do canvas do Phaser
+          (constellations), renderizado por cima logo abaixo.
+          "layered-parallax" volta quando houver asset de produção validado
+          por camada (ver core/domain/receptionLayerAssets.ts). */}
+      {isLofi && <ReceptionBackground mode="static-art" />}
 
       {showPhaserScene && (
         <Suspense fallback={null}>
@@ -229,7 +228,7 @@ export default function GuildReception() {
               {...cardEnter(0)}
             >
               <StellaSpark className="reception-card-accent" />
-              <CalendarIcon width={20} height={20} />
+              <CalendarIcon width={16} height={16} />
               <span className="reception-card-fn-label">Próximo</span>
               <span className="reception-card-fn-hint">
                 {homeSummary.highlight?.text ?? homeSummary.alarm?.text ?? "Nada urgente por perto."}
@@ -245,7 +244,7 @@ export default function GuildReception() {
               {...cardEnter(1)}
             >
               <StellaSpark className="reception-card-accent" />
-              <ChecklistIcon width={20} height={20} />
+              <ChecklistIcon width={16} height={16} />
               <span className="reception-card-fn-label">Hoje</span>
               <span className="reception-card-fn-hint">{todayTally || "Nada marcado por hoje"}</span>
             </motion.button>
@@ -259,7 +258,7 @@ export default function GuildReception() {
               {...cardEnter(2)}
             >
               <StellaSpark className="reception-card-accent" />
-              <InvoiceIcon width={20} height={20} />
+              <InvoiceIcon width={16} height={16} />
               <span className="reception-card-fn-label">Atenção</span>
               <span className="reception-card-fn-hint">
                 {pendingBillsCount === 0
@@ -277,7 +276,7 @@ export default function GuildReception() {
               {...cardEnter(3)}
             >
               <StellaSpark className="reception-card-accent" />
-              <CheckIcon width={20} height={20} />
+              <CheckIcon width={16} height={16} />
               <span className="reception-card-fn-label">Progresso</span>
               <span className="reception-card-fn-hint">
                 {todayReminders.length > 0
