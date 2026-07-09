@@ -32,9 +32,17 @@ export const RECEPTION_LAYERS: ReceptionLayerConfig[] = [
 // do briefing: "Não usar deslocamentos exagerados").
 export const RECEPTION_PARALLAX_MAX_TRAVEL_PX = 60;
 
-export function parallaxOffsetFor(layerId: string, pointer: { x: number; y: number }): { x: number; y: number } {
+// Estilo pronto (calculado 1x, não por frame) que lê --parallax-x/y — as
+// custom properties que useReceptionParallax.ts escreve imperativamente a
+// cada frame no container (nunca via setState/re-render do React; ver seção
+// 15 do briefing: "não atualizar dezenas de componentes React por frame").
+// O fallback "0" no var() cobre o instante antes do hook montar/quando o
+// parallax está desligado (reduced motion) — nunca fica sem valor.
+export function parallaxTransform(layerId: string): { transform: string } | undefined {
   const layer = RECEPTION_LAYERS.find((l) => l.id === layerId);
-  if (!layer || !layer.enabled) return { x: 0, y: 0 };
+  if (!layer || !layer.enabled) return undefined;
   const travel = RECEPTION_PARALLAX_MAX_TRAVEL_PX * layer.parallaxFactor;
-  return { x: pointer.x * travel, y: pointer.y * travel };
+  return {
+    transform: `translate3d(calc(var(--parallax-x, 0) * ${travel}px), calc(var(--parallax-y, 0) * ${travel}px), 0)`,
+  };
 }

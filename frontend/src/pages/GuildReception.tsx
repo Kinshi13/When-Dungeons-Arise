@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemesScreen from "../components/ThemesScreen";
 import ReceptionBackground from "../components/ReceptionBackground";
+import StellaStarIcon from "../ui/stella-core/StellaStarIcon";
 import { playSfx } from "../sound";
 import { useVerticalSwipe } from "../useVerticalSwipe";
 import { useOverlayBackClose } from "../useOverlayBackClose";
@@ -17,7 +18,7 @@ import { api, type Bill, type Reminder } from "../api";
 import { getCachedPrimaryWeather, fetchPrimaryWeather, type WeatherInfo } from "../weather";
 import { buildHomeSummary } from "../core/domain/homeSummary";
 import { toDateKey } from "../core/domain/calendarEntries";
-import { parallaxOffsetFor } from "../core/domain/receptionLayers";
+import { parallaxTransform } from "../core/domain/receptionLayers";
 import { useReceptionParallax } from "../useReceptionParallax";
 import { greeting } from "../greeting";
 import { useQuickAction } from "../useQuickAction";
@@ -63,12 +64,15 @@ export default function GuildReception() {
   const navigate = useNavigate();
 
   // Parallax leve (Fase 7, etapa H) — mesma condição do Phaser: "Animações
-  // reduzidas" desliga o rastreamento de ponteiro inteiro (nem escuta), não
-  // só zera o deslocamento. Sky e constellations são as únicas camadas com
-  // elemento visual de verdade hoje (ver core/domain/receptionLayers.ts).
-  const parallaxPointer = useReceptionParallax(pageRef, showPhaserScene);
-  const skyParallax = parallaxOffsetFor("sky", parallaxPointer);
-  const constellationsParallax = parallaxOffsetFor("constellations", parallaxPointer);
+  // reduzidas" desliga o rastreamento inteiro (nem escuta), não só zera o
+  // deslocamento. Sky e constellations são as únicas camadas com elemento
+  // visual de verdade hoje (ver core/domain/receptionLayers.ts). O estilo é
+  // estático (calculado 1x, não muda por frame) — o movimento de verdade
+  // vem das custom properties --parallax-x/y que o hook escreve
+  // imperativamente no container a cada frame.
+  const parallax = useReceptionParallax(pageRef, showPhaserScene);
+  const skyStyle = parallaxTransform("sky");
+  const constellationsStyle = parallaxTransform("constellations");
 
   useOverlayBackClose(moreOpen, () => setMoreOpen(false));
 
@@ -173,12 +177,12 @@ export default function GuildReception() {
           página (renderizados por App.tsx), usando --z-dock. Parallax leve
           (etapa H) aplicado só nas 2 camadas com elemento visual de verdade
           hoje — sky (o próprio gradiente) e constellations (o Phaser). */}
-      {isLofi && <ReceptionBackground mode="gradient-fallback" parallax={skyParallax} />}
+      {isLofi && <ReceptionBackground mode="gradient-fallback" parallaxStyle={skyStyle} />}
 
       {showPhaserScene && (
         <Suspense fallback={null}>
           <ReceptionCanvas
-            style={{ transform: `translate3d(${constellationsParallax.x}px, ${constellationsParallax.y}px, 0)` }}
+            style={constellationsStyle}
             onHotspotTap={() => {
               playSfx("coin");
               setWeatherOpen(true);
@@ -321,6 +325,24 @@ export default function GuildReception() {
                   <TabGearIcon width={18} height={18} />
                   Ajustes
                 </button>
+                {parallax.permission === "unknown" && (
+                  // Só aparece em navegadores que exigem gesto explícito pro
+                  // sensor de inclinação (iOS 13+ Safari) — Android/desktop
+                  // com sensor já ficam "granted" sem pedir nada, e sem
+                  // suporte nenhum o item nem aparece (seção 4 do briefing).
+                  <button
+                    role="menuitem"
+                    className="reception-more-item"
+                    onClick={() => {
+                      playSfx("coin");
+                      setMoreOpen(false);
+                      void parallax.requestSensor();
+                    }}
+                  >
+                    <StellaStarIcon width={18} height={18} />
+                    Ativar movimento da cena
+                  </button>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
