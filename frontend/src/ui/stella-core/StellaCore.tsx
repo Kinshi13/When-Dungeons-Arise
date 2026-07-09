@@ -20,6 +20,10 @@ interface StellaCoreProps {
 
 const ARC_DEGREES = 150;
 const RADIUS = 92;
+// Margem além do raio, pra caber o traço do anel orbital + os sparks sem
+// cortar nas bordas da caixa do SVG.
+const CONSTELLATION_MARGIN = 12;
+const CONSTELLATION_SIZE = RADIUS * 2 + CONSTELLATION_MARGIN * 2;
 
 // Ângulo de cada ação no leque, medido a partir da vertical (0° = pra cima),
 // distribuído simetricamente em torno do topo. Com 1 ação só, fica reto pra
@@ -70,6 +74,34 @@ export default function StellaCore({ actions }: StellaCoreProps) {
           <div className="stella-core-backdrop" onClick={() => setOpen(false)} aria-hidden="true" />,
           document.body
         )}
+
+      <AnimatePresence>
+        {open && (
+          <svg
+            className="stella-core-constellation"
+            width={CONSTELLATION_SIZE}
+            height={RADIUS + CONSTELLATION_MARGIN}
+            aria-hidden="true"
+          >
+            <g transform={`translate(${CONSTELLATION_SIZE / 2}, ${RADIUS + CONSTELLATION_MARGIN})`}>
+              <circle className="stella-core-orbit" cx={0} cy={0} r={RADIUS} />
+              {sorted.map((action, i) => {
+                const angle = angleFor(i, sorted.length);
+                const rad = (angle * Math.PI) / 180;
+                const x = Math.sin(rad) * RADIUS;
+                const y = -Math.cos(rad) * RADIUS;
+                const delay = `${i * 30}ms`;
+                return (
+                  <g key={action.id}>
+                    <line x1={0} y1={0} x2={x} y2={y} className="stella-core-link" style={{ animationDelay: delay }} />
+                    <circle cx={x} cy={y} r={3} className="stella-core-spark" style={{ animationDelay: delay }} />
+                  </g>
+                );
+              })}
+            </g>
+          </svg>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {open && (

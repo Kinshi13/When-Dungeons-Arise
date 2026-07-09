@@ -64,6 +64,79 @@
   pointer-events: none;
 }
 
+/* Constelação decorativa do leque — mesmo ponto de origem/raio do arco que
+   as ações já percorrem (RADIUS em StellaCore.tsx), então o anel orbital
+   passa exatamente pelos nós, sem coordenadas duplicadas. Puramente
+   ornamental: aria-hidden, pointer-events:none, nunca compete com o clique
+   das ações reais (.stella-core-action, acima na pilha). */
+.stella-core-constellation {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  z-index: 1;
+  transform: translateX(-50%);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.stella-core-orbit {
+  fill: none;
+  stroke: var(--stella-surface-glass-border);
+  stroke-width: 1;
+  opacity: 0;
+  animation: stella-core-orbit-in 320ms ease forwards;
+}
+
+.stella-core-link {
+  stroke: var(--stella-gold);
+  stroke-width: 1;
+  opacity: 0;
+  animation: stella-core-link-in 220ms ease forwards;
+}
+
+.stella-core-spark {
+  fill: var(--stella-gold);
+  opacity: 0;
+  animation: stella-core-spark-in 220ms ease forwards;
+}
+
+@keyframes stella-core-orbit-in {
+  to {
+    opacity: 0.4;
+  }
+}
+
+@keyframes stella-core-link-in {
+  to {
+    opacity: 0.3;
+  }
+}
+
+@keyframes stella-core-spark-in {
+  to {
+    opacity: 0.9;
+  }
+}
+
+/* Reduzidas: elementos ficam visíveis (ajudam a orientar o leque), mas sem
+   a sequência de entrada escalonada — nada de listener/RAF aqui pra
+   desligar, é só a keyframe-animation que precisa sumir. */
+.no-animations .stella-core-orbit,
+.no-animations .stella-core-link,
+.no-animations .stella-core-spark {
+  animation: none;
+  opacity: 0.3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stella-core-orbit,
+  .stella-core-link,
+  .stella-core-spark {
+    animation: none;
+    opacity: 0.3;
+  }
+}
+
 .stella-core-action {
   position: absolute;
   top: 0;
