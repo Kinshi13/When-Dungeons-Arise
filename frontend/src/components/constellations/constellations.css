@@ -1,0 +1,52 @@
+/* Biblioteca de constelações SVG — puramente decorativa. Todo elemento
+   aqui é aria-hidden e pointer-events:none: nunca pode bloquear clique/toque
+   em cards, botões ou no Stella Core por baixo/em volta dele. */
+
+.constellation-field,
+.orbit-ring,
+.stella-spark,
+.astral-divider {
+  pointer-events: none;
+}
+
+.constellation-field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.constellation-node {
+  fill: var(--stella-gold);
+  opacity: 0.55;
+}
+
+.constellation-line {
+  stroke: var(--stella-gold);
+  stroke-width: 0.15;
+  opacity: 0.25;
+}
+
+.orbit-ring circle {
+  fill: none;
+  stroke: var(--stella-surface-glass-border);
+  stroke-width: 0.6;
+  opacity: 0.5;
+}
+
+.stella-spark path {
+  fill: var(--stella-gold);
+}
+
+.astral-divider line,
+.astral-divider path {
+  stroke: var(--stella-gold);
+  fill: var(--stella-gold);
+  opacity: 0.35;
+}
+
+.astral-divider line {
+  stroke-width: 1;
+  fill: none;
+}
