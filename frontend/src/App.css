@@ -2855,6 +2855,19 @@
   overflow: hidden;
 }
 
+/* Acento discreto (seção 12 do briefing Stella): um pequeno nó astral no
+   canto de cada card, bem apagado — reforça a identidade sem competir com
+   o conteúdo funcional (label/hint), que continua sendo o protagonista. */
+.reception-card-accent {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 10px;
+  height: 10px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
 .reception-card-fn-label {
   font-family: var(--font-display);
   font-size: 0.85rem;

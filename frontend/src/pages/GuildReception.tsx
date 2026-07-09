@@ -22,6 +22,7 @@ import { parallaxTransform } from "../core/domain/receptionLayers";
 import { useReceptionParallax } from "../useReceptionParallax";
 import { greeting } from "../greeting";
 import { useQuickAction } from "../useQuickAction";
+import StellaSpark from "../components/constellations/StellaSpark";
 
 // Phaser só baixa quando a Recepção realmente monta (ver phaser/ReceptionCanvas.tsx)
 // — não entra no bundle principal, que as outras 3 áreas nunca precisam dele.
@@ -221,6 +222,7 @@ export default function GuildReception() {
               }}
               {...cardEnter(0)}
             >
+              <StellaSpark className="reception-card-accent" />
               <CalendarIcon width={20} height={20} />
               <span className="reception-card-fn-label">Próximo</span>
               <span className="reception-card-fn-hint">
@@ -236,6 +238,7 @@ export default function GuildReception() {
               }}
               {...cardEnter(1)}
             >
+              <StellaSpark className="reception-card-accent" />
               <ChecklistIcon width={20} height={20} />
               <span className="reception-card-fn-label">Hoje</span>
               <span className="reception-card-fn-hint">{todayTally || "Nada marcado por hoje"}</span>
@@ -249,6 +252,7 @@ export default function GuildReception() {
               }}
               {...cardEnter(2)}
             >
+              <StellaSpark className="reception-card-accent" />
               <InvoiceIcon width={20} height={20} />
               <span className="reception-card-fn-label">Atenção</span>
               <span className="reception-card-fn-hint">
@@ -266,6 +270,7 @@ export default function GuildReception() {
               }}
               {...cardEnter(3)}
             >
+              <StellaSpark className="reception-card-accent" />
               <CheckIcon width={20} height={20} />
               <span className="reception-card-fn-label">Progresso</span>
               <span className="reception-card-fn-hint">
