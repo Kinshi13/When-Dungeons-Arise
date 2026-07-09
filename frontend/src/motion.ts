@@ -48,16 +48,36 @@ export const sheetSlideUp = {
   transition: SPRINGS.sheet,
 } as const;
 
-// Transição de entrada/saída entre as telas principais da dock — substitui
-// o antigo sistema de arrastar+prévia (que dependia do dedo estar preso à
-// posição real do gesto). Valores discretos (opacity + leve translateY +
-// scale quase imperceptível) em vez de um slide completo de tela: a troca
-// deve parecer "o ambiente mudou", não "uma página deslizou pela tela".
+// Transição de entrada/saída entre as telas principais da dock — gaveta
+// subindo de baixo pra cima (pedido explícito após relato de atraso real
+// em aparelhos Android 15/16 — Samsung A56, Redmi Note 14). Só
+// translateY, sem scale nem opacity: scale forçava o navegador a
+// recompor o blur() de tudo que tem filter/backdrop-filter por baixo
+// (fundos de tela, cards de vidro) a cada frame da animação — uma
+// combinação cara em WebView Android, e um dos motivos reais do atraso,
+// não só estético. Sem scale/opacity, é só reposicionar uma camada já
+// composta pela GPU (translateY é barato em qualquer resolução/potência);
+// a tela nova "subindo por cima" da antiga já emerge sozinha da ordem de
+// empilhamento normal do AnimatePresence, sem precisar simular com fade.
 export const screenEnter = {
-  initial: { opacity: 0, y: 18, scale: 0.97 },
-  animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, y: -10, scale: 0.97 },
-  transition: { duration: 0.3, ease: [0.32, 0.72, 0, 1] },
+  initial: { y: 56 },
+  animate: { y: 0 },
+  exit: { y: -32 },
+  transition: { type: "spring", stiffness: 340, damping: 32, mass: 0.9 },
+} as const;
+
+// Fundo full-bleed atrás da tela (.page-bg-layer, ver App.tsx) — mesma
+// troca de rota do screenEnter, mas só com fade: é uma camada position:
+// fixed/inset:0 atrás de tudo, então um translateY de poucos px não se
+// percebe (a imagem já cobre o viewport inteiro antes/depois do
+// deslocamento) — sem o fade, a troca "pipoca" de um fundo pro outro
+// instantaneamente por trás do conteúdo ainda saindo (percebido durante a
+// integração desta mudança). Sem scale (esse sim, caro — ver screenEnter).
+export const pageBackgroundEnter = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+  transition: { duration: 0.25 },
 } as const;
 
 // Sub-abas dentro de uma mesma tela principal (Mural, Tesouraria, Sala do

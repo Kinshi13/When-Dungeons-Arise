@@ -10,7 +10,7 @@ import StellaCore from "./ui/stella-core/StellaCore";
 import { buildStellaActions } from "./stellaActions";
 import { useSettings, isLofiTheme } from "./contexts/SettingsContext";
 import { sectionOf } from "./useSwipeNav";
-import { SPRINGS, screenEnter } from "./motion";
+import { SPRINGS, screenEnter, pageBackgroundEnter } from "./motion";
 import { isNativePlatform } from "./notifications";
 import { consumeBackPress } from "./useOverlayBackClose";
 import {
@@ -375,7 +375,14 @@ function App() {
   }
   // Sem a animação de transição, cada tela só troca na hora — nenhuma das
   // duas camadas abaixo precisa de initial/exit, só o conteúdo já assentado.
+  // Duas transições diferentes por design: o conteúdo (screen-transition)
+  // usa a gaveta (translateY puro); o fundo full-bleed (page-bg-layer) usa
+  // só fade — um translateY de poucos px não se percebe numa camada que já
+  // cobre o viewport inteiro antes/depois do deslocamento, e sem NENHUMA
+  // transição visível ali a troca "pipoca" pro fundo novo instantaneamente
+  // por trás do conteúdo ainda saindo.
   const transitionProps = screenTransitionAnimationEnabled ? screenEnter : {};
+  const bgTransitionProps = screenTransitionAnimationEnabled ? pageBackgroundEnter : {};
 
   if (isReader) {
     return (
@@ -400,7 +407,7 @@ function App() {
             nenhum mecanismo extra de acompanhamento de gesto (que existia só
             por causa do arraste, removido junto com o swipe global). */}
         <AnimatePresence mode="sync" initial={false}>
-          <motion.div key={mainScreenKeyOf(location.pathname)} className="page-bg-layer" aria-hidden="true" {...transitionProps}>
+          <motion.div key={mainScreenKeyOf(location.pathname)} className="page-bg-layer" aria-hidden="true" {...bgTransitionProps}>
             {renderBackgroundContent(pageBackground, isLofi, location.pathname, customWallpaper)}
           </motion.div>
         </AnimatePresence>
