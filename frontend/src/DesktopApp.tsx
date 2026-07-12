@@ -13,6 +13,7 @@ import { getCachedPrimaryWeather, fetchPrimaryWeather, type WeatherInfo } from "
 import { buildHomeSummary } from "./core/domain/homeSummary";
 import { TabCoinsIcon, TabGuildIcon, TabHomeCalendarIcon, TabGearIcon, TabBookIcon } from "./icons2";
 import { greeting } from "./greeting";
+import { prefetchMainRoutes, schedulePrefetch } from "./routePrefetch";
 import "./DesktopApp.css";
 
 // Mesmo code-splitting por rota do App.tsx mobile — precisa ficar
@@ -184,6 +185,10 @@ function DesktopApp() {
   const navigate = useNavigate();
   const isReader = location.pathname.startsWith("/leitor");
   const stellaActions = buildStellaActions(sectionOf(location.pathname), navigate);
+
+  useEffect(() => {
+    return schedulePrefetch(prefetchMainRoutes);
+  }, []);
 
   if (isReader) {
     return (

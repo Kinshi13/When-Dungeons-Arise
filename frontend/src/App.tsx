@@ -24,6 +24,7 @@ import {
   type WallpaperSlotId,
 } from "./wallpaperStore";
 import { onWallpaperChanged } from "./wallpaperEvents";
+import { prefetchMainRoutes, schedulePrefetch } from "./routePrefetch";
 import { playSfx } from "./sound";
 import { TabBellIcon, TabCoinsIcon, TabGuildIcon, TabHomeCalendarIcon, TabGearIcon, TabBookIcon } from "./icons2";
 import "./App.css";
@@ -308,6 +309,16 @@ function useAmbientParticlesPause() {
   }, []);
 }
 
+// Aquece o cache das telas principais assim que o app fica ocioso (ver
+// routePrefetch.ts) — só uma vez por sessão, nunca bloqueia o primeiro
+// paint. Sem isso, a primeira visita a cada tela paga o custo de rede+
+// parse do chunk dela no meio da transição (o que motivou este hook).
+function useRoutePrefetch() {
+  useEffect(() => {
+    return schedulePrefetch(prefetchMainRoutes);
+  }, []);
+}
+
 function useAndroidBackButton() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -338,6 +349,7 @@ function App() {
   const navigate = useNavigate();
   useAndroidBackButton();
   useAmbientParticlesPause();
+  useRoutePrefetch();
   const resolveCustomWallpaper = useWallpaperState();
   // Com "Fixar papel de parede da Recepção em todas as telas" ligado, toda
   // tela resolve a mesma imagem da Guilda (mainSlot), então o fundo nunca
