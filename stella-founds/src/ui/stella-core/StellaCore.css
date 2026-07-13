@@ -1,0 +1,63 @@
+.stella-core {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stella-core__button {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
+  background: linear-gradient(145deg, var(--accent-stella), #4b5fc7);
+  color: #f4f6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(109, 139, 255, 0.45);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.stella-core__button:active {
+  transform: scale(0.94);
+}
+
+.stella-core__menu {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 200px;
+  background: rgba(28, 36, 64, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 32px rgba(10, 14, 32, 0.5);
+}
+
+.stella-core__menu-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.stella-core__menu-item:hover,
+.stella-core__menu-item:focus-visible {
+  background: var(--surface-glass);
+  outline: none;
+}
