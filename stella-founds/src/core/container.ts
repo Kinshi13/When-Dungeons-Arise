@@ -6,7 +6,7 @@ import {
   RecurringRuleRepository,
   CalendarFinanceMarkRepository,
 } from './repositories';
-import { FinanceService } from './services';
+import { FinanceService, HomeSummaryService } from './services';
 
 export function createContainer() {
   const storage = new IndexedDbAdapter();
@@ -18,6 +18,7 @@ export function createContainer() {
   const calendarFinanceMarkRepository = new CalendarFinanceMarkRepository(storage);
 
   const financeService = new FinanceService(financeEntryRepository, calendarFinanceMarkRepository);
+  const homeSummaryService = new HomeSummaryService(financeEntryRepository);
 
   return {
     storage,
@@ -27,6 +28,7 @@ export function createContainer() {
     recurringRuleRepository,
     calendarFinanceMarkRepository,
     financeService,
+    homeSummaryService,
   };
 }
 
