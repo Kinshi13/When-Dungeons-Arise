@@ -8,16 +8,12 @@ import { effectiveStatus } from '../../core/utils/status';
 import { EmptyState } from '../../ui/components/EmptyState';
 import { ScreenShell } from '../../ui/components/ScreenShell';
 import { StatusPill } from '../../ui/components/StatusPill';
+import { financeEntryTypeIcons } from '../../ui/icons/typeIcons';
 import { useFinanceDialog } from '../finance/FinanceDialogContext';
 import { applyBillsFilter, billsFilters, isDueSoon, type BillsFilter } from './billsFilters';
 import './BillsScreen.css';
 
-const typeIcons: Record<string, string> = {
-  subscription: '⭐',
-  bill: '🧾',
-  income: '💰',
-  expense: '✦',
-};
+const typeIcons = financeEntryTypeIcons;
 
 const emptyMessages: Record<BillsFilter, { title: string; message: string }> = {
   all: { title: 'Nenhuma conta por enquanto', message: 'Seu céu financeiro está limpo.' },
