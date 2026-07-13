@@ -9,6 +9,7 @@ import { SettingsScreen } from './features/settings/SettingsScreen';
 import { FinanceDialogProvider, useFinanceDialog } from './features/finance/FinanceDialogContext';
 import { FinanceEntryDialog } from './features/finance/FinanceEntryDialog';
 import { StellaParallaxBackground } from './ui/parallax/StellaParallaxBackground';
+import { emitReportsExportRequested } from './core/events';
 import type { FinanceEntryType } from './core/models';
 
 const actionToEntryType: Partial<Record<string, FinanceEntryType>> = {
@@ -31,6 +32,10 @@ function AppContent() {
     }
     if (actionId === 'mark-paid') {
       navigate('/contas');
+      return;
+    }
+    if (actionId === 'export-summary') {
+      emitReportsExportRequested();
     }
   }
 

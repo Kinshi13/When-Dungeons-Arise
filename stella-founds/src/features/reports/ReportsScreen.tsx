@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAppContainer } from '../../core/AppContainerContext';
-import { onFinanceChanged } from '../../core/events';
+import { onFinanceChanged, onReportsExportRequested } from '../../core/events';
 import type { FinanceCategory, FinanceNucleus } from '../../core/models';
 import { formatCurrency } from '../../core/utils/currency';
 import { todayIso } from '../../core/utils/date';
@@ -65,7 +65,7 @@ function Breakdown({
 }
 
 export function ReportsScreen() {
-  const { reportService, financeCategoryRepository, financeNucleusRepository } = useAppContainer();
+  const { reportService, financeCategoryRepository, financeNucleusRepository, exportAdapter } = useAppContainer();
   const today = new Date(todayIso());
   const [viewedYear, setViewedYear] = useState(today.getFullYear());
   const [viewedMonth, setViewedMonth] = useState(today.getMonth());
@@ -96,6 +96,35 @@ export function ReportsScreen() {
 
   const categoryMap = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
   const nucleusMap = useMemo(() => new Map(nuclei.map((nucleus) => [nucleus.id, nucleus])), [nuclei]);
+
+  useEffect(() => {
+    if (!summary) return;
+    return onReportsExportRequested(() => {
+      const monthKey = toMonthKey(viewedYear, viewedMonth);
+      const rows: string[][] = [
+        ['Métrica', 'Valor'],
+        ['Total gasto', formatCurrency(summary.totalGasto)],
+        ['Total pago', formatCurrency(summary.totalPago)],
+        ['Total a pagar', formatCurrency(summary.totalAPagar)],
+        ['Total a receber', formatCurrency(summary.totalAReceber)],
+        ['Assinaturas', formatCurrency(summary.totalAssinaturas)],
+        ['Previsão do mês', formatCurrency(summary.previsaoMes)],
+        [],
+        ['Gastos por categoria'],
+        ...summary.porCategoria.map((item) => [
+          item.id ? (categoryMap.get(item.id)?.name ?? 'Sem categoria') : 'Sem categoria',
+          formatCurrency(item.amount),
+        ]),
+        [],
+        ['Gastos por núcleo'],
+        ...summary.porNucleo.map((item) => [
+          item.id ? (nucleusMap.get(item.id)?.name ?? 'Sem núcleo') : 'Sem núcleo',
+          formatCurrency(item.amount),
+        ]),
+      ];
+      exportAdapter.exportCsv(`stella-founds-relatorio-${monthKey}.csv`, rows);
+    });
+  }, [summary, categoryMap, nucleusMap, viewedYear, viewedMonth, exportAdapter]);
 
   function goToMonth(offset: number) {
     const next = new Date(viewedYear, viewedMonth + offset, 1);

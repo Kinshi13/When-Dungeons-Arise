@@ -7,6 +7,7 @@ import {
   CalendarFinanceMarkRepository,
 } from './repositories';
 import { FinanceService, HomeSummaryService, RecurrenceService, ReportService } from './services';
+import { WebExportAdapter, WebNotificationAdapter, WebPlatformAdapter } from './platform';
 
 export function createContainer() {
   const storage = new IndexedDbAdapter();
@@ -26,6 +27,10 @@ export function createContainer() {
   );
   const reportService = new ReportService(financeEntryRepository);
 
+  const platformAdapter = new WebPlatformAdapter();
+  const notificationAdapter = new WebNotificationAdapter();
+  const exportAdapter = new WebExportAdapter();
+
   return {
     storage,
     financeEntryRepository,
@@ -37,6 +42,9 @@ export function createContainer() {
     homeSummaryService,
     recurrenceService,
     reportService,
+    platformAdapter,
+    notificationAdapter,
+    exportAdapter,
   };
 }
 
