@@ -1,12 +1,9 @@
 .stella-core {
   position: fixed;
   left: 50%;
-  bottom: 14px;
+  bottom: calc(14px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   z-index: 30;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 .stella-core__button {
@@ -28,36 +25,57 @@
   transform: scale(0.94);
 }
 
-.stella-core__menu {
-  list-style: none;
-  margin: 0 0 12px;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 200px;
-  background: rgba(28, 36, 64, 0.92);
-  backdrop-filter: blur(16px);
+.stella-core__button:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+.stella-core__orbit {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  width: 0;
+  height: 0;
+}
+
+.stella-core__orbit-lines {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: visible;
+  transform: translate(-50%, -50%);
+  color: var(--accent-gold);
+  pointer-events: none;
+}
+
+.stella-core__orbit-slot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
+
+.stella-core__orbit-item {
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 9px 14px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 12px 32px rgba(10, 14, 32, 0.5);
-}
-
-.stella-core__menu-item {
-  width: 100%;
-  text-align: left;
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
-  border: none;
-  background: transparent;
+  background: rgba(28, 36, 64, 0.94);
+  backdrop-filter: blur(10px);
   color: var(--text-primary);
-  font-size: 14px;
+  box-shadow: 0 6px 18px rgba(10, 14, 32, 0.4), 0 0 12px rgba(232, 201, 136, 0.12);
   cursor: pointer;
-  transition: background 0.15s ease;
 }
 
-.stella-core__menu-item:hover,
-.stella-core__menu-item:focus-visible {
-  background: var(--surface-glass);
-  outline: none;
+.stella-core__orbit-item:hover {
+  background: rgba(38, 48, 82, 0.96);
+}
+
+.stella-core__orbit-item:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
 }
