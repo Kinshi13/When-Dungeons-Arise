@@ -1,0 +1,33 @@
+.stella-amount-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+}
+
+.stella-amount-card__label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.stella-amount-card__value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.stella-amount-card--success .stella-amount-card__value {
+  color: var(--status-success);
+}
+
+.stella-amount-card--warning .stella-amount-card__value {
+  color: var(--status-warning);
+}
+
+.stella-amount-card--danger .stella-amount-card__value {
+  color: var(--status-danger);
+}
+
+.stella-amount-card__detail {
+  font-size: 12px;
+  color: var(--text-secondary);
+}

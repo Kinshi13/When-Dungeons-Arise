@@ -4,8 +4,10 @@ import { onFinanceChanged } from '../../core/events';
 import type { CalendarFinanceMark, FinanceEntry } from '../../core/models';
 import { formatCurrency } from '../../core/utils/currency';
 import { toDateOnly, todayIso } from '../../core/utils/date';
-import { EmptyState } from '../../ui/components/EmptyState';
 import { ScreenShell } from '../../ui/components/ScreenShell';
+import { StellaButton } from '../../ui/components/StellaButton';
+import { StellaCard } from '../../ui/components/StellaCard';
+import { StellaEmptyState } from '../../ui/components/StellaEmptyState';
 import { financeEntryTypeIcons } from '../../ui/icons/typeIcons';
 import { useFinanceDialog } from '../finance/FinanceDialogContext';
 import { calendarFilters, matchesCalendarFilter, type CalendarFilter } from './calendarFilters';
@@ -93,30 +95,30 @@ export function CalendarScreen() {
     <ScreenShell title="Calendário">
       <div className="calendar-filters">
         {calendarFilters.map((option) => (
-          <button
+          <StellaButton
             key={option.id}
-            type="button"
-            className={`calendar-filters__chip${filter === option.id ? ' is-active' : ''}`}
+            variant="chip"
+            active={filter === option.id}
             onClick={() => setFilter(option.id)}
           >
             {option.label}
-          </button>
+          </StellaButton>
         ))}
       </div>
 
       <div className="calendar-nav">
-        <button type="button" onClick={() => goToMonth(-1)} aria-label="Mês anterior">
+        <button type="button" className="calendar-nav__arrow" onClick={() => goToMonth(-1)} aria-label="Mês anterior">
           ‹
         </button>
         <span className="calendar-nav__label">
           {monthLabels[viewedMonth]} {viewedYear}
         </span>
-        <button type="button" onClick={() => goToMonth(1)} aria-label="Próximo mês">
+        <button type="button" className="calendar-nav__arrow" onClick={() => goToMonth(1)} aria-label="Próximo mês">
           ›
         </button>
-        <button type="button" className="calendar-nav__today" onClick={goToToday}>
+        <StellaButton className="calendar-nav__today" onClick={goToToday}>
           Hoje
-        </button>
+        </StellaButton>
       </div>
 
       <div className="calendar-grid">
@@ -151,10 +153,10 @@ export function CalendarScreen() {
         })}
       </div>
 
-      <div className="calendar-day-panel">
+      <StellaCard className="calendar-day-panel">
         <h2 className="calendar-day-panel__title">{selectedDate}</h2>
         {selectedDayMarks.length === 0 ? (
-          <EmptyState title="Nada por aqui" message="Nenhum lançamento financeiro neste dia." />
+          <StellaEmptyState title="Nada por aqui" message="Nenhum lançamento financeiro neste dia." />
         ) : (
           <ul className="calendar-day-panel__list">
             {selectedDayMarks.map((mark) => {
@@ -177,7 +179,7 @@ export function CalendarScreen() {
             })}
           </ul>
         )}
-      </div>
+      </StellaCard>
     </ScreenShell>
   );
 }

@@ -1,0 +1,23 @@
+.stella-card {
+  position: relative;
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.stella-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120px 60px at 12% 0%, rgba(232, 201, 136, 0.09), transparent 70%);
+  pointer-events: none;
+}
+
+.stella-card--interactive {
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.stella-card--interactive:hover {
+  border-color: rgba(232, 201, 136, 0.45);
+}

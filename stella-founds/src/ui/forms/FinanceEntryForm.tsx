@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import type { FinanceCategory, FinanceEntry, FinanceEntryType, FinanceNucleus } from '../../core/models';
+import { StellaButton } from '../components/StellaButton';
 import './FinanceEntryForm.css';
 
 export interface FinanceEntryFormValues {
@@ -70,7 +71,11 @@ export function FinanceEntryForm({
     <form className="finance-entry-form" onSubmit={handleSubmit}>
       <label className="finance-entry-form__field">
         <span>Tipo</span>
-        <select value={type} onChange={(event) => setType(event.target.value as FinanceEntryType)}>
+        <select
+          className="stella-input"
+          value={type}
+          onChange={(event) => setType(event.target.value as FinanceEntryType)}
+        >
           {Object.entries(typeLabels).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
@@ -82,6 +87,7 @@ export function FinanceEntryForm({
       <label className="finance-entry-form__field">
         <span>Título</span>
         <input
+          className="stella-input"
           type="text"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
@@ -93,6 +99,7 @@ export function FinanceEntryForm({
       <label className="finance-entry-form__field">
         <span>Valor</span>
         <input
+          className="stella-input"
           type="text"
           inputMode="decimal"
           value={amount}
@@ -104,7 +111,7 @@ export function FinanceEntryForm({
 
       <label className="finance-entry-form__field">
         <span>Categoria</span>
-        <select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
+        <select className="stella-input" value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
           <option value="">Nenhuma</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
@@ -116,7 +123,7 @@ export function FinanceEntryForm({
 
       <label className="finance-entry-form__field">
         <span>Núcleo</span>
-        <select value={nucleusId} onChange={(event) => setNucleusId(event.target.value)}>
+        <select className="stella-input" value={nucleusId} onChange={(event) => setNucleusId(event.target.value)}>
           <option value="">Nenhum</option>
           {nuclei.map((nucleus) => (
             <option key={nucleus.id} value={nucleus.id}>
@@ -128,12 +135,13 @@ export function FinanceEntryForm({
 
       <label className="finance-entry-form__field">
         <span>Vencimento</span>
-        <input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
+        <input className="stella-input" type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
       </label>
 
       <label className="finance-entry-form__field">
         <span>Observação</span>
         <textarea
+          className="stella-input"
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           rows={2}
@@ -154,12 +162,12 @@ export function FinanceEntryForm({
       )}
 
       <div className="finance-entry-form__actions">
-        <button type="button" className="finance-entry-form__button finance-entry-form__button--ghost" onClick={onCancel}>
+        <StellaButton type="button" onClick={onCancel}>
           Cancelar
-        </button>
-        <button type="submit" className="finance-entry-form__button finance-entry-form__button--primary">
+        </StellaButton>
+        <StellaButton type="submit" variant="primary">
           Salvar
-        </button>
+        </StellaButton>
       </div>
     </form>
   );

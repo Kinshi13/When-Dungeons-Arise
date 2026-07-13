@@ -11,25 +11,6 @@
   display: none;
 }
 
-.bills-filters__chip {
-  flex-shrink: 0;
-  font-family: inherit;
-  font-size: 13px;
-  padding: 8px 14px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-glass);
-  color: var(--text-secondary);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.bills-filters__chip.is-active {
-  background: var(--accent-stella);
-  color: #f4f6ff;
-  border-color: transparent;
-}
-
 .bills-list {
   list-style: none;
   margin: 0;
@@ -41,9 +22,6 @@
 
 .bills-list__item {
   padding: 14px 16px;
-  border-radius: var(--radius-lg);
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
   border-left: 3px solid transparent;
   display: flex;
   flex-wrap: wrap;
@@ -123,23 +101,4 @@
   gap: 6px;
   flex-wrap: wrap;
   width: 100%;
-}
-
-.bills-list__actions button {
-  font-family: inherit;
-  font-size: 12px;
-  padding: 6px 12px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-glass);
-  color: var(--text-primary);
-  cursor: pointer;
-}
-
-.bills-list__actions button:hover {
-  background: var(--surface-elevated);
-}
-
-.bills-list__danger {
-  color: var(--status-danger) !important;
 }

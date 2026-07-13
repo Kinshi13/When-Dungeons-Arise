@@ -1,6 +1,7 @@
 import { ScreenShell } from '../../ui/components/ScreenShell';
-import { AmountCard } from '../../ui/cards/AmountCard';
+import { StellaAmountCard } from '../../ui/cards/StellaAmountCard';
 import { EntryListCard } from '../../ui/cards/EntryListCard';
+import { StellaConstellationDivider } from '../../ui/components/StellaConstellationDivider';
 import { formatCurrency } from '../../core/utils/currency';
 import { toDateOnly, todayIso } from '../../core/utils/date';
 import { useHomeSummary } from './useHomeSummary';
@@ -25,26 +26,28 @@ export function HomeScreen() {
   return (
     <ScreenShell title="Hoje">
       <div className="home-screen__grid">
-        <AmountCard
+        <StellaAmountCard
           label="Gasto hoje"
           value={formatCurrency(summary.gastoHoje)}
           tone={summary.gastoHoje > 0 ? 'warning' : 'neutral'}
         />
-        <AmountCard
+        <StellaAmountCard
           label="Próxima conta"
           value={summary.proximaConta ? formatCurrency(summary.proximaConta.amount) : '—'}
           detail={proximaContaDetail}
         />
-        <AmountCard
+        <StellaAmountCard
           label="Assinaturas do mês"
           value={formatCurrency(summary.assinaturasMes)}
         />
-        <AmountCard
+        <StellaAmountCard
           label="Previsto após contas"
           value={formatCurrency(summary.previstoAposContas)}
           tone={summary.previstoAposContas >= 0 ? 'success' : 'danger'}
         />
       </div>
+
+      <StellaConstellationDivider />
 
       {summary.alertas.length > 0 && (
         <EntryListCard

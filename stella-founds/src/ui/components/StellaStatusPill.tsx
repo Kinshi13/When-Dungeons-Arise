@@ -1,5 +1,5 @@
 import type { FinanceStatus } from '../../core/models';
-import './StatusPill.css';
+import './StellaStatusPill.css';
 
 const labels: Record<FinanceStatus, string> = {
   pending: 'Pendente',
@@ -9,6 +9,6 @@ const labels: Record<FinanceStatus, string> = {
   cancelled: 'Cancelado',
 };
 
-export function StatusPill({ status }: { status: FinanceStatus }) {
-  return <span className={`status-pill status-pill--${status}`}>{labels[status]}</span>;
+export function StellaStatusPill({ status }: { status: FinanceStatus }) {
+  return <span className={`stella-status-pill stella-status-pill--${status}`}>{labels[status]}</span>;
 }

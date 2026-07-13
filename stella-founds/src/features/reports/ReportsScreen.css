@@ -14,7 +14,7 @@
   font-weight: 600;
 }
 
-.reports-filters__month button {
+.reports-filters__arrow {
   font-family: inherit;
   background: var(--surface-glass);
   border: 1px solid var(--border-subtle);
@@ -26,13 +26,8 @@
   cursor: pointer;
 }
 
-.reports-filters select {
-  font-family: inherit;
+.reports-filters select.stella-input {
   font-size: 13px;
-  color: var(--text-primary);
-  background: var(--surface-glass);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
   padding: 8px 10px;
 }
 
@@ -45,9 +40,6 @@
 
 .report-breakdown {
   padding: 16px;
-  border-radius: var(--radius-lg);
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
   margin-bottom: 16px;
 }
 

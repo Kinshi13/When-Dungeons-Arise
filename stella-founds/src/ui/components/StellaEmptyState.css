@@ -1,22 +1,21 @@
-.empty-state {
+.stella-empty-state {
   text-align: center;
   padding: 32px 16px;
   color: var(--text-secondary);
 }
 
-.empty-state__glyph {
-  font-size: 22px;
+.stella-empty-state__glyph {
   color: var(--accent-gold);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
-.empty-state__title {
+.stella-empty-state__title {
   color: var(--text-primary);
   font-weight: 600;
   margin: 0 0 4px;
 }
 
-.empty-state__message {
+.stella-empty-state__message {
   margin: 0;
   font-size: 14px;
 }

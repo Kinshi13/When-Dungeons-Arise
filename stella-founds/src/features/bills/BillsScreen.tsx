@@ -5,9 +5,11 @@ import type { FinanceCategory, FinanceEntry, FinanceNucleus } from '../../core/m
 import { formatCurrency } from '../../core/utils/currency';
 import { toDateOnly, todayIso } from '../../core/utils/date';
 import { effectiveStatus } from '../../core/utils/status';
-import { EmptyState } from '../../ui/components/EmptyState';
 import { ScreenShell } from '../../ui/components/ScreenShell';
-import { StatusPill } from '../../ui/components/StatusPill';
+import { StellaButton } from '../../ui/components/StellaButton';
+import { StellaCard } from '../../ui/components/StellaCard';
+import { StellaEmptyState } from '../../ui/components/StellaEmptyState';
+import { StellaStatusPill } from '../../ui/components/StellaStatusPill';
 import { financeEntryTypeIcons } from '../../ui/icons/typeIcons';
 import { useFinanceDialog } from '../finance/FinanceDialogContext';
 import { applyBillsFilter, billsFilters, isDueSoon, type BillsFilter } from './billsFilters';
@@ -74,19 +76,19 @@ export function BillsScreen() {
     <ScreenShell title="Contas">
       <div className="bills-filters">
         {billsFilters.map((option) => (
-          <button
+          <StellaButton
             key={option.id}
-            type="button"
-            className={`bills-filters__chip${filter === option.id ? ' is-active' : ''}`}
+            variant="chip"
+            active={filter === option.id}
             onClick={() => setFilter(option.id)}
           >
             {option.label}
-          </button>
+          </StellaButton>
         ))}
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState title={empty.title} message={empty.message} />
+        <StellaEmptyState title={empty.title} message={empty.message} />
       ) : (
         <ul className="bills-list">
           {filtered.map((entry) => {
@@ -98,8 +100,10 @@ export function BillsScreen() {
             const nucleus = entry.nucleusId ? nucleusMap.get(entry.nucleusId) : undefined;
 
             return (
-              <li
+              <StellaCard
                 key={entry.id}
+                as="li"
+                interactive
                 className={`bills-list__item${settled ? ' is-settled' : ''}${overdue ? ' is-overdue' : ''}${dueSoon ? ' is-due-soon' : ''}`}
               >
                 <div className="bills-list__info">
@@ -131,37 +135,25 @@ export function BillsScreen() {
 
                 <div className="bills-list__meta">
                   <span className="bills-list__amount">{formatCurrency(entry.amount)}</span>
-                  <StatusPill status={status} />
+                  <StellaStatusPill status={status} />
                 </div>
 
                 <div className="bills-list__actions">
                   {entry.status === 'pending' && entry.type === 'income' && (
-                    <button type="button" onClick={() => financeService.markAsReceived(entry.id)}>
-                      Receber
-                    </button>
+                    <StellaButton onClick={() => financeService.markAsReceived(entry.id)}>Receber</StellaButton>
                   )}
                   {entry.status === 'pending' && entry.type !== 'income' && (
-                    <button type="button" onClick={() => financeService.markAsPaid(entry.id)}>
-                      Pagar
-                    </button>
+                    <StellaButton onClick={() => financeService.markAsPaid(entry.id)}>Pagar</StellaButton>
                   )}
-                  <button type="button" onClick={() => openEdit(entry)}>
-                    Editar
-                  </button>
+                  <StellaButton onClick={() => openEdit(entry)}>Editar</StellaButton>
                   {entry.status === 'pending' && (
-                    <button type="button" onClick={() => financeService.cancelEntry(entry.id)}>
-                      Cancelar
-                    </button>
+                    <StellaButton onClick={() => financeService.cancelEntry(entry.id)}>Cancelar</StellaButton>
                   )}
-                  <button
-                    type="button"
-                    className="bills-list__danger"
-                    onClick={() => financeService.deleteEntry(entry.id)}
-                  >
+                  <StellaButton variant="danger" onClick={() => financeService.deleteEntry(entry.id)}>
                     Excluir
-                  </button>
+                  </StellaButton>
                 </div>
-              </li>
+              </StellaCard>
             );
           })}
         </ul>

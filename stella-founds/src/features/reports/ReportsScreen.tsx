@@ -5,8 +5,10 @@ import type { FinanceCategory, FinanceNucleus } from '../../core/models';
 import { formatCurrency } from '../../core/utils/currency';
 import { todayIso } from '../../core/utils/date';
 import type { ReportSummary } from '../../core/services';
-import { AmountCard } from '../../ui/cards/AmountCard';
-import { EmptyState } from '../../ui/components/EmptyState';
+import { StellaAmountCard } from '../../ui/cards/StellaAmountCard';
+import { StellaCard } from '../../ui/components/StellaCard';
+import { StellaConstellationDivider } from '../../ui/components/StellaConstellationDivider';
+import { StellaEmptyState } from '../../ui/components/StellaEmptyState';
 import { ScreenShell } from '../../ui/components/ScreenShell';
 import './ReportsScreen.css';
 
@@ -33,10 +35,10 @@ function Breakdown({
   const max = items.length > 0 ? items[0].amount : 0;
 
   return (
-    <section className="report-breakdown">
+    <StellaCard className="report-breakdown">
       <h2 className="report-breakdown__title">{title}</h2>
       {items.length === 0 ? (
-        <EmptyState title="Sem dados" message={emptyMessage} />
+        <StellaEmptyState title="Sem dados" message={emptyMessage} />
       ) : (
         <ul className="report-breakdown__list">
           {items.map((item) => {
@@ -58,7 +60,7 @@ function Breakdown({
           })}
         </ul>
       )}
-    </section>
+    </StellaCard>
   );
 }
 
@@ -113,17 +115,17 @@ export function ReportsScreen() {
     <ScreenShell title="Relatórios">
       <div className="reports-filters">
         <div className="reports-filters__month">
-          <button type="button" onClick={() => goToMonth(-1)} aria-label="Mês anterior">
+          <button type="button" className="reports-filters__arrow" onClick={() => goToMonth(-1)} aria-label="Mês anterior">
             ‹
           </button>
           <span>
             {monthLabels[viewedMonth]} {viewedYear}
           </span>
-          <button type="button" onClick={() => goToMonth(1)} aria-label="Próximo mês">
+          <button type="button" className="reports-filters__arrow" onClick={() => goToMonth(1)} aria-label="Próximo mês">
             ›
           </button>
         </div>
-        <select value={nucleusId} onChange={(event) => setNucleusId(event.target.value)}>
+        <select className="stella-input" value={nucleusId} onChange={(event) => setNucleusId(event.target.value)}>
           <option value="">Todos os núcleos</option>
           {nuclei.map((nucleus) => (
             <option key={nucleus.id} value={nucleus.id}>
@@ -134,17 +136,19 @@ export function ReportsScreen() {
       </div>
 
       <div className="reports-grid">
-        <AmountCard label="Total gasto" value={formatCurrency(summary.totalGasto)} />
-        <AmountCard label="Total pago" value={formatCurrency(summary.totalPago)} tone="success" />
-        <AmountCard label="Total a pagar" value={formatCurrency(summary.totalAPagar)} tone="warning" />
-        <AmountCard label="Total a receber" value={formatCurrency(summary.totalAReceber)} />
-        <AmountCard label="Assinaturas" value={formatCurrency(summary.totalAssinaturas)} />
-        <AmountCard
+        <StellaAmountCard label="Total gasto" value={formatCurrency(summary.totalGasto)} />
+        <StellaAmountCard label="Total pago" value={formatCurrency(summary.totalPago)} tone="success" />
+        <StellaAmountCard label="Total a pagar" value={formatCurrency(summary.totalAPagar)} tone="warning" />
+        <StellaAmountCard label="Total a receber" value={formatCurrency(summary.totalAReceber)} />
+        <StellaAmountCard label="Assinaturas" value={formatCurrency(summary.totalAssinaturas)} />
+        <StellaAmountCard
           label="Previsão do mês"
           value={formatCurrency(summary.previsaoMes)}
           tone={summary.previsaoMes >= 0 ? 'success' : 'danger'}
         />
       </div>
+
+      <StellaConstellationDivider />
 
       <Breakdown
         title="Gastos por categoria"

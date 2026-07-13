@@ -5,6 +5,7 @@ import '@fontsource/quicksand/400.css';
 import '@fontsource/quicksand/500.css';
 import '@fontsource/quicksand/700.css';
 import './index.css';
+import './ui/components/StellaInput.css';
 import App from './App.tsx';
 import { AppContainerProvider } from './core/AppContainerContext';
 
