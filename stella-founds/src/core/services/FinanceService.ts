@@ -5,6 +5,7 @@ import type {
 } from '../repositories';
 import { generateId } from '../utils/id';
 import { todayIso } from '../utils/date';
+import { emitFinanceChanged } from '../events';
 
 export interface CreateFinanceEntryInput {
   title: string;
@@ -16,6 +17,8 @@ export interface CreateFinanceEntryInput {
   notes: string | null;
   recurrenceRuleId?: string | null;
 }
+
+export type UpdateFinanceEntryInput = Omit<CreateFinanceEntryInput, 'recurrenceRuleId'>;
 
 export class FinanceService {
   private readonly entries: FinanceEntryRepository;
@@ -57,7 +60,38 @@ export class FinanceService {
       });
     }
 
+    emitFinanceChanged();
     return entry;
+  }
+
+  async updateEntry(id: string, input: UpdateFinanceEntryInput): Promise<FinanceEntry> {
+    const entry = await this.requireEntry(id);
+    const updated: FinanceEntry = {
+      ...entry,
+      title: input.title,
+      amount: input.amount,
+      type: input.type,
+      categoryId: input.categoryId,
+      nucleusId: input.nucleusId,
+      dueDate: input.dueDate,
+      notes: input.notes,
+      updatedAt: todayIso(),
+    };
+    await this.entries.save(updated);
+
+    if (input.dueDate) {
+      await this.marks.removeBySource(id);
+      await this.marks.save({
+        id: generateId(),
+        sourceType: updated.type,
+        sourceId: id,
+        date: input.dueDate,
+        kind: updated.type === 'subscription' ? 'subscription_due' : 'finance_due',
+      });
+    }
+
+    emitFinanceChanged();
+    return updated;
   }
 
   async markAsPaid(id: string, paidAt: string = todayIso()): Promise<FinanceEntry> {
@@ -76,6 +110,7 @@ export class FinanceService {
       date: paidAt,
       kind: 'finance_paid',
     });
+    emitFinanceChanged();
     return updated;
   }
 
@@ -95,6 +130,7 @@ export class FinanceService {
       date: receivedAt,
       kind: 'finance_received',
     });
+    emitFinanceChanged();
     return updated;
   }
 
@@ -106,12 +142,14 @@ export class FinanceService {
       updatedAt: todayIso(),
     };
     await this.entries.save(updated);
+    emitFinanceChanged();
     return updated;
   }
 
   async deleteEntry(id: string): Promise<void> {
     await this.entries.remove(id);
     await this.marks.removeBySource(id);
+    emitFinanceChanged();
   }
 
   private async requireEntry(id: string): Promise<FinanceEntry> {

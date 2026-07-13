@@ -1,0 +1,75 @@
+.bills-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bills-list__item {
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.bills-list__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 160px;
+  flex: 1;
+}
+
+.bills-list__title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.bills-list__date,
+.bills-list__notes {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.bills-list__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bills-list__amount {
+  font-weight: 600;
+}
+
+.bills-list__actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.bills-list__actions button {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-glass);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.bills-list__actions button:hover {
+  background: var(--surface-elevated);
+}
+
+.bills-list__danger {
+  color: var(--status-danger) !important;
+}
