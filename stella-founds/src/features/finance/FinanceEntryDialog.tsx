@@ -15,8 +15,13 @@ const typeTitles: Record<string, string> = {
 
 export function FinanceEntryDialog() {
   const { state, close } = useFinanceDialog();
-  const { financeService, financeCategoryRepository, financeNucleusRepository, recurringRuleRepository } =
-    useAppContainer();
+  const {
+    financeService,
+    financeCategoryRepository,
+    financeNucleusRepository,
+    recurringRuleRepository,
+    recurrenceService,
+  } = useAppContainer();
   const [categories, setCategories] = useState<FinanceCategory[]>([]);
   const [nuclei, setNuclei] = useState<FinanceNucleus[]>([]);
 
@@ -35,7 +40,6 @@ export function FinanceEntryDialog() {
       return;
     }
 
-    let recurrenceRuleId: string | null = null;
     if (values.recurring && values.dueDate) {
       const rule = {
         id: generateId(),
@@ -54,10 +58,12 @@ export function FinanceEntryDialog() {
         active: true,
       };
       await recurringRuleRepository.save(rule);
-      recurrenceRuleId = rule.id;
+      await recurrenceService.generateForRule(rule.id);
+      close();
+      return;
     }
 
-    await financeService.createEntry({ ...values, recurrenceRuleId });
+    await financeService.createEntry({ ...values, recurrenceRuleId: null });
     close();
   }
 

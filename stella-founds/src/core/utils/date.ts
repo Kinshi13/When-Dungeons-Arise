@@ -19,3 +19,7 @@ export function addMonths(iso: string, months: number): string {
   date.setMonth(date.getMonth() + months);
   return date.toISOString();
 }
+
+export function daysInMonth(year: number, monthIndex: number): number {
+  return new Date(year, monthIndex + 1, 0).getDate();
+}

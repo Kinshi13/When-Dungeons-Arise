@@ -8,7 +8,9 @@ export function AppContainerProvider({ children }: { children: ReactNode }) {
   const container = useMemo(() => createContainer(), []);
 
   useEffect(() => {
-    seedDefaultsIfEmpty(container.financeCategoryRepository, container.financeNucleusRepository);
+    seedDefaultsIfEmpty(container.financeCategoryRepository, container.financeNucleusRepository).then(() => {
+      container.recurrenceService.generateAll();
+    });
   }, [container]);
 
   return (
