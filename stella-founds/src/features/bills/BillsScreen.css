@@ -1,3 +1,35 @@
+.bills-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+  scrollbar-width: none;
+}
+
+.bills-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.bills-filters__chip {
+  flex-shrink: 0;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-glass);
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bills-filters__chip.is-active {
+  background: var(--accent-stella);
+  color: #f4f6ff;
+  border-color: transparent;
+}
+
 .bills-list {
   list-style: none;
   margin: 0;
@@ -12,11 +44,27 @@
   border-radius: var(--radius-lg);
   background: var(--surface-card);
   border: 1px solid var(--border-subtle);
+  border-left: 3px solid transparent;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  transition: opacity 0.2s ease;
+}
+
+.bills-list__item.is-settled {
+  opacity: 0.6;
+}
+
+.bills-list__item.is-overdue {
+  border-left-color: var(--status-danger);
+  background: rgba(241, 141, 141, 0.06);
+}
+
+.bills-list__item.is-due-soon {
+  border-left-color: var(--status-warning);
+  box-shadow: 0 0 0 1px rgba(240, 197, 107, 0.15);
 }
 
 .bills-list__info {
@@ -28,14 +76,36 @@
 }
 
 .bills-list__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-weight: 600;
   font-size: 15px;
+}
+
+.bills-list__type-icon {
+  font-size: 13px;
 }
 
 .bills-list__date,
 .bills-list__notes {
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+.bills-list__tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.bills-list__tag {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--surface-glass);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
 }
 
 .bills-list__meta {
