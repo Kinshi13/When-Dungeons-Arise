@@ -8,6 +8,7 @@ import { ReportsScreen } from './features/reports/ReportsScreen';
 import { SettingsScreen } from './features/settings/SettingsScreen';
 import { FinanceDialogProvider, useFinanceDialog } from './features/finance/FinanceDialogContext';
 import { FinanceEntryDialog } from './features/finance/FinanceEntryDialog';
+import { StellaParallaxBackground } from './ui/parallax/StellaParallaxBackground';
 import type { FinanceEntryType } from './core/models';
 
 const actionToEntryType: Partial<Record<string, FinanceEntryType>> = {
@@ -35,6 +36,7 @@ function AppContent() {
 
   return (
     <div className="app-shell">
+      <StellaParallaxBackground />
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/contas" element={<BillsScreen />} />

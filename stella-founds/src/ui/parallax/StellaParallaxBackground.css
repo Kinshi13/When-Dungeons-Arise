@@ -1,0 +1,86 @@
+.stella-parallax {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  --parallax-x: 0;
+  --parallax-y: 0;
+}
+
+.stella-parallax__layer {
+  position: absolute;
+  inset: -12px;
+  transform: translate(
+    calc(var(--parallax-x, 0) * var(--layer-offset, 0px)),
+    calc(var(--parallax-y, 0) * var(--layer-offset, 0px))
+  );
+  will-change: transform;
+}
+
+.stella-parallax__sky {
+  background: radial-gradient(600px 400px at 20% 0%, rgba(109, 139, 255, 0.16), transparent 60%),
+    radial-gradient(500px 380px at 85% 15%, rgba(185, 168, 255, 0.12), transparent 65%);
+}
+
+.stella-parallax__stars {
+  color: #f4f6ff;
+}
+
+.stella-parallax__star {
+  position: absolute;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.stella-parallax__constellation {
+  width: calc(100% + 24px);
+  height: calc(100% + 24px);
+  color: var(--accent-gold);
+  opacity: 0.5;
+}
+
+.stella-parallax__orbits {
+  color: var(--accent-lavender);
+}
+
+.stella-parallax__orbit {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  opacity: 0.12;
+}
+
+.stella-parallax__orbit--a {
+  width: 60vmax;
+  height: 60vmax;
+  left: -20vmax;
+  top: 50vh;
+}
+
+.stella-parallax__orbit--b {
+  width: 40vmax;
+  height: 40vmax;
+  right: -14vmax;
+  top: -10vh;
+}
+
+.stella-parallax__glow {
+  background: radial-gradient(420px 320px at 50% 100%, rgba(232, 201, 136, 0.1), transparent 70%);
+}
+
+.stella-parallax__particles {
+  color: var(--accent-gold);
+}
+
+.stella-parallax__particle {
+  position: absolute;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stella-parallax__layer {
+    transform: none !important;
+  }
+}
