@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../core/navigation.dart';
 import '../core/theme/theme.dart';
 
-/// Mobile bottom navigation: Início, Produções, Órbita, Sinais, Mais.
-/// A notch in the middle makes room for the docked [QuickCaptureStar] FAB.
+/// Mobile bottom navigation: Início, Produções — [notch] — Mais, Órbita,
+/// Sinais. The notch makes room for the docked [QuickCaptureStar] FAB;
+/// "Mais" sits closest to it on purpose (see [build]).
 class BakaBottomNav extends StatelessWidget {
   const BakaBottomNav({
     super.key,
@@ -23,6 +24,24 @@ class BakaBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = mobilePrimarySections;
     final midpoint = items.length ~/ 2;
+    // Split evenly around the docked FAB instead of just appending "Mais"
+    // at the end — with an odd total (4 primary + Mais), tacking it onto
+    // the tail left 2 items on one side of the notch and 3 on the other,
+    // so the fixed-width gap below never lined up with the FAB's actual
+    // (screen-centered) notch. Two equally-flexed groups guarantee the gap
+    // sits exactly at the midpoint regardless of how many items are in
+    // each side.
+    final leftItems = items.sublist(0, midpoint);
+    final rightItems = items.sublist(midpoint);
+
+    Widget navItem(AppSection section) => Expanded(
+      child: _NavItem(
+        section: section,
+        selected: section == selected,
+        onTap: () => onSelect(section),
+        badge: section == AppSection.signals && pendingSignals > 0 ? pendingSignals : null,
+      ),
+    );
 
     return BottomAppBar(
       color: BakaColors.deepOrbit,
@@ -33,21 +52,18 @@ class BakaBottomNav extends StatelessWidget {
         height: 64,
         child: Row(
           children: [
-            for (var i = 0; i < items.length; i++) ...[
-              Expanded(child: _NavItem(
-                section: items[i],
-                selected: items[i] == selected,
-                onTap: () => onSelect(items[i]),
-                badge: items[i] == AppSection.signals && pendingSignals > 0 ? pendingSignals : null,
-              )),
-              if (i == midpoint - 1) const SizedBox(width: 56),
-            ],
+            Expanded(child: Row(children: [for (final section in leftItems) navItem(section)])),
+            const SizedBox(width: 56),
             Expanded(
-              child: _NavItem(
-                icon: Icons.grid_view_rounded,
-                label: 'Mais',
-                selected: false,
-                onTap: onMore,
+              child: Row(
+                children: [
+                  // "Mais" sits right next to the FAB, closest to the
+                  // notch — the remaining primary sections trail after it.
+                  Expanded(
+                    child: _NavItem(icon: Icons.grid_view_rounded, label: 'Mais', selected: false, onTap: onMore),
+                  ),
+                  for (final section in rightItems) navItem(section),
+                ],
               ),
             ),
           ],
