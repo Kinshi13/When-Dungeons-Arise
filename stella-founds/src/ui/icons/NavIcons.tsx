@@ -44,16 +44,18 @@ export function ReportsIcon({ size = 22 }: IconProps) {
 export function StellaCoreIcon({ size = 26 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="3" fill="currentColor" />
-      <circle cx="5" cy="7" r="1.4" fill="currentColor" />
-      <circle cx="19" cy="7" r="1.4" fill="currentColor" />
-      <circle cx="6" cy="18" r="1.4" fill="currentColor" />
-      <circle cx="18" cy="18" r="1.4" fill="currentColor" />
       <path
-        d="M12 12L5 7M12 12l7-5M12 12l-6 6M12 12l6 6"
-        stroke="currentColor"
-        strokeWidth="1"
-        strokeLinecap="round"
+        d="M11.5 9.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"
+        fill="currentColor"
+      />
+      <path
+        d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9z"
+        fill="currentColor"
+        opacity="0.85"
+      />
+      <path
+        d="M19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"
+        fill="currentColor"
         opacity="0.6"
       />
     </svg>

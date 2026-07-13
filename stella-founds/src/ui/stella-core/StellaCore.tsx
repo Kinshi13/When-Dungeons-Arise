@@ -1,45 +1,89 @@
-import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { motion as motionTokens } from '../theme/motion';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import { StellaCoreIcon } from '../icons/NavIcons';
+import { ConstellationLines } from './ConstellationLines';
+import { StellaActionItem } from './StellaActionItem';
 import { getStellaCoreActions } from './stellaCoreActions';
-import { computeOrbitPositions } from './orbitLayout';
+import { getStellaActionLayouts } from './stellaLayout';
 import './StellaCore.css';
 
 export interface StellaCoreProps {
   onAction?: (actionId: string) => void;
 }
 
-const ORBIT_SIZE = 260;
-const ORBIT_CENTER = ORBIT_SIZE / 2;
+type Phase = 'closed' | 'opening' | 'open' | 'closing';
+
+const STAGGER_S = 0.06;
+const ITEM_DURATION_S = 0.22;
+const REDUCED_DURATION_S = 0.12;
 
 export function StellaCore({ onAction }: StellaCoreProps) {
-  const [open, setOpen] = useState(false);
+  const [phase, setPhase] = useState<Phase>('closed');
   const location = useLocation();
   const rootRef = useRef<HTMLDivElement>(null);
   const firstItemRef = useRef<HTMLButtonElement>(null);
+  const timeoutRef = useRef<number | null>(null);
+  const reducedMotion = usePrefersReducedMotion();
+
   const actions = getStellaCoreActions(location.pathname);
-  const positions = computeOrbitPositions(actions.length);
+  const layouts = useMemo(() => getStellaActionLayouts(actions.length), [actions.length]);
+  const maxOrder = layouts.length;
+
+  const isVisuallyOpen = phase === 'opening' || phase === 'open';
+  const stagger = reducedMotion ? 0 : STAGGER_S;
+  const duration = reducedMotion ? REDUCED_DURATION_S : ITEM_DURATION_S;
+
+  function clearPendingTransition() {
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }
+
+  function openMenu() {
+    if (phase !== 'closed') return;
+    clearPendingTransition();
+    setPhase('opening');
+    const totalMs = ((maxOrder - 1) * stagger + duration) * 1000;
+    timeoutRef.current = window.setTimeout(() => setPhase('open'), totalMs);
+  }
+
+  function closeMenu() {
+    if (phase !== 'open') return;
+    clearPendingTransition();
+    setPhase('closing');
+    const totalMs = ((maxOrder - 1) * stagger + duration) * 1000;
+    timeoutRef.current = window.setTimeout(() => setPhase('closed'), totalMs);
+  }
+
+  function toggle() {
+    if (phase === 'closed') openMenu();
+    else if (phase === 'open') closeMenu();
+    // Ignore taps while opening/closing so we never stack overlapping timers.
+  }
 
   useEffect(() => {
-    setOpen(false);
+    clearPendingTransition();
+    setPhase('closed');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
-  useEffect(() => {
-    if (!open) return;
+  useEffect(() => () => clearPendingTransition(), []);
 
+  useEffect(() => {
+    if (phase !== 'open') return;
     firstItemRef.current?.focus();
 
     function handlePointerDown(event: PointerEvent) {
       if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
-        setOpen(false);
+        closeMenu();
       }
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        setOpen(false);
+        closeMenu();
       }
     }
 
@@ -49,89 +93,57 @@ export function StellaCore({ onAction }: StellaCoreProps) {
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   return (
-    <div className="stella-core" ref={rootRef}>
-      <AnimatePresence>
-        {open && (
-          <div className="stella-core__orbit" role="menu">
-            <svg
-              className="stella-core__orbit-lines"
-              width={ORBIT_SIZE}
-              height={ORBIT_SIZE}
-              viewBox={`0 0 ${ORBIT_SIZE} ${ORBIT_SIZE}`}
-            >
-              <motion.polyline
-                points={positions
-                  .map(({ x, y }) => `${ORBIT_CENTER + x},${ORBIT_CENTER + y}`)
-                  .join(' ')}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.35 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: motionTokens.duration.medium }}
+    <div className="stella-core" data-phase={phase} ref={rootRef}>
+      {phase !== 'closed' && (
+        <div className="stella-core__orbit" id="stella-core-menu" role="menu">
+          <ConstellationLines
+            layouts={layouts}
+            isActive={isVisuallyOpen}
+            stagger={stagger}
+            duration={duration}
+            reducedMotion={reducedMotion}
+          />
+          {actions.map((action, index) => {
+            const layout = layouts[index];
+            const delay = isVisuallyOpen
+              ? (layout.order - 1) * stagger
+              : (maxOrder - layout.order) * stagger;
+            return (
+              <StellaActionItem
+                key={action.id}
+                layout={layout}
+                label={action.label}
+                isActive={isVisuallyOpen}
+                delay={delay}
+                duration={duration}
+                ref={layout.order === 1 ? firstItemRef : undefined}
+                onClick={() => {
+                  if (phase !== 'open') return;
+                  onAction?.(action.id);
+                  closeMenu();
+                }}
               />
-              {positions.map(({ x, y }, index) => (
-                <motion.circle
-                  key={index}
-                  cx={ORBIT_CENTER + x}
-                  cy={ORBIT_CENTER + y}
-                  r={2}
-                  fill="currentColor"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.6 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: motionTokens.duration.medium, delay: index * 0.03 }}
-                />
-              ))}
-            </svg>
-
-            {actions.map((action, index) => {
-              const { x, y } = positions[index];
-              return (
-                <motion.div
-                  key={action.id}
-                  className="stella-core__orbit-slot"
-                  initial={{ x: 0, y: 0, opacity: 0, scale: 0.4 }}
-                  animate={{ x, y, opacity: 1, scale: 1 }}
-                  exit={{ x: 0, y: 0, opacity: 0, scale: 0.4 }}
-                  transition={{
-                    duration: motionTokens.duration.medium,
-                    delay: index * 0.03,
-                    ease: motionTokens.easing,
-                  }}
-                >
-                  <button
-                    ref={index === 0 ? firstItemRef : undefined}
-                    type="button"
-                    role="menuitem"
-                    className="stella-core__orbit-item"
-                    aria-label={action.label}
-                    onClick={() => {
-                      onAction?.(action.id);
-                      setOpen(false);
-                    }}
-                  >
-                    {action.label}
-                  </button>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-      </AnimatePresence>
+            );
+          })}
+        </div>
+      )}
 
       <button
         type="button"
         className="stella-core__button"
-        aria-label={open ? 'Fechar Stella Core' : 'Abrir Stella Core'}
-        aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
+        aria-label={phase === 'closed' ? 'Abrir Stella Core' : 'Fechar Stella Core'}
+        aria-expanded={phase !== 'closed'}
+        aria-controls="stella-core-menu"
+        onClick={toggle}
       >
-        <StellaCoreIcon />
+        <span className="stella-core__glow" aria-hidden="true" />
+        <span className="stella-core__icon">
+          <StellaCoreIcon />
+        </span>
       </button>
     </div>
   );
