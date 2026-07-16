@@ -7,6 +7,7 @@ export * from './components';
 export * from './cards';
 export * from './forms';
 export * from './navigation';
+export * from './layout';
 export * from './parallax';
 export * from './stella-core';
 export * from './icons';

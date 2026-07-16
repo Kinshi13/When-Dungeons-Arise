@@ -1,0 +1,48 @@
+.stella-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stella-sidebar-nav__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.stella-sidebar-nav.is-collapsed .stella-sidebar-nav__item {
+  justify-content: center;
+  padding: 12px;
+}
+
+.stella-sidebar-nav__item:hover {
+  background: var(--surface-glass);
+}
+
+.stella-sidebar-nav__item.is-active {
+  color: var(--accent-gold);
+  background: rgba(232, 201, 136, 0.1);
+}
+
+.stella-sidebar-nav__item:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+.stella-sidebar-nav__icon {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.stella-sidebar-nav__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,0 +1,12 @@
+.dashboard-page__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 640px) {
+  .dashboard-page__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

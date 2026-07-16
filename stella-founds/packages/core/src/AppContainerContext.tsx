@@ -4,8 +4,16 @@ import { seedDefaultsIfEmpty } from './seed';
 
 const AppContainerContext = createContext<AppContainer | null>(null);
 
-export function AppContainerProvider({ children }: { children: ReactNode }) {
-  const container = useMemo(() => createContainer(), []);
+export function AppContainerProvider({
+  children,
+  container: containerOverride,
+}: {
+  children: ReactNode;
+  /** Inject a pre-built container (e.g. one backed by a fake/in-memory StorageAdapter) instead of the default IndexedDB-backed one. */
+  container?: AppContainer;
+}) {
+  const defaultContainer = useMemo(() => (containerOverride ? null : createContainer()), [containerOverride]);
+  const container = containerOverride ?? defaultContainer!;
 
   useEffect(() => {
     seedDefaultsIfEmpty(container.financeCategoryRepository, container.financeNucleusRepository).then(() => {

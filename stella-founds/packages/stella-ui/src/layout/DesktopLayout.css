@@ -1,0 +1,34 @@
+.stella-desktop-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr 320px;
+  min-height: 100vh;
+}
+
+.stella-desktop-layout__sidebar {
+  border-right: 1px solid var(--border-subtle);
+  background: var(--surface-glass);
+  padding: 24px 16px;
+}
+
+.stella-desktop-layout__center {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stella-desktop-layout__header {
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 16px 32px;
+}
+
+.stella-desktop-layout__main {
+  flex: 1;
+  padding: 24px 32px 48px;
+  max-width: 960px;
+}
+
+.stella-desktop-layout__right-panel {
+  border-left: 1px solid var(--border-subtle);
+  background: var(--surface-glass);
+  padding: 24px 20px;
+}

@@ -7,6 +7,10 @@ export interface HomeSummary {
   proximaConta: FinanceEntry | null;
   assinaturasMes: number;
   previstoAposContas: number;
+  /** Total de entradas (income) previstas no mês corrente. */
+  entradasMes: number;
+  /** Total de contas e assinaturas pendentes no mês corrente. */
+  saidasMes: number;
   proximosVencimentos: FinanceEntry[];
   ultimosLancamentos: FinanceEntry[];
   alertas: FinanceEntry[];
@@ -75,6 +79,8 @@ export class HomeSummaryService {
       proximaConta,
       assinaturasMes,
       previstoAposContas,
+      entradasMes: totalIncomeMonth,
+      saidasMes: totalDueMonth,
       proximosVencimentos,
       ultimosLancamentos,
       alertas,
