@@ -6,9 +6,13 @@ import {
   toDateOnly,
   todayIso,
   effectiveStatus,
+  applyFinanceEntryFilter,
+  financeEntryFilters,
+  isFinanceEntryDueSoon,
   type FinanceCategory,
   type FinanceEntry,
   type FinanceNucleus,
+  type FinanceEntryFilter,
 } from '@stella-founds/core';
 import {
   ScreenShell,
@@ -19,12 +23,11 @@ import {
   financeEntryTypeIcons,
 } from '@stella-founds/stella-ui';
 import { useFinanceDialog } from '../finance/FinanceDialogContext';
-import { applyBillsFilter, billsFilters, isDueSoon, type BillsFilter } from './billsFilters';
 import './BillsScreen.css';
 
 const typeIcons = financeEntryTypeIcons;
 
-const emptyMessages: Record<BillsFilter, { title: string; message: string }> = {
+const emptyMessages: Record<FinanceEntryFilter, { title: string; message: string }> = {
   all: { title: 'Nenhuma conta por enquanto', message: 'Seu céu financeiro está limpo.' },
   upcoming: { title: 'Nenhum vencimento por enquanto', message: 'Seu céu financeiro está limpo.' },
   toPay: { title: 'Nada a pagar', message: 'Você está em dia.' },
@@ -42,7 +45,7 @@ export function BillsScreen() {
   const [entries, setEntries] = useState<FinanceEntry[] | null>(null);
   const [categories, setCategories] = useState<FinanceCategory[]>([]);
   const [nuclei, setNuclei] = useState<FinanceNucleus[]>([]);
-  const [filter, setFilter] = useState<BillsFilter>('all');
+  const [filter, setFilter] = useState<FinanceEntryFilter>('all');
   const today = todayIso();
 
   useEffect(() => {
@@ -74,7 +77,7 @@ export function BillsScreen() {
   }
 
   const notCancelled = entries.filter((entry) => entry.status !== 'cancelled');
-  const filtered = applyBillsFilter(notCancelled, filter, today).sort((a, b) =>
+  const filtered = applyFinanceEntryFilter(notCancelled, filter, today).sort((a, b) =>
     (a.dueDate ?? a.createdAt) < (b.dueDate ?? b.createdAt) ? -1 : 1,
   );
   const empty = emptyMessages[filter];
@@ -82,7 +85,7 @@ export function BillsScreen() {
   return (
     <ScreenShell title="Contas">
       <div className="bills-filters">
-        {billsFilters.map((option) => (
+        {financeEntryFilters.map((option) => (
           <StellaButton
             key={option.id}
             variant="chip"
@@ -102,7 +105,7 @@ export function BillsScreen() {
             const status = effectiveStatus(entry, today);
             const settled = status === 'paid' || status === 'received';
             const overdue = status === 'overdue';
-            const dueSoon = !overdue && isDueSoon(entry, today);
+            const dueSoon = !overdue && isFinanceEntryDueSoon(entry, today);
             const category = entry.categoryId ? categoryMap.get(entry.categoryId) : undefined;
             const nucleus = entry.nucleusId ? nucleusMap.get(entry.nucleusId) : undefined;
 

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import type { FinanceCategory, FinanceEntry, FinanceEntryType, FinanceNucleus } from '@stella-founds/core';
+import { validateFinanceEntryInput, type FinanceCategory, type FinanceEntry, type FinanceEntryType, type FinanceNucleus } from '@stella-founds/core';
 import { StellaButton } from '../components/StellaButton';
 import './FinanceEntryForm.css';
 
@@ -48,20 +48,25 @@ export function FinanceEntryForm({
   const [dueDate, setDueDate] = useState(toDateInputValue(entry?.dueDate ?? null));
   const [notes, setNotes] = useState(entry?.notes ?? '');
   const [recurring, setRecurring] = useState(!!entry?.recurrenceRuleId);
+  const [errors, setErrors] = useState<string[]>([]);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const parsedAmount = Number(amount.replace(',', '.'));
-    if (!title.trim() || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+    const dueDateIso = dueDate ? new Date(`${dueDate}T00:00:00`).toISOString() : null;
+    const validationErrors = validateFinanceEntryInput({ title, amount: parsedAmount, dueDate: dueDateIso });
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors);
       return;
     }
+    setErrors([]);
     onSubmit({
       title: title.trim(),
       amount: parsedAmount,
       type,
       categoryId: categoryId || null,
       nucleusId: nucleusId || null,
-      dueDate: dueDate ? new Date(`${dueDate}T00:00:00`).toISOString() : null,
+      dueDate: dueDateIso,
       notes: notes.trim() || null,
       recurring,
     });
@@ -69,6 +74,14 @@ export function FinanceEntryForm({
 
   return (
     <form className="finance-entry-form" onSubmit={handleSubmit}>
+      {errors.length > 0 && (
+        <div className="finance-entry-form__errors" role="alert" aria-live="assertive">
+          {errors.map((error) => (
+            <p key={error}>{error}</p>
+          ))}
+        </div>
+      )}
+
       <label className="finance-entry-form__field">
         <span>Tipo</span>
         <select

@@ -1,17 +1,28 @@
-.placeholder-toast {
+.stella-toast {
   position: fixed;
   left: 50%;
   bottom: calc(96px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  background: rgba(22, 27, 56, 0.94);
+  background: rgba(22, 27, 56, 0.96);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-pill);
   padding: 8px 18px;
   font-size: 13px;
+  font-weight: 500;
   color: var(--text-primary);
   z-index: var(--z-modal);
-  animation: stella-toast-fade 2s ease forwards;
+  animation: stella-toast-fade 2.5s ease forwards;
   pointer-events: none;
+}
+
+.stella-toast--success {
+  border-color: rgba(127, 216, 166, 0.4);
+  color: var(--status-success);
+}
+
+.stella-toast--error {
+  border-color: rgba(241, 141, 141, 0.4);
+  color: var(--status-danger);
 }
 
 @keyframes stella-toast-fade {
@@ -19,13 +30,19 @@
     opacity: 0;
     transform: translate(-50%, 8px);
   }
-  15%,
-  80% {
+  10%,
+  85% {
     opacity: 1;
     transform: translate(-50%, 0);
   }
   100% {
     opacity: 0;
     transform: translate(-50%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stella-toast {
+    animation: none;
   }
 }

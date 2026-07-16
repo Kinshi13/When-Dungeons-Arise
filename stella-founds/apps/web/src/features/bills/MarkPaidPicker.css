@@ -1,0 +1,13 @@
+.mark-paid-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mark-paid-picker__amount {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}

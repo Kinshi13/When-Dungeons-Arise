@@ -1,6 +1,8 @@
-import { toDateOnly, effectiveStatus, type FinanceEntry } from '@stella-founds/core';
+import type { FinanceEntry } from '../models';
+import { toDateOnly } from './date';
+import { effectiveStatus } from './status';
 
-export type BillsFilter =
+export type FinanceEntryFilter =
   | 'all'
   | 'upcoming'
   | 'toPay'
@@ -10,7 +12,7 @@ export type BillsFilter =
   | 'recurring'
   | 'overdue';
 
-export const billsFilters: { id: BillsFilter; label: string }[] = [
+export const financeEntryFilters: { id: FinanceEntryFilter; label: string }[] = [
   { id: 'all', label: 'Tudo' },
   { id: 'upcoming', label: 'Próximos vencimentos' },
   { id: 'toPay', label: 'A pagar' },
@@ -21,7 +23,11 @@ export const billsFilters: { id: BillsFilter; label: string }[] = [
   { id: 'overdue', label: 'Vencidas' },
 ];
 
-export function applyBillsFilter(entries: FinanceEntry[], filter: BillsFilter, todayIso: string): FinanceEntry[] {
+export function applyFinanceEntryFilter(
+  entries: FinanceEntry[],
+  filter: FinanceEntryFilter,
+  todayIso: string,
+): FinanceEntry[] {
   switch (filter) {
     case 'upcoming':
       return entries.filter((entry) => entry.status === 'pending' && !!entry.dueDate);
@@ -43,7 +49,7 @@ export function applyBillsFilter(entries: FinanceEntry[], filter: BillsFilter, t
   }
 }
 
-export function isDueSoon(entry: FinanceEntry, todayIso: string, withinDays = 3): boolean {
+export function isFinanceEntryDueSoon(entry: FinanceEntry, todayIso: string, withinDays = 3): boolean {
   if (entry.status !== 'pending' || !entry.dueDate) return false;
   const due = new Date(toDateOnly(entry.dueDate));
   const today = new Date(toDateOnly(todayIso));

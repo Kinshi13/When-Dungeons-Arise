@@ -5,6 +5,7 @@ export * from './services';
 export * from './storage';
 export * from './recurrence';
 export * from './utils';
+export * from './validation';
 export * from './platform';
 export * from './sync';
 

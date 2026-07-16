@@ -1,0 +1,10 @@
+.stella-confirm-dialog__message {
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+}
+
+.stella-confirm-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

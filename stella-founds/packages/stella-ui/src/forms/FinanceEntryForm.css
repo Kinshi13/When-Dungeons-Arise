@@ -16,6 +16,23 @@
   font-size: 15px;
 }
 
+.finance-entry-form__errors {
+  background: rgba(241, 141, 141, 0.12);
+  border: 1px solid rgba(241, 141, 141, 0.35);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  color: var(--status-danger);
+  font-size: 13px;
+}
+
+.finance-entry-form__errors p {
+  margin: 0;
+}
+
+.finance-entry-form__errors p + p {
+  margin-top: 4px;
+}
+
 .finance-entry-form__checkbox {
   display: flex;
   align-items: center;
