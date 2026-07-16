@@ -1,0 +1,28 @@
+/* Visual treatment for the Stella Parallax Engine's default scene layers.
+   Night-sky blue/graphite, gold and lavender accents — no pure black, no neon. */
+
+.stella-scene-background {
+  background: radial-gradient(600px 400px at 20% 0%, rgba(109, 139, 255, 0.16), transparent 60%),
+    radial-gradient(500px 380px at 85% 15%, rgba(185, 168, 255, 0.12), transparent 65%);
+}
+
+.stella-scene-stars {
+  color: var(--text-primary);
+}
+
+.stella-scene-constellation {
+  color: var(--accent-gold);
+  opacity: 0.5;
+}
+
+.stella-scene-orbits {
+  color: var(--accent-lavender);
+}
+
+.stella-scene-glow {
+  background: radial-gradient(420px 320px at 50% 100%, rgba(232, 201, 136, 0.1), transparent 70%);
+}
+
+.stella-scene-particles {
+  color: var(--accent-gold);
+}

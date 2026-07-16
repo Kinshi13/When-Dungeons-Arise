@@ -1,0 +1,6 @@
+.stella-parallax-scene {
+  position: relative;
+  overflow: hidden;
+  --parallax-x: 0;
+  --parallax-y: 0;
+}

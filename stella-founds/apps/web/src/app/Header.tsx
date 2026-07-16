@@ -23,7 +23,7 @@ export function Header() {
       </div>
       <div className="stella-header__actions">
         <input className="stella-header__search" type="search" placeholder="Pesquisar (em breve)" disabled />
-        <StellaIconButton icon="✦" label="Abrir Stella Core" disabled />
+        <StellaIconButton icon="✦" label="Stella Core (acesse pelo botão flutuante)" disabled />
         <span className="stella-header__avatar" aria-hidden="true">🌙</span>
       </div>
     </div>

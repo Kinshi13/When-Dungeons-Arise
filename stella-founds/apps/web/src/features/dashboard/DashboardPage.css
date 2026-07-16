@@ -1,3 +1,12 @@
+.dashboard-page__parallax {
+  min-height: 100%;
+}
+
+.dashboard-page__content {
+  position: relative;
+  z-index: var(--z-content);
+}
+
 .dashboard-page__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

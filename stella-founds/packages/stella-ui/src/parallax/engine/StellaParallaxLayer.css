@@ -1,0 +1,20 @@
+.stella-parallax-layer {
+  position: absolute;
+  inset: -16px;
+  pointer-events: none;
+  opacity: var(--layer-opacity, 1);
+  filter: blur(var(--layer-blur, 0px));
+  transform: translate3d(
+      calc(var(--parallax-x, 0) * var(--layer-depth-x, 1) * var(--layer-max-x, 0px)),
+      calc(var(--parallax-y, 0) * var(--layer-depth-y, 1) * var(--layer-max-y, 0px)),
+      0
+    )
+    scale(var(--layer-scale, 1)) rotate(var(--layer-rotate, 0deg));
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stella-parallax-layer {
+    transform: none !important;
+  }
+}
