@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { validateFinanceEntryInput, type FinanceCategory, type FinanceEntry, type FinanceEntryType, type FinanceNucleus } from '@stella-founds/core';
 import { StellaButton } from '../components/StellaButton';
+import { StellaIconButton } from '../components/StellaIconButton';
 import './FinanceEntryForm.css';
 
 export interface FinanceEntryFormValues {
@@ -32,6 +33,7 @@ export function FinanceEntryForm({
   nuclei,
   onSubmit,
   onCancel,
+  onOpenCalculator,
 }: {
   initialType: FinanceEntryType;
   entry?: FinanceEntry;
@@ -39,6 +41,8 @@ export function FinanceEntryForm({
   nuclei: FinanceNucleus[];
   onSubmit: (values: FinanceEntryFormValues) => void;
   onCancel: () => void;
+  /** Optional — when provided (Web only), a small calculator trigger appears next to "Valor". The form never imports or knows about the calculator itself, only this callback contract. */
+  onOpenCalculator?: (useValue: (value: number) => void) => void;
 }) {
   const [type, setType] = useState<FinanceEntryType>(entry?.type ?? initialType);
   const [title, setTitle] = useState(entry?.title ?? '');
@@ -111,15 +115,24 @@ export function FinanceEntryForm({
 
       <label className="finance-entry-form__field">
         <span>Valor</span>
-        <input
-          className="stella-input"
-          type="text"
-          inputMode="decimal"
-          value={amount}
-          onChange={(event) => setAmount(event.target.value)}
-          placeholder="0,00"
-          required
-        />
+        <span className="finance-entry-form__amount-row">
+          <input
+            className="stella-input"
+            type="text"
+            inputMode="decimal"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            placeholder="0,00"
+            required
+          />
+          {onOpenCalculator && (
+            <StellaIconButton
+              icon="🖩"
+              label="Abrir calculadora"
+              onClick={() => onOpenCalculator((value) => setAmount(String(value)))}
+            />
+          )}
+        </span>
       </label>
 
       <label className="finance-entry-form__field">

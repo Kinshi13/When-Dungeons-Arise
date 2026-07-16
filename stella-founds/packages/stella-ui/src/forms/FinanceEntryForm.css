@@ -16,6 +16,16 @@
   font-size: 15px;
 }
 
+.finance-entry-form__amount-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.finance-entry-form__amount-row .stella-input {
+  flex: 1;
+}
+
 .finance-entry-form__errors {
   background: rgba(241, 141, 141, 0.12);
   border: 1px solid rgba(241, 141, 141, 0.35);

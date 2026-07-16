@@ -14,6 +14,7 @@ import {
   type FinanceEntryFormValues,
 } from '@stella-founds/stella-ui';
 import { useFinanceDialog } from './FinanceDialogContext';
+import { useGlobalCalculator } from '../calculator/GlobalCalculatorProvider';
 
 const typeTitles: Record<string, string> = {
   expense: 'Adicionar gasto',
@@ -32,6 +33,7 @@ export function FinanceEntryDialog() {
     recurrenceService,
   } = useAppContainer();
   const breakpoint = useBreakpoint();
+  const { openForValue } = useGlobalCalculator();
   const [categories, setCategories] = useState<FinanceCategory[]>([]);
   const [nuclei, setNuclei] = useState<FinanceNucleus[]>([]);
 
@@ -89,6 +91,7 @@ export function FinanceEntryDialog() {
       nuclei={nuclei}
       onSubmit={handleSubmit}
       onCancel={close}
+      onOpenCalculator={openForValue}
     />
   );
 

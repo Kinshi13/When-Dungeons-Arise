@@ -1,94 +1,57 @@
 import { useState } from 'react';
 import { StellaButton } from './StellaButton';
+import { showStellaToast } from './StellaToast';
+import type { StellaCalculatorEngine, StellaCalculatorOperator } from '../hooks/useStellaCalculatorEngine';
 import './StellaCalculator.css';
 
-type Operator = '+' | '-' | '×' | '÷';
-
-function compute(a: number, b: number, operator: Operator): number {
-  switch (operator) {
-    case '+':
-      return a + b;
-    case '-':
-      return a - b;
-    case '×':
-      return a * b;
-    case '÷':
-      return b === 0 ? NaN : a / b;
-  }
-}
+const digits = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.'];
+const operators: StellaCalculatorOperator[] = ['÷', '×', '-', '+'];
 
 /**
- * A simple four-operation calculator — no finance logic, no persistence.
- * `onUseResult` is optional so it also works as a fully standalone utility.
+ * Presentational four-operation calculator — all arithmetic/history state
+ * lives in `engine` (see useStellaCalculatorEngine), so a single instance
+ * can survive being hidden and shown again. `onUseResult` is optional: when
+ * present (the calculator was opened for a specific field), a "Usar
+ * resultado" button appears; the calculator never imports or knows about
+ * whatever opened it that way.
  */
-export function StellaCalculator({ onUseResult }: { onUseResult?: (value: number) => void }) {
-  const [display, setDisplay] = useState('0');
-  const [pending, setPending] = useState<{ value: number; operator: Operator } | null>(null);
-  // True right after "=" or an operator key — the next digit should start a
-  // fresh number instead of appending to what's currently on screen.
-  const [awaitingFreshDigit, setAwaitingFreshDigit] = useState(false);
+export function StellaCalculator({
+  engine,
+  onUseResult,
+}: {
+  engine: StellaCalculatorEngine;
+  onUseResult?: (value: number) => void;
+}) {
   const [copied, setCopied] = useState(false);
 
-  function inputDigit(digit: string) {
-    setCopied(false);
-    if (awaitingFreshDigit) {
-      setDisplay(digit === '.' ? '0.' : digit);
-      setAwaitingFreshDigit(false);
-      return;
+  async function handleCopy() {
+    const ok = await engine.copyResult();
+    setCopied(ok);
+    if (ok) {
+      showStellaToast('Valor copiado', 'success');
+      window.setTimeout(() => setCopied(false), 2000);
     }
-    if (digit === '.' && display.includes('.')) return;
-    setDisplay((current) => (current === '0' && digit !== '.' ? digit : current + digit));
   }
 
-  function applyOperator(operator: Operator) {
-    const value = Number(display);
-    if (pending && !awaitingFreshDigit) {
-      const result = compute(pending.value, value, pending.operator);
-      setPending({ value: result, operator });
-      setDisplay(String(result));
-    } else {
-      setPending({ value, operator });
-    }
-    setAwaitingFreshDigit(true);
-  }
-
-  function evaluate() {
-    if (!pending) return;
-    const result = compute(pending.value, Number(display), pending.operator);
-    setDisplay(String(result));
-    setPending(null);
-    setAwaitingFreshDigit(true);
-  }
-
-  function clear() {
-    setDisplay('0');
-    setPending(null);
-    setAwaitingFreshDigit(false);
-    setCopied(false);
-  }
-
-  async function copyResult() {
+  async function handleCopyHistoryEntry(result: number) {
     try {
-      await navigator.clipboard.writeText(display);
-      setCopied(true);
+      await navigator.clipboard.writeText(String(result));
+      showStellaToast('Valor copiado', 'success');
     } catch {
-      setCopied(false);
+      showStellaToast('Não foi possível copiar.', 'error');
     }
   }
-
-  const digits = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '0', '.'];
-  const operators: Operator[] = ['÷', '×', '-', '+'];
 
   return (
     <div className="stella-calculator">
       <div className="stella-calculator__display" aria-live="polite">
-        {display}
+        {engine.display}
       </div>
 
       <div className="stella-calculator__grid">
         <div className="stella-calculator__digits">
           {digits.map((digit) => (
-            <StellaButton key={digit} type="button" onClick={() => inputDigit(digit)}>
+            <StellaButton key={digit} type="button" onClick={() => engine.inputDigit(digit)}>
               {digit}
             </StellaButton>
           ))}
@@ -98,31 +61,49 @@ export function StellaCalculator({ onUseResult }: { onUseResult?: (value: number
             <StellaButton
               key={operator}
               type="button"
-              variant={pending?.operator === operator ? 'primary' : 'ghost'}
-              onClick={() => applyOperator(operator)}
+              variant={engine.activeOperator === operator ? 'primary' : 'ghost'}
+              onClick={() => engine.applyOperator(operator)}
             >
               {operator}
             </StellaButton>
           ))}
-          <StellaButton type="button" variant="primary" onClick={evaluate}>
+          <StellaButton type="button" variant="primary" onClick={engine.evaluate}>
             =
           </StellaButton>
         </div>
       </div>
 
       <div className="stella-calculator__actions">
-        <StellaButton type="button" onClick={clear}>
+        <StellaButton type="button" onClick={engine.clear}>
           Limpar
         </StellaButton>
-        <StellaButton type="button" onClick={copyResult}>
+        <StellaButton type="button" onClick={handleCopy}>
           {copied ? 'Copiado!' : 'Copiar resultado'}
         </StellaButton>
         {onUseResult && (
-          <StellaButton type="button" variant="primary" onClick={() => onUseResult(Number(display))}>
+          <StellaButton type="button" variant="primary" onClick={() => onUseResult(Number(engine.display))}>
             Usar resultado
           </StellaButton>
         )}
       </div>
+
+      {engine.history.length > 0 && (
+        <div className="stella-calculator__history">
+          <span className="stella-calculator__history-title">Últimos cálculos</span>
+          <ul className="stella-calculator__history-list">
+            {engine.history.map((entry) => (
+              <li key={entry.id} className="stella-calculator__history-item">
+                <span className="stella-calculator__history-expression">
+                  {entry.expression} = {entry.result}
+                </span>
+                <StellaButton type="button" onClick={() => handleCopyHistoryEntry(entry.result)}>
+                  Copiar
+                </StellaButton>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

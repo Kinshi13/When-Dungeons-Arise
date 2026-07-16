@@ -1,4 +1,5 @@
 import { StellaIconButton } from '@stella-founds/stella-ui';
+import { useGlobalCalculator } from '../features/calculator/GlobalCalculatorProvider';
 import './Header.css';
 
 function greetingForHour(hour: number): string {
@@ -12,6 +13,7 @@ const dateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 
 /** Reused across Desktop and Tablet layouts (Mobile keeps its own compact ScreenShell header, same as Android). */
 export function Header() {
   const now = new Date();
+  const { toggleCalculator } = useGlobalCalculator();
 
   return (
     <div className="stella-header">
@@ -23,7 +25,7 @@ export function Header() {
       </div>
       <div className="stella-header__actions">
         <input className="stella-header__search" type="search" placeholder="Pesquisar (em breve)" disabled />
-        <StellaIconButton icon="✦" label="Stella Core (acesse pelo botão flutuante)" disabled />
+        <StellaIconButton icon="🖩" label="Calculadora (Alt+C)" onClick={toggleCalculator} />
         <span className="stella-header__avatar" aria-hidden="true">🌙</span>
       </div>
     </div>

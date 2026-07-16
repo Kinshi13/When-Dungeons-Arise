@@ -7,6 +7,7 @@ export * from './StellaCalculator';
 export * from './StellaCard';
 export * from './StellaConfirmDialog';
 export * from './StellaDrawer';
+export * from './StellaFloatingPanel';
 export * from './StellaGlassCard';
 export * from './StellaConstellationDivider';
 export * from './StellaEmptyState';

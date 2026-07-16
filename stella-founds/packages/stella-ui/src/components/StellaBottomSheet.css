@@ -18,6 +18,17 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   padding: 12px 20px calc(20px + env(safe-area-inset-bottom));
+  transition: transform 0.2s ease;
+}
+
+.stella-bottom-sheet.is-dragging {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stella-bottom-sheet {
+    transition: none;
+  }
 }
 
 .stella-bottom-sheet__handle {
@@ -25,7 +36,11 @@
   height: 4px;
   border-radius: var(--radius-pill);
   background: var(--border-subtle);
-  margin: 0 auto 12px;
+  background-clip: content-box;
+  box-sizing: content-box;
+  padding: 10px 40px;
+  margin: -10px auto 2px;
+  touch-action: none;
 }
 
 .stella-bottom-sheet__title {

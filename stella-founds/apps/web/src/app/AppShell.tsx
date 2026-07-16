@@ -19,7 +19,8 @@ import { useWebStellaCoreActions } from '../features/stellaCore/useWebStellaCore
 import { FinanceDialogProvider, useFinanceDialog } from '../features/finance/FinanceDialogContext';
 import { FinanceEntryDialog } from '../features/finance/FinanceEntryDialog';
 import { MarkPaidPicker } from '../features/bills/MarkPaidPicker';
-import { CalculatorSheet } from '../features/calculator/CalculatorSheet';
+import { GlobalCalculatorProvider, useGlobalCalculator } from '../features/calculator/GlobalCalculatorProvider';
+import { GlobalCalculatorHost } from '../features/calculator/GlobalCalculatorHost';
 import type { FinanceEntryType } from '@stella-founds/core';
 
 function AppRoutes() {
@@ -45,8 +46,8 @@ const actionToEntryType: Partial<Record<string, FinanceEntryType>> = {
 function AppShellContent() {
   const location = useLocation();
   const { openCreate } = useFinanceDialog();
+  const { openCalculator } = useGlobalCalculator();
   const [markPaidOpen, setMarkPaidOpen] = useState(false);
-  const [calculatorOpen, setCalculatorOpen] = useState(false);
 
   const stellaCoreActions = useWebStellaCoreActions({
     pathname: location.pathname,
@@ -55,7 +56,7 @@ function AppShellContent() {
       if (entryType) openCreate(entryType);
     },
     openMarkPaid: () => setMarkPaidOpen(true),
-    openCalculator: () => setCalculatorOpen(true),
+    openCalculator,
     onPlaceholder: (label) => showStellaToast(`${label} — em breve`, 'info'),
   });
 
@@ -101,7 +102,7 @@ function AppShellContent() {
 
       <FinanceEntryDialog />
       {markPaidOpen && <MarkPaidPicker onClose={() => setMarkPaidOpen(false)} />}
-      {calculatorOpen && <CalculatorSheet onClose={() => setCalculatorOpen(false)} />}
+      <GlobalCalculatorHost />
       <StellaToastViewport />
     </>
   );
@@ -110,7 +111,9 @@ function AppShellContent() {
 export function AppShell() {
   return (
     <FinanceDialogProvider>
-      <AppShellContent />
+      <GlobalCalculatorProvider>
+        <AppShellContent />
+      </GlobalCalculatorProvider>
     </FinanceDialogProvider>
   );
 }

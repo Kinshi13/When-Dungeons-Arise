@@ -1,0 +1,53 @@
+.stella-floating-panel {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  width: min(340px, calc(100vw - 48px));
+  background: rgba(28, 36, 64, 0.97);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-core-item);
+  z-index: var(--z-modal);
+  overflow: hidden;
+}
+
+.stella-floating-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 8px 10px 16px;
+  cursor: grab;
+  background: var(--surface-glass);
+  touch-action: none;
+  user-select: none;
+}
+
+.stella-floating-panel__header:active {
+  cursor: grabbing;
+}
+
+.stella-floating-panel__title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.stella-floating-panel__header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.stella-floating-panel__header-actions .stella-icon-button {
+  width: 32px;
+  height: 32px;
+}
+
+.stella-floating-panel__body {
+  padding: 16px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.stella-floating-panel.is-minimized {
+  width: auto;
+}
