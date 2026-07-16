@@ -33,21 +33,3 @@
   color: var(--text-secondary);
   font-size: 13px;
 }
-
-.bills-page__drawer-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(10, 14, 32, 0.5);
-  z-index: var(--z-modal);
-  display: flex;
-  justify-content: flex-end;
-}
-
-.bills-page__drawer {
-  width: min(360px, 88vw);
-  height: 100%;
-  background: rgba(28, 36, 64, 0.97);
-  border-left: 1px solid var(--border-subtle);
-  padding: 24px 20px;
-  overflow-y: auto;
-}

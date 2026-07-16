@@ -24,6 +24,7 @@ export function StellaSidebarNavigation({
           key={item.id}
           to={item.to}
           end={item.end}
+          aria-label={item.label}
           className={({ isActive }) => `stella-sidebar-nav__item${isActive ? ' is-active' : ''}`}
         >
           <span className="stella-sidebar-nav__icon">{item.icon}</span>

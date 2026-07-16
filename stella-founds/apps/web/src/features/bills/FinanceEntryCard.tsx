@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from 'react';
 import {
   formatCurrency,
   toDateOnly,
@@ -59,8 +60,24 @@ export function FinanceEntryCard({
     .filter(Boolean)
     .join(' ');
 
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onSelect(entry);
+    }
+  }
+
   return (
-    <StellaCard as="li" interactive className={classes} onClick={() => onSelect(entry)}>
+    <StellaCard
+      as="li"
+      interactive
+      className={classes}
+      role="button"
+      tabIndex={0}
+      aria-label={`Ver detalhes de ${entry.title}`}
+      onClick={() => onSelect(entry)}
+      onKeyDown={handleKeyDown}
+    >
       <div className="finance-entry-card__info">
         <span className="finance-entry-card__title">
           <span className="finance-entry-card__type-icon" aria-hidden="true">

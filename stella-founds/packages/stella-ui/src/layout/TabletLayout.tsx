@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { useDismissableOverlay } from '../hooks/useDismissableOverlay';
 import { StellaIconButton } from '../components/StellaIconButton';
+import { StellaDrawer } from '../components/StellaDrawer';
 import './TabletLayout.css';
 
 /** Tablet app shell: collapsed icon-only sidebar rail, wider content area, and the desktop right panel collapsed into a dismissable drawer. */
@@ -18,7 +18,6 @@ export function TabletLayout({
   rightPanelLabel?: string;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  useDismissableOverlay(() => setDrawerOpen(false));
 
   return (
     <div className="stella-tablet-layout">
@@ -39,17 +38,9 @@ export function TabletLayout({
       </div>
 
       {drawerOpen && (
-        <div className="stella-tablet-layout__drawer-backdrop" onClick={() => setDrawerOpen(false)}>
-          <aside
-            id="stella-right-panel-drawer"
-            className="stella-tablet-layout__drawer"
-            role="dialog"
-            aria-label={rightPanelLabel}
-            onClick={(event) => event.stopPropagation()}
-          >
-            {rightPanel}
-          </aside>
-        </div>
+        <StellaDrawer id="stella-right-panel-drawer" label={rightPanelLabel} onClose={() => setDrawerOpen(false)}>
+          {rightPanel}
+        </StellaDrawer>
       )}
     </div>
   );

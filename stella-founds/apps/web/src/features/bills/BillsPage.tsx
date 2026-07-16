@@ -10,6 +10,7 @@ import {
   ScreenShell,
   StellaConfirmDialog,
   StellaBottomSheet,
+  StellaDrawer,
   useBreakpoint,
   showStellaToast,
   StellaParallax,
@@ -157,16 +158,9 @@ export function BillsPage() {
         </div>
 
         {breakpoint === 'tablet' && selectedEntry && (
-          <div className="bills-page__drawer-backdrop" onClick={() => setSelectedId(null)}>
-            <aside
-              className="bills-page__drawer"
-              role="dialog"
-              aria-label="Detalhes do lançamento"
-              onClick={(event) => event.stopPropagation()}
-            >
-              {details}
-            </aside>
-          </div>
+          <StellaDrawer label="Detalhes do lançamento" onClose={() => setSelectedId(null)}>
+            {details}
+          </StellaDrawer>
         )}
 
         {breakpoint === 'mobile' && selectedEntry && (

@@ -1,0 +1,35 @@
+.stella-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 32, 0.5);
+  z-index: var(--z-modal);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.stella-drawer {
+  width: min(360px, 88vw);
+  height: 100%;
+  background: rgba(28, 36, 64, 0.97);
+  border-left: 1px solid var(--border-subtle);
+  padding: 24px 20px;
+  overflow-y: auto;
+  animation: stella-drawer-slide-in 0.22s ease forwards;
+}
+
+@keyframes stella-drawer-slide-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stella-drawer {
+    animation: none;
+  }
+}
