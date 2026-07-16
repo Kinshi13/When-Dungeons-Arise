@@ -1,4 +1,5 @@
-import { useEffect, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { useDismissableOverlay } from '../hooks/useDismissableOverlay';
 import './Modal.css';
 
 export function Modal({
@@ -10,13 +11,7 @@ export function Modal({
   onClose: () => void;
   children: ReactNode;
 }) {
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  useDismissableOverlay(onClose);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>

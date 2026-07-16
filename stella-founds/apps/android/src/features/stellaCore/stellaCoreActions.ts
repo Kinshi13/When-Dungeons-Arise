@@ -1,9 +1,11 @@
-export interface StellaCoreAction {
+import type { FinanceEntryType } from '@stella-founds/core';
+
+export interface StellaCoreActionConfig {
   id: string;
   label: string;
 }
 
-export const stellaCoreActionsByRoute: Record<string, StellaCoreAction[]> = {
+export const stellaCoreActionsByRoute: Record<string, StellaCoreActionConfig[]> = {
   '/': [
     { id: 'add-expense', label: 'Adicionar gasto' },
     { id: 'new-bill', label: 'Nova conta' },
@@ -34,6 +36,14 @@ export const stellaCoreActionsByRoute: Record<string, StellaCoreAction[]> = {
   ],
 };
 
-export function getStellaCoreActions(pathname: string): StellaCoreAction[] {
+export function getStellaCoreActionsForRoute(pathname: string): StellaCoreActionConfig[] {
   return stellaCoreActionsByRoute[pathname] ?? stellaCoreActionsByRoute['/'];
 }
+
+export const actionToEntryType: Partial<Record<string, FinanceEntryType>> = {
+  'add-expense': 'expense',
+  'new-bill': 'bill',
+  'new-subscription': 'subscription',
+  'add-income': 'income',
+  'new-income': 'income',
+};

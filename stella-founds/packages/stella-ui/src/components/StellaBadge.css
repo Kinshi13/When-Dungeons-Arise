@@ -1,0 +1,31 @@
+.stella-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--surface-glass);
+  color: var(--text-secondary);
+}
+
+.stella-badge--success {
+  background: rgba(127, 216, 166, 0.15);
+  color: var(--status-success);
+}
+
+.stella-badge--warning {
+  background: rgba(240, 197, 107, 0.15);
+  color: var(--status-warning);
+}
+
+.stella-badge--danger {
+  background: rgba(241, 141, 141, 0.18);
+  color: var(--status-danger);
+}
+
+.stella-badge--info {
+  background: rgba(109, 139, 255, 0.15);
+  color: var(--status-info);
+}

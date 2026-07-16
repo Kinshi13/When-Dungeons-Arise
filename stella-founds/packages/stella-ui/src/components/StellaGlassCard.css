@@ -1,0 +1,4 @@
+.stella-glass-card {
+  background: var(--surface-glass);
+  backdrop-filter: blur(10px);
+}

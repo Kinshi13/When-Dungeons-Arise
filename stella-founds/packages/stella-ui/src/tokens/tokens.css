@@ -1,0 +1,51 @@
+/* Stella Design System — CSS custom properties.
+   Single source of truth for both apps/android and apps/web; keep these
+   values in sync with the TypeScript tokens in this same tokens/ folder. */
+:root {
+  --bg-primary: #141a30;
+  --bg-soft: #1c2440;
+  --surface-glass: rgba(255, 255, 255, 0.06);
+  --surface-card: rgba(255, 255, 255, 0.08);
+  --surface-elevated: rgba(255, 255, 255, 0.12);
+  --surface-navigation: linear-gradient(180deg, rgba(17, 22, 42, 0.82) 0%, rgba(14, 18, 36, 0.94) 100%);
+  --text-primary: #f4f6ff;
+  --text-secondary: #aab2d6;
+  --text-muted: rgba(170, 178, 214, 0.6);
+  --text-inverse: #141a30;
+  --accent-stella: #6d8bff;
+  --accent-gold: #e8c988;
+  --accent-lavender: #b9a8ff;
+  --status-success: #7fd8a6;
+  --status-warning: #f0c56b;
+  --status-danger: #f18d8d;
+  --status-info: #6d8bff;
+  --border-subtle: rgba(232, 201, 136, 0.25);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --shadow-dock: 0 -4px 24px rgba(6, 8, 20, 0.35);
+  --shadow-core-button: 0 4px 14px rgba(6, 8, 20, 0.5), 0 0 0 1px rgba(185, 168, 255, 0.08) inset;
+  --shadow-core-item: 0 6px 18px rgba(6, 8, 20, 0.45), 0 0 10px rgba(109, 139, 255, 0.1);
+  --z-scrim: 15;
+  --z-navigation: 20;
+  --z-core: 30;
+  --z-modal: 50;
+  /* Shared by StellaBottomNavigation's grid column and StellaCore's button
+     so the two components can never drift apart — single source of truth
+     for width. */
+  --stella-core-slot: 68px;
+  color-scheme: dark;
+}
+
+@media (max-width: 340px) {
+  :root {
+    --stella-core-slot: 60px;
+  }
+}
+
+@media (min-width: 900px) {
+  :root {
+    --stella-core-slot: 76px;
+  }
+}

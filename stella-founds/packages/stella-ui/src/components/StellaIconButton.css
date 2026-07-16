@@ -1,0 +1,33 @@
+.stella-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-glass);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.stella-icon-button:hover {
+  background: var(--surface-elevated);
+}
+
+.stella-icon-button.is-active {
+  background: var(--accent-stella);
+  color: #f4f6ff;
+  border-color: transparent;
+}
+
+.stella-icon-button:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+.stella-icon-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

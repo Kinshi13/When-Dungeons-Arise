@@ -5,13 +5,14 @@ interface StellaActionItemProps {
   layout: StellaConstellationLayout;
   label: string;
   isActive: boolean;
+  disabled?: boolean;
   delay: number;
   duration: number;
   onClick: () => void;
 }
 
 export const StellaActionItem = forwardRef<HTMLButtonElement, StellaActionItemProps>(
-  function StellaActionItem({ layout, label, isActive, delay, duration, onClick }, ref) {
+  function StellaActionItem({ layout, label, isActive, disabled, delay, duration, onClick }, ref) {
     const style: CSSProperties = {
       '--nx': layout.normalizedX,
       '--ny': layout.normalizedY,
@@ -28,6 +29,8 @@ export const StellaActionItem = forwardRef<HTMLButtonElement, StellaActionItemPr
           className="stella-core__item"
           tabIndex={isActive ? 0 : -1}
           aria-label={label}
+          aria-disabled={disabled}
+          disabled={disabled}
           onClick={onClick}
         >
           {label}

@@ -1,39 +1,4 @@
-:root {
-  --bg-primary: #141a30;
-  --bg-soft: #1c2440;
-  --surface-glass: rgba(255, 255, 255, 0.06);
-  --surface-card: rgba(255, 255, 255, 0.08);
-  --surface-elevated: rgba(255, 255, 255, 0.12);
-  --text-primary: #f4f6ff;
-  --text-secondary: #aab2d6;
-  --accent-stella: #6d8bff;
-  --accent-gold: #e8c988;
-  --accent-lavender: #b9a8ff;
-  --status-success: #7fd8a6;
-  --status-warning: #f0c56b;
-  --status-danger: #f18d8d;
-  --border-subtle: rgba(232, 201, 136, 0.25);
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-pill: 999px;
-  /* Shared by BottomNav's grid column and StellaCore's button so the two
-     components can never drift apart — single source of truth for width. */
-  --stella-core-slot: 68px;
-  color-scheme: dark;
-}
-
-@media (max-width: 340px) {
-  :root {
-    --stella-core-slot: 60px;
-  }
-}
-
-@media (min-width: 900px) {
-  :root {
-    --stella-core-slot: 76px;
-  }
-}
+@import '@stella-founds/stella-ui/src/tokens/tokens.css';
 
 * {
   box-sizing: border-box;
