@@ -1,5 +1,11 @@
-import { useLayoutEffect, useRef, useState } from 'react';
-import type { StellaActionLayout } from './stellaLayout';
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import type { StellaConstellationLayout } from './stellaLayout';
+
+function resolveAnchor(layouts: StellaConstellationLayout[], layout: StellaConstellationLayout) {
+  if (layout.connectionFrom === 'core') return { x: 0, y: 0 };
+  const parent = layouts[layout.connectionFrom];
+  return { x: parent.normalizedX, y: parent.normalizedY };
+}
 
 export function ConstellationLines({
   layouts,
@@ -8,7 +14,7 @@ export function ConstellationLines({
   duration,
   reducedMotion,
 }: {
-  layouts: StellaActionLayout[];
+  layouts: StellaConstellationLayout[];
   isActive: boolean;
   stagger: number;
   duration: number;
@@ -24,23 +30,42 @@ export function ConstellationLines({
 
   return (
     <svg className="stella-core__lines" aria-hidden="true" overflow="visible">
+      <defs>
+        <linearGradient id="stella-line-gradient" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" style={{ stopColor: 'var(--accent-stella)', stopOpacity: 0.15 }} />
+          <stop offset="100%" style={{ stopColor: 'var(--accent-lavender)', stopOpacity: 0.65 }} />
+        </linearGradient>
+      </defs>
       {layouts.map((layout, index) => {
         const length = lengths[index] ?? 0;
-        const delay = isActive ? (layout.order - 1) * stagger : (maxOrder - layout.order) * stagger;
-        // Slight perpendicular bow so the line reads as a drawn curve, not a ruler-straight spoke.
-        const midX = layout.offsetX / 2 + layout.offsetY * 0.12;
-        const midY = layout.offsetY / 2 - layout.offsetX * 0.12;
+        const delay = isActive
+          ? (layout.animationOrder - 1) * stagger
+          : (maxOrder - layout.animationOrder) * stagger;
+        const anchor = resolveAnchor(layouts, layout);
+        // Gentle organic bow, perpendicular to the segment, not a ruler-straight spoke.
+        const dx = layout.normalizedX - anchor.x;
+        const dy = layout.normalizedY - anchor.y;
+        const midX = anchor.x + dx / 2 + dy * 0.12;
+        const midY = anchor.y + dy / 2 - dx * 0.12;
+        const path = `M${anchor.x},${anchor.y} Q${midX},${midY} ${layout.normalizedX},${layout.normalizedY}`;
 
         if (reducedMotion) {
           return (
             <path
               key={index}
-              d={`M0,0 Q${midX},${midY} ${layout.offsetX},${layout.offsetY}`}
+              d={path}
               className="stella-core__line"
-              style={{ opacity: isActive ? 0.4 : 0, transition: `opacity ${duration}s linear` }}
+              vectorEffect="non-scaling-stroke"
+              style={{ opacity: isActive ? 0.7 : 0, transition: `opacity ${duration}s linear` }}
             />
           );
         }
+
+        const style = {
+          '--line-length': length,
+          animationDelay: `${delay}s`,
+          animationDuration: `${duration}s`,
+        } as CSSProperties;
 
         return (
           <g key={index}>
@@ -48,24 +73,19 @@ export function ConstellationLines({
               ref={(el) => {
                 pathRefs.current[index] = el;
               }}
-              d={`M0,0 Q${midX},${midY} ${layout.offsetX},${layout.offsetY}`}
-              className="stella-core__line"
-              style={{
-                strokeDasharray: length,
-                strokeDashoffset: isActive ? 0 : length,
-                transitionDelay: `${delay}s`,
-                transitionDuration: `${duration}s`,
-              }}
+              d={path}
+              className={`stella-core__line${isActive ? ' is-active' : ' is-closing'}`}
+              vectorEffect="non-scaling-stroke"
+              style={style}
             />
             <circle
-              cx={layout.offsetX}
-              cy={layout.offsetY}
-              r={2.2}
-              className="stella-core__node"
+              cx={layout.normalizedX}
+              cy={layout.normalizedY}
+              r={0.045}
+              className={`stella-core__node${isActive ? ' is-active' : ' is-closing'}`}
               style={{
-                opacity: isActive ? 0.8 : 0,
-                transitionDelay: `${delay + duration * 0.5}s`,
-                transitionDuration: `${duration}s`,
+                animationDelay: `${delay + duration * 0.5}s`,
+                animationDuration: `${duration}s`,
               }}
             />
           </g>

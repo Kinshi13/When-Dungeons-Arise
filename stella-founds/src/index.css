@@ -17,7 +17,22 @@
   --radius-md: 14px;
   --radius-lg: 20px;
   --radius-pill: 999px;
+  /* Shared by BottomNav's grid column and StellaCore's button so the two
+     components can never drift apart — single source of truth for width. */
+  --stella-core-slot: 68px;
   color-scheme: dark;
+}
+
+@media (max-width: 340px) {
+  :root {
+    --stella-core-slot: 60px;
+  }
+}
+
+@media (min-width: 900px) {
+  :root {
+    --stella-core-slot: 76px;
+  }
 }
 
 * {

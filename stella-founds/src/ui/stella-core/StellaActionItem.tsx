@@ -1,8 +1,8 @@
 import { forwardRef, type CSSProperties } from 'react';
-import type { StellaActionLayout } from './stellaLayout';
+import type { StellaConstellationLayout } from './stellaLayout';
 
 interface StellaActionItemProps {
-  layout: StellaActionLayout;
+  layout: StellaConstellationLayout;
   label: string;
   isActive: boolean;
   delay: number;
@@ -13,14 +13,14 @@ interface StellaActionItemProps {
 export const StellaActionItem = forwardRef<HTMLButtonElement, StellaActionItemProps>(
   function StellaActionItem({ layout, label, isActive, delay, duration, onClick }, ref) {
     const style: CSSProperties = {
-      '--tx': `${layout.offsetX}px`,
-      '--ty': `${layout.offsetY}px`,
-      transitionDelay: `${delay}s`,
-      transitionDuration: `${duration}s`,
+      '--nx': layout.normalizedX,
+      '--ny': layout.normalizedY,
+      animationDelay: `${delay}s`,
+      animationDuration: `${duration}s`,
     } as CSSProperties;
 
     return (
-      <div className={`stella-core__slot${isActive ? ' is-active' : ''}`} style={style}>
+      <div className={`stella-core__slot${isActive ? ' is-active' : ' is-closing'}`} style={style}>
         <button
           ref={ref}
           type="button"
