@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { duration as durationTokens, stagger as staggerTokens } from '../tokens/motion';
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
+import { useDocumentHidden } from '../hooks/useDocumentHidden';
 import { StellaCoreIcon } from '../icons/NavIcons';
 import { ConstellationLines } from './ConstellationLines';
 import { StellaActionItem } from './StellaActionItem';
@@ -21,6 +22,7 @@ export interface StellaCoreProps {
 export function StellaCore({ actions, activeContext, reducedMotion: reducedMotionOverride }: StellaCoreProps) {
   const systemReducedMotion = usePrefersReducedMotion();
   const reducedMotion = reducedMotionOverride ?? systemReducedMotion;
+  const isTabHidden = useDocumentHidden();
 
   const stagger = reducedMotion ? 0 : staggerTokens.short;
   const duration = reducedMotion ? durationTokens.fast : durationTokens.normal;
@@ -41,7 +43,11 @@ export function StellaCore({ actions, activeContext, reducedMotion: reducedMotio
           aria-hidden="true"
         />
       )}
-      <div className="stella-core" data-phase={phase} ref={rootRef}>
+      <div
+        className={`stella-core${isTabHidden ? ' is-tab-hidden' : ''}`}
+        data-phase={phase}
+        ref={rootRef}
+      >
         {phase !== 'closed' && (
           <div className="stella-core__orbit" id="stella-core-menu" role="menu">
             <ConstellationLines

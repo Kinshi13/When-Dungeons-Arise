@@ -95,7 +95,7 @@
    the button is "the heart" of the open menu without turning it neon. */
 .stella-core[data-phase='opening'] .stella-core__button,
 .stella-core[data-phase='open'] .stella-core__button {
-  box-shadow: var(--shadow-core-button), 0 0 16px rgba(232, 201, 136, 0.16);
+  box-shadow: var(--shadow-core-button), var(--glow-core), 0 0 16px rgba(232, 201, 136, 0.16);
 }
 
 .stella-core__button:active {
@@ -117,8 +117,24 @@
   inset: -5px;
   border-radius: 50%;
   background: radial-gradient(closest-side, rgba(120, 130, 220, 0.32), transparent 75%);
-  animation: stella-core-breathe 3.6s ease-in-out infinite;
+  opacity: var(--core-glow-strength, 1);
   pointer-events: none;
+}
+
+/* Idle "breathing" — closed, idle, tab visible, HIGH/MEDIUM tier only.
+   Every exclusion (reduced motion, LOW/REDUCED tier, tab hidden, any phase
+   but closed) lives in this ONE selector rather than as separate override
+   rules — a separate "disable" rule with lower specificity than this one
+   would silently lose the cascade (that was a real, confirmed bug: the
+   LOW-tier and reduced-motion overrides were both losing to this rule
+   because they had fewer selector terms). One rule means no cascade race
+   to get wrong. */
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-parallax-quality='low']):not([data-parallax-quality='reduced'])
+    .stella-core[data-phase='closed']:not(.is-tab-hidden)
+    .stella-core__glow {
+    animation: stella-core-breathe 7s ease-in-out infinite;
+  }
 }
 
 .stella-core__icon {
@@ -136,15 +152,14 @@
   transform: rotate(135deg);
 }
 
+/* No scale — opacity-only breathing per the "sem scale perceptível" brief. */
 @keyframes stella-core-breathe {
   0%,
   100% {
-    opacity: 0.45;
-    transform: scale(1);
+    opacity: calc(0.45 * var(--core-glow-strength, 1));
   }
   50% {
-    opacity: 0.75;
-    transform: scale(1.05);
+    opacity: calc(0.75 * var(--core-glow-strength, 1));
   }
 }
 

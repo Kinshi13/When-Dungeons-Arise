@@ -4,24 +4,26 @@ import { StellaParallaxLayer, useParallaxScene, StellaConstellationField, Stella
  * Mid/near-scene decoration: constellation lines on their own layer, orbit
  * rings + soft glow sharing a second "near-decoration" layer (Web Fase 6.5
  * merged what used to be two separate layers — same visual result, one
- * fewer transformed wrapper). Hides entirely under reduced/off motion
- * (only BackgroundLayer persists in that case) rather than rendering
- * motionless — keeps the reduced-motion view calm instead of just frozen.
- * Cluster count and whether rings/glow render at all come from the
- * scene's quality tier — LOW drops rings+glow outright, the cheapest
- * thing to cut.
+ * fewer transformed wrapper).
+ *
+ * Web Fase 6.6: this used to hide entirely under reduced/off motion — that
+ * was wrong. prefers-reduced-motion means "no movement", not "no scene";
+ * REDUCED tier keeps a real cluster/orbit count (see useParallaxQuality),
+ * so this only actually disappears when a tier's clusterCount is
+ * genuinely 0. `motionActive` no longer gates existence, only the CSS
+ * ambient-drift animation below does (see stellaScene.css).
  */
 export type DecorationLayerProps = Record<string, never>;
 
 export function DecorationLayer(_props: DecorationLayerProps) {
   const { layersById, motionActive, quality } = useParallaxScene();
-  if (!motionActive || quality.clusterCount === 0) return null;
+  if (quality.clusterCount === 0) return null;
 
   return (
     <>
       <StellaParallaxLayer
         config={layersById['constellation-lines'] ?? { id: 'constellation-lines', depthX: 1, depthY: 1, maxOffsetX: 0, maxOffsetY: 0 }}
-        className="stella-scene-constellation"
+        className={`stella-scene-constellation${motionActive ? ' is-active' : ''}`}
       >
         <StellaConstellationField clusterCount={quality.clusterCount} seed={3} />
       </StellaParallaxLayer>

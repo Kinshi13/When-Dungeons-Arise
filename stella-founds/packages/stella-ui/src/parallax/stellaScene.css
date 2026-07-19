@@ -1,5 +1,8 @@
 /* Visual treatment for the Stella Parallax Engine's default scene layers.
-   Night-sky blue/graphite, gold and lavender accents — no pure black, no neon. */
+   Night-sky blue/graphite, gold and lavender accents — no pure black, no neon.
+   Layer opacity itself comes from the quality tier via each layer's own
+   inline --layer-opacity (see StellaParallaxLayer) — these rules only add
+   color and the two ambient (non-cursor-driven) motion touches. */
 
 .stella-scene-background {
   background: radial-gradient(600px 400px at 20% 0%, rgba(109, 139, 255, 0.16), transparent 60%),
@@ -10,9 +13,49 @@
   color: var(--text-primary);
 }
 
+/* Distant stars drift very slightly on their own, independent of cursor
+   position — a "the sky is alive" cue while the pointer sits still. This
+   wrapper is a child of the StellaParallaxLayer div (which already carries
+   the cursor-follow transform), so the two transforms compose instead of
+   one overwriting the other. Only one @keyframes per layer, per the
+   "no dozens of independent animations" budget. */
+.stella-scene-stars__ambient {
+  position: absolute;
+  inset: 0;
+}
+
+.stella-scene-stars__ambient.is-active {
+  animation: stella-stars-drift 14s ease-in-out infinite;
+}
+
+@keyframes stella-stars-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(2px, -2px);
+  }
+}
+
 .stella-scene-constellation {
   color: var(--accent-gold);
-  opacity: 0.5;
+}
+
+/* Opacity breathes gently around the tier's own configured value (never a
+   hardcoded number) so LOW/MEDIUM/HIGH all keep their relative depth. */
+.stella-scene-constellation.is-active {
+  animation: stella-constellation-breathe 16s ease-in-out infinite;
+}
+
+@keyframes stella-constellation-breathe {
+  0%,
+  100% {
+    opacity: var(--layer-opacity, 0.3);
+  }
+  50% {
+    opacity: calc(var(--layer-opacity, 0.3) * 1.3);
+  }
 }
 
 .stella-scene-orbits {
@@ -25,4 +68,11 @@
 
 .stella-scene-particles {
   color: var(--accent-gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stella-scene-stars__ambient,
+  .stella-scene-constellation {
+    animation: none !important;
+  }
 }

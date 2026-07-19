@@ -1,7 +1,5 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
-import { useBreakpoint } from '../../layout/useBreakpoint';
-import { parallaxAmplitudeByBreakpoint } from './parallax.tokens';
 import { useParallaxInput } from './useParallaxInput';
 import { useParallaxMotion } from './useParallaxMotion';
 import { useParallaxQuality } from './useParallaxQuality';
@@ -27,7 +25,6 @@ export function StellaParallax({
 }: StellaParallaxProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const systemReducedMotion = usePrefersReducedMotion();
-  const breakpoint = useBreakpoint();
   const quality = useParallaxQuality();
 
   const isMotionActive =
@@ -42,11 +39,41 @@ export function StellaParallax({
   });
   useParallaxMotion(containerRef, inputRef, { enabled: isMotionActive });
 
-  const amplitude = parallaxAmplitudeByBreakpoint[breakpoint] * quality.amplitudeMultiplier;
   const layersById = useMemo(
     () => Object.fromEntries(layers.map((layer) => [layer.id, layer])),
     [layers],
   );
+
+  // Exposes the current tier as both a data-attribute (for CSS like
+  // `:root[data-parallax-quality="low"] { ... }`, e.g. Stella Core's glow)
+  // and as the exact named CSS custom properties from the Fase 6.6 brief —
+  // not the render path itself (StellaParallaxLayer sets its own inline
+  // --layer-max-x/y directly from `quality`, see that component), but a
+  // live, inspectable mirror of it in devtools for diagnosis, and the one
+  // place other components (StellaCore) can read --core-glow-strength from.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.parallaxQuality = quality.tier;
+    root.style.setProperty('--parallax-stars-x', `${quality.layers['distant-stars'].x}px`);
+    root.style.setProperty('--parallax-stars-y', `${quality.layers['distant-stars'].y}px`);
+    root.style.setProperty('--parallax-lines-x', `${quality.layers['constellation-lines'].x}px`);
+    root.style.setProperty('--parallax-lines-y', `${quality.layers['constellation-lines'].y}px`);
+    root.style.setProperty('--parallax-near-x', `${quality.layers['near-decoration'].x}px`);
+    root.style.setProperty('--parallax-near-y', `${quality.layers['near-decoration'].y}px`);
+    root.style.setProperty('--stars-opacity', `${quality.layers['distant-stars'].opacity}`);
+    root.style.setProperty('--lines-opacity', `${quality.layers['constellation-lines'].opacity}`);
+    root.style.setProperty('--near-opacity', `${quality.layers['near-decoration'].opacity}`);
+    root.style.setProperty('--core-glow-strength', `${quality.coreGlowStrength}`);
+  }, [quality]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    // eslint-disable-next-line no-console
+    console.log(
+      `[StellaParallax] quality=${quality.tier} | pointer=${isMotionActive ? 'active' : 'inactive'} | layers=${Object.keys(layersById).length} | amplitude(px)=`,
+      quality.layers,
+    );
+  }, [quality, isMotionActive, layersById]);
 
   const classes = ['stella-parallax-scene', fixed && 'stella-parallax-scene--fixed', className]
     .filter(Boolean)
@@ -54,7 +81,7 @@ export function StellaParallax({
 
   return (
     <div className={classes} ref={containerRef}>
-      <ParallaxSceneProvider value={{ layersById, amplitude, motionActive: isMotionActive, quality }}>
+      <ParallaxSceneProvider value={{ layersById, motionActive: isMotionActive, quality }}>
         {children}
       </ParallaxSceneProvider>
     </div>

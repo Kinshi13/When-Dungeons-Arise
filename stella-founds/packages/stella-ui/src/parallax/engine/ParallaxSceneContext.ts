@@ -5,11 +5,9 @@ import type { ParallaxQualitySettings } from './useParallaxQuality';
 export interface ParallaxSceneContextValue {
   /** The scene's layer configs, keyed by id, as passed to <StellaParallax layers={...}>. */
   layersById: Record<string, ParallaxLayerConfig>;
-  /** Responsive amplitude multiplier (desktop=1, tablet=0.6, mobile=0.35), already folded together with the quality tier's own multiplier. */
-  amplitude: number;
   /** false under reduced/off motion mode — decorative groups (DecorationLayer, ForegroundLayer) hide themselves in that case, keeping only the static background per the reduced-motion brief. */
   motionActive: boolean;
-  /** Element-count budget for the current device/tier — BackgroundLayer/DecorationLayer read this instead of hardcoding star/cluster counts. */
+  /** Element-count budget, per-layer amplitude/opacity and glow strength for the current device/tier — BackgroundLayer/DecorationLayer/StellaParallaxLayer read this instead of hardcoding numbers. */
   quality: ParallaxQualitySettings;
 }
 
@@ -18,12 +16,16 @@ const defaultQuality: ParallaxQualitySettings = {
   starCount: 30,
   clusterCount: 3,
   showOrbitsAndGlow: true,
-  amplitudeMultiplier: 1,
+  layers: {
+    'distant-stars': { x: 4, y: 4, opacity: 0.55 },
+    'constellation-lines': { x: 8.5, y: 8.5, opacity: 0.32 },
+    'near-decoration': { x: 14, y: 14, opacity: 0.3 },
+  },
+  coreGlowStrength: 1,
 };
 
 const defaultValue: ParallaxSceneContextValue = {
   layersById: {},
-  amplitude: 1,
   motionActive: true,
   quality: defaultQuality,
 };

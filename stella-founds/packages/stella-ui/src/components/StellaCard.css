@@ -15,6 +15,22 @@
   pointer-events: none;
 }
 
+/* Faint "light from above" highlight — a thin gradient hugging the top
+   edge, separate from ::before's gold radial glow. This is what actually
+   reads as depth/lift, not the shadow alone. */
+.stella-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--surface-highlight) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.stella-card--active {
+  border-color: rgba(232, 201, 136, 0.4);
+  box-shadow: var(--shadow-card), var(--glow-gold-active);
+}
+
 .stella-card--interactive {
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
 }

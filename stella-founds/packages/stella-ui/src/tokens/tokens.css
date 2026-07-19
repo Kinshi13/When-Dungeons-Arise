@@ -32,6 +32,19 @@
   --shadow-card: 0 2px 10px rgba(6, 8, 20, 0.22);
   --shadow-elevated: 0 10px 30px rgba(6, 8, 20, 0.38);
   --glow-gold-soft: 0 0 0 1px rgba(232, 201, 136, 0.14);
+  /* A stronger relative of --glow-gold-soft, for a card that's actively
+     selected/active rather than merely hovered — still discreet, never neon. */
+  --glow-gold-active: 0 0 0 1px rgba(232, 201, 136, 0.28), 0 0 16px rgba(232, 201, 136, 0.12);
+  /* Stella Core's halo — referenced by StellaCore.css, scaled by
+     --core-glow-strength (set per parallax quality tier, see StellaParallax). */
+  --glow-core: 0 0 20px rgba(120, 130, 220, 0.28);
+  /* Faint top-left highlight on cards — the "light source from above"
+     depth cue, extremely subtle. */
+  --surface-highlight: rgba(255, 255, 255, 0.05);
+  /* Default before StellaParallax's JS sets the real per-tier value (or on
+     screens where no StellaParallax is mounted at all, e.g. some Android
+     screens) — full strength, matching HIGH. */
+  --core-glow-strength: 1;
   --z-parallax-background: 0;
   --z-parallax-decoration: 1;
   --z-parallax-foreground: 5;
