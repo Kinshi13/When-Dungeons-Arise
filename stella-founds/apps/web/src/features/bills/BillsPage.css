@@ -3,6 +3,14 @@
   z-index: var(--z-content);
 }
 
+.bills-page__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0;
+}
+
 .bills-page__summary {
   color: var(--text-secondary);
   font-size: 13px;

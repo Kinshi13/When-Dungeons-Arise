@@ -25,6 +25,16 @@
   color: var(--status-danger);
 }
 
+.stella-toast--warning {
+  border-color: rgba(240, 197, 107, 0.4);
+  color: var(--status-warning);
+}
+
+.stella-toast--info {
+  border-color: rgba(109, 139, 255, 0.4);
+  color: var(--status-info);
+}
+
 @keyframes stella-toast-fade {
   0% {
     opacity: 0;

@@ -1,5 +1,6 @@
 import { useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import { useDismissableOverlay } from '../hooks/useDismissableOverlay';
+import { useLocalStorageState } from '../hooks/useLocalStorageState';
 import { StellaIconButton } from './StellaIconButton';
 import './StellaFloatingPanel.css';
 
@@ -13,14 +14,26 @@ export function StellaFloatingPanel({
   title,
   onClose,
   children,
+  persistKey,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  /** When set, position and minimized state survive a reload under this localStorage key — pass a stable, unique key per panel instance (e.g. the calculator's). Omit for one-off panels that shouldn't persist. */
+  persistKey?: string;
 }) {
   useDismissableOverlay(onClose);
-  const [minimized, setMinimized] = useState(false);
-  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
+  const [minimizedPersisted, setMinimizedPersisted] = useLocalStorageState(`${persistKey}:minimized`, false);
+  const [positionPersisted, setPositionPersisted] = useLocalStorageState<{ x: number; y: number } | null>(
+    `${persistKey}:position`,
+    null,
+  );
+  const [minimizedLocal, setMinimizedLocal] = useState(false);
+  const [positionLocal, setPositionLocal] = useState<{ x: number; y: number } | null>(null);
+  const minimized = persistKey ? minimizedPersisted : minimizedLocal;
+  const setMinimized = persistKey ? setMinimizedPersisted : setMinimizedLocal;
+  const position = persistKey ? positionPersisted : positionLocal;
+  const setPosition = persistKey ? setPositionPersisted : setPositionLocal;
   const panelRef = useRef<HTMLDivElement>(null);
   const dragOrigin = useRef<{ pointerX: number; pointerY: number; panelX: number; panelY: number } | null>(null);
 

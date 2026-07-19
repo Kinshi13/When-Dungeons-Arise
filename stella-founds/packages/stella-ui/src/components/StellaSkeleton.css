@@ -1,0 +1,28 @@
+.stella-skeleton {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    100deg,
+    var(--surface-glass) 40%,
+    var(--surface-elevated) 50%,
+    var(--surface-glass) 60%
+  );
+  background-size: 200% 100%;
+  animation: stella-skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes stella-skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stella-skeleton {
+    animation: none;
+    background: var(--surface-glass);
+  }
+}

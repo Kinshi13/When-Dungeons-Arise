@@ -1,5 +1,5 @@
-import { Suspense, useMemo, useState } from 'react';
-import { useLocation, Route, Routes } from 'react-router-dom';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate, Route, Routes } from 'react-router-dom';
 import {
   ResponsiveContainer,
   DesktopLayout,
@@ -13,6 +13,7 @@ import {
   BackgroundLayer,
   DecorationLayer,
   stellaParallaxScene,
+  StellaOfflineBanner,
 } from '@stella-founds/stella-ui';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
@@ -28,8 +29,32 @@ import { GlobalCalculatorHost } from '../features/calculator/GlobalCalculatorHos
 import type { FinanceEntryType } from '@stella-founds/core';
 import './AppShell.css';
 
+const LAST_SCREEN_KEY = 'stella-last-screen';
+
 function AppRoutes() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const hasRestoredRef = useRef(false);
+
+  // One-shot: landing on "/" fresh (not via an explicit link/back-button
+  // navigation elsewhere in the app) restores whatever screen was open last
+  // time. Any direct/deep link still works exactly as typed — this only
+  // ever fires for the bare root path, and only once per page load.
+  useEffect(() => {
+    if (hasRestoredRef.current) return;
+    hasRestoredRef.current = true;
+    if (location.pathname !== '/') return;
+    const lastScreen = window.localStorage.getItem(LAST_SCREEN_KEY);
+    if (lastScreen && lastScreen !== '/') {
+      navigate(lastScreen, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(LAST_SCREEN_KEY, location.pathname);
+  }, [location.pathname]);
+
   return (
     <Suspense fallback={<p>Carregando…</p>}>
       <Routes>
@@ -73,6 +98,8 @@ function AppShellContent() {
 
   return (
     <>
+      <StellaOfflineBanner />
+
       <StellaParallax fixed layers={stellaParallaxScene} className="app-shell__background">
         <BackgroundLayer />
         <DecorationLayer />

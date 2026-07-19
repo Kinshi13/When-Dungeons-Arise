@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import './StellaToast.css';
 
-export type StellaToastTone = 'success' | 'error' | 'info';
+export type StellaToastTone = 'success' | 'error' | 'warning' | 'info';
 
 interface StellaToastMessage {
   id: number;

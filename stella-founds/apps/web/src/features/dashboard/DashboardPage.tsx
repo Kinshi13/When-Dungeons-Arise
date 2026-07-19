@@ -3,21 +3,40 @@ import {
   StellaAmountCard,
   EntryListCard,
   StellaConstellationDivider,
+  StellaEmptyState,
+  StellaButton,
   PageTransition,
 } from '@stella-founds/stella-ui';
 import { formatCurrency, toDateOnly, todayIso } from '@stella-founds/core';
 import { useDashboardSummary } from './useDashboardSummary';
 import { DashboardHero } from './DashboardHero';
+import { DashboardSkeleton } from './DashboardSkeleton';
 import './DashboardPage.css';
 
 export function DashboardPage() {
-  const summary = useDashboardSummary();
+  const { summary, isLoading, error, reload } = useDashboardSummary();
   const today = todayIso();
 
-  if (!summary) {
+  if (isLoading) {
     return (
-      <ScreenShell title="Hoje">
-        <p>Carregando seu céu financeiro…</p>
+      <ScreenShell title="Hoje" hideHeader>
+        <DashboardSkeleton />
+      </ScreenShell>
+    );
+  }
+
+  if (error || !summary) {
+    return (
+      <ScreenShell title="Hoje" hideHeader>
+        <div className="dashboard-page__error">
+          <StellaEmptyState
+            title="Não foi possível carregar seu céu financeiro"
+            message="Verifique sua conexão e tente novamente."
+          />
+          <StellaButton variant="primary" onClick={reload}>
+            Tentar novamente
+          </StellaButton>
+        </div>
       </ScreenShell>
     );
   }

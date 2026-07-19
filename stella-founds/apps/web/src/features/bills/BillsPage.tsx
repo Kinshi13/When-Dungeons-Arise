@@ -11,14 +11,18 @@ import {
   StellaConfirmDialog,
   StellaBottomSheet,
   StellaDrawer,
+  StellaEmptyState,
+  StellaButton,
   useBreakpoint,
   showStellaToast,
   PageTransition,
+  useLocalStorageState,
 } from '@stella-founds/stella-ui';
 import { useBillsData } from './useBillsData';
 import { BillsFiltersBar } from './BillsFiltersBar';
 import { FinanceEntryList } from './FinanceEntryList';
 import { FinanceEntryDetails } from './FinanceEntryDetails';
+import { BillsListSkeleton } from './BillsListSkeleton';
 import { useFinanceDialog } from '../finance/FinanceDialogContext';
 import './BillsPage.css';
 
@@ -39,8 +43,8 @@ export function BillsPage() {
   const { financeService } = useAppContainer();
   const { openEdit } = useFinanceDialog();
   const breakpoint = useBreakpoint();
-  const { entries, categories, nuclei } = useBillsData();
-  const [filter, setFilter] = useState<FinanceEntryFilter>('all');
+  const { entries, categories, nuclei, isLoading, error, reload } = useBillsData();
+  const [filter, setFilter] = useLocalStorageState<FinanceEntryFilter>('stella-bills-filter', 'all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
@@ -100,8 +104,18 @@ export function BillsPage() {
 
   const empty = emptyMessages[filter];
 
-  const list = !entries ? (
-    <p>Carregando…</p>
+  const list = isLoading ? (
+    <BillsListSkeleton />
+  ) : error ? (
+    <div className="bills-page__error">
+      <StellaEmptyState
+        title="Não foi possível carregar suas contas"
+        message="Verifique sua conexão e tente novamente."
+      />
+      <StellaButton variant="primary" onClick={reload}>
+        Tentar novamente
+      </StellaButton>
+    </div>
   ) : (
     <FinanceEntryList
       entries={filtered}

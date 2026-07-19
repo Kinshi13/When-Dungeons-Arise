@@ -38,7 +38,7 @@ export function GlobalCalculatorHost() {
   }
 
   return (
-    <StellaFloatingPanel title="Calculadora" onClose={closeCalculator}>
+    <StellaFloatingPanel title="Calculadora" onClose={closeCalculator} persistKey="stella-calculator-panel">
       {content}
     </StellaFloatingPanel>
   );

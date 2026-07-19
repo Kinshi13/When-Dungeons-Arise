@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   useAppContainer,
   generateId,
+  emitFinanceChanged,
   type FinanceCategory,
   type FinanceNucleus,
 } from '@stella-founds/core';
@@ -15,6 +16,7 @@ import {
 } from '@stella-founds/stella-ui';
 import { useFinanceDialog } from './FinanceDialogContext';
 import { useGlobalCalculator } from '../calculator/GlobalCalculatorProvider';
+import { logError } from '../../lib/logError';
 
 const typeTitles: Record<string, string> = {
   expense: 'Adicionar gasto',
@@ -46,40 +48,51 @@ export function FinanceEntryDialog() {
   if (!state.open) return null;
 
   async function handleSubmit(values: FinanceEntryFormValues) {
-    if (state.entry) {
-      await financeService.updateEntry(state.entry.id, values);
-      close();
-      showStellaToast('Lançamento atualizado.', 'success');
-      return;
-    }
+    try {
+      if (state.entry) {
+        await financeService.updateEntry(state.entry.id, values);
+        close();
+        showStellaToast('Lançamento atualizado.', 'success');
+        return;
+      }
 
-    if (values.recurring && values.dueDate) {
-      const rule = {
-        id: generateId(),
-        title: values.title,
-        amount: values.amount,
-        type: values.type,
-        categoryId: values.categoryId,
-        nucleusId: values.nucleusId,
-        frequency: 'monthly' as const,
-        interval: 1,
-        dueDay: new Date(values.dueDate).getDate(),
-        startDate: values.dueDate,
-        endDate: null,
-        reminderDaysBefore: 3,
-        autoGenerate: true,
-        active: true,
-      };
-      await recurringRuleRepository.save(rule);
-      await recurrenceService.generateForRule(rule.id);
-      close();
-      showStellaToast('Lançamento recorrente criado.', 'success');
-      return;
-    }
+      if (values.recurring && values.dueDate) {
+        const rule = {
+          id: generateId(),
+          title: values.title,
+          amount: values.amount,
+          type: values.type,
+          categoryId: values.categoryId,
+          nucleusId: values.nucleusId,
+          frequency: 'monthly' as const,
+          interval: 1,
+          dueDay: new Date(values.dueDate).getDate(),
+          startDate: values.dueDate,
+          endDate: null,
+          reminderDaysBefore: 3,
+          autoGenerate: true,
+          active: true,
+        };
+        await recurringRuleRepository.save(rule);
+        await recurrenceService.generateForRule(rule.id);
+        // recurringRuleRepository.save() is a direct repository write, not a
+        // FinanceService call — those emit finance-changed themselves, this
+        // one doesn't, so the dashboard/list hooks wouldn't otherwise learn
+        // a new rule exists (generateForRule only emits when it produced at
+        // least one occurrence).
+        emitFinanceChanged();
+        close();
+        showStellaToast('Lançamento recorrente criado.', 'success');
+        return;
+      }
 
-    await financeService.createEntry({ ...values, recurrenceRuleId: null });
-    close();
-    showStellaToast('Lançamento salvo.', 'success');
+      await financeService.createEntry({ ...values, recurrenceRuleId: null });
+      close();
+      showStellaToast('Lançamento salvo.', 'success');
+    } catch (err) {
+      logError('FinanceEntryDialog.handleSubmit', err);
+      showStellaToast('Não foi possível salvar o lançamento.', 'error');
+    }
   }
 
   const title = state.entry ? 'Editar lançamento' : typeTitles[state.initialType];

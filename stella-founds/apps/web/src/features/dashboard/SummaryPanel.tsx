@@ -1,17 +1,26 @@
-import { StellaCard, StellaEmptyState } from '@stella-founds/stella-ui';
+import { StellaCard, StellaEmptyState, StellaSkeleton } from '@stella-founds/stella-ui';
 import { formatCurrency, toDateOnly } from '@stella-founds/core';
 import { useDashboardSummary } from './useDashboardSummary';
 import './SummaryPanel.css';
 
 /** Desktop right panel / tablet drawer content — no charts yet, just the four headline numbers. */
 export function SummaryPanel() {
-  const summary = useDashboardSummary();
+  const { summary, isLoading, error } = useDashboardSummary();
 
   return (
     <div className="summary-panel">
       <h2 className="summary-panel__title">Resumo financeiro</h2>
-      {!summary ? (
-        <p>Carregando…</p>
+      {isLoading ? (
+        <div className="summary-panel__list" aria-hidden="true">
+          {[0, 1, 2, 3].map((i) => (
+            <StellaCard className="summary-panel__row" key={i}>
+              <StellaSkeleton width={80} height={11} />
+              <StellaSkeleton width={110} height={14} />
+            </StellaCard>
+          ))}
+        </div>
+      ) : error || !summary ? (
+        <StellaEmptyState title="Resumo indisponível" message="Não foi possível carregar os dados agora." />
       ) : (
         <div className="summary-panel__list">
           <StellaCard className="summary-panel__row">
