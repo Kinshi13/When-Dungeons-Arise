@@ -8,7 +8,7 @@ import {
   PageTransition,
 } from '@stella-founds/stella-ui';
 import { formatCurrency, toDateOnly, todayIso } from '@stella-founds/core';
-import { useDashboardSummary } from './useDashboardSummary';
+import { useDashboardSummary } from './DashboardSummaryContext';
 import { DashboardHero } from './DashboardHero';
 import { DashboardSkeleton } from './DashboardSkeleton';
 import './DashboardPage.css';

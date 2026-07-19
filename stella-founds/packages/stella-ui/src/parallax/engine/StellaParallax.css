@@ -7,11 +7,18 @@
 
 /* App-shell-level background: pinned to the viewport, behind sidebar,
    header, panels and content alike, instead of scoped to one page's
-   content column. Low z-index (see tokens/zIndex.ts) keeps it under
-   every real UI element without needing pointer-events: none — it still
-   receives pointer input over empty space for the parallax motion. */
+   content column. pointer-events: none makes it fully click-through (it
+   never needs to receive events itself — see StellaParallax's `fixed`
+   prop, which switches cursor tracking to a window-level listener
+   instead of one on this element) so it can never intercept a click or
+   interfere with touch scrolling on mobile. transform: translateZ(0)
+   promotes it to its own compositor layer once, up front, instead of the
+   browser deciding to on first animation frame. */
 .stella-parallax-scene--fixed {
   position: fixed;
   inset: 0;
   z-index: var(--z-parallax-background);
+  pointer-events: none;
+  overflow: hidden;
+  transform: translateZ(0);
 }

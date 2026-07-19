@@ -4,6 +4,7 @@ import { useBreakpoint } from '../../layout/useBreakpoint';
 import { parallaxAmplitudeByBreakpoint } from './parallax.tokens';
 import { useParallaxInput } from './useParallaxInput';
 import { useParallaxMotion } from './useParallaxMotion';
+import { useParallaxQuality } from './useParallaxQuality';
 import { ParallaxSceneProvider } from './ParallaxSceneContext';
 import type { StellaParallaxProps } from './parallax.types';
 import './StellaParallax.css';
@@ -27,13 +28,21 @@ export function StellaParallax({
   const containerRef = useRef<HTMLDivElement>(null);
   const systemReducedMotion = usePrefersReducedMotion();
   const breakpoint = useBreakpoint();
+  const quality = useParallaxQuality();
 
-  const isMotionActive = enabled && motionMode === 'full' && !reducedMotion && !systemReducedMotion;
+  const isMotionActive =
+    enabled && motionMode === 'full' && !reducedMotion && !systemReducedMotion && quality.tier !== 'reduced';
 
-  const inputRef = useParallaxInput(containerRef, { enabled: isMotionActive });
+  // Fixed (viewport-pinned) scenes are pointer-events:none, so they can
+  // only track the cursor via a window-level listener — see
+  // useParallaxInput's `mode` doc comment.
+  const inputRef = useParallaxInput(containerRef, {
+    enabled: isMotionActive,
+    mode: fixed ? 'viewport' : 'container',
+  });
   useParallaxMotion(containerRef, inputRef, { enabled: isMotionActive });
 
-  const amplitude = parallaxAmplitudeByBreakpoint[breakpoint];
+  const amplitude = parallaxAmplitudeByBreakpoint[breakpoint] * quality.amplitudeMultiplier;
   const layersById = useMemo(
     () => Object.fromEntries(layers.map((layer) => [layer.id, layer])),
     [layers],
@@ -45,7 +54,7 @@ export function StellaParallax({
 
   return (
     <div className={classes} ref={containerRef}>
-      <ParallaxSceneProvider value={{ layersById, amplitude, motionActive: isMotionActive }}>
+      <ParallaxSceneProvider value={{ layersById, amplitude, motionActive: isMotionActive, quality }}>
         {children}
       </ParallaxSceneProvider>
     </div>

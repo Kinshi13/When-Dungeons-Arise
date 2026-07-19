@@ -32,8 +32,12 @@ export function StellaParallaxLayer({
     '--layer-max-y': `${config.maxOffsetY * resolvedAmplitude}px`,
     '--layer-scale': config.scale ?? 1,
     '--layer-rotate': `${config.rotate ?? 0}deg`,
-    '--layer-blur': `${config.blur ?? 0}px`,
     '--layer-opacity': config.opacity ?? 1,
+    // Omitted entirely (not even set to 0px) when unused — a `filter`
+    // property at all, even blur(0px), can push a browser to allocate a
+    // separate compositing layer for it. None of the current scene layers
+    // use blur, so this keeps every layer on the cheap transform-only path.
+    ...(config.blur ? { filter: `blur(${config.blur}px)` } : {}),
     zIndex: config.zIndex,
   } as CSSProperties;
 

@@ -10,6 +10,50 @@ function resolveBreakpoint(width: number): StellaBreakpoint {
 }
 
 /**
+ * Single shared `resize` listener for the whole app, no matter how many
+ * components call useBreakpoint() — six call sites used to mean six
+ * independent listeners (ResponsiveContainer, StellaParallax, BillsPage,
+ * GlobalCalculatorHost, MarkPaidPicker, FinanceEntryDialog), each also
+ * re-running its own resolveBreakpoint() on every pixel of a window drag.
+ * rAF-throttled so a resize burst collapses to at most one recompute per
+ * frame instead of one per 'resize' event.
+ */
+let listeners: Set<(breakpoint: StellaBreakpoint) => void> | null = null;
+let currentBreakpoint: StellaBreakpoint = 'desktop';
+let pendingFrame: number | null = null;
+
+function handleWindowResize() {
+  if (pendingFrame !== null) return;
+  pendingFrame = requestAnimationFrame(() => {
+    pendingFrame = null;
+    const next = resolveBreakpoint(window.innerWidth);
+    if (next === currentBreakpoint) return;
+    currentBreakpoint = next;
+    listeners?.forEach((listener) => listener(next));
+  });
+}
+
+function subscribe(listener: (breakpoint: StellaBreakpoint) => void): () => void {
+  if (!listeners) {
+    listeners = new Set();
+    currentBreakpoint = resolveBreakpoint(window.innerWidth);
+    window.addEventListener('resize', handleWindowResize, { passive: true });
+  }
+  listeners.add(listener);
+  return () => {
+    listeners?.delete(listener);
+    if (listeners?.size === 0) {
+      window.removeEventListener('resize', handleWindowResize);
+      if (pendingFrame !== null) {
+        cancelAnimationFrame(pendingFrame);
+        pendingFrame = null;
+      }
+      listeners = null;
+    }
+  };
+}
+
+/**
  * Tracks the current Stella breakpoint (mobile / tablet / desktop) from the
  * shared token thresholds, so layout decisions never hardcode a device size.
  * Desktop starts at 1440px per the Web App Shell spec; tablet covers
@@ -20,14 +64,7 @@ export function useBreakpoint(): StellaBreakpoint {
     typeof window === 'undefined' ? 'desktop' : resolveBreakpoint(window.innerWidth),
   );
 
-  useEffect(() => {
-    function handleResize() {
-      setBreakpoint(resolveBreakpoint(window.innerWidth));
-    }
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  useEffect(() => subscribe(setBreakpoint), []);
 
   return breakpoint;
 }

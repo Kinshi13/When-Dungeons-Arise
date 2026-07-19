@@ -4,31 +4,28 @@ import { generateStarField } from './starField';
 import './stellaScene.css';
 
 /**
- * The Stella scene's base layer: sky gradient + distant stars. Always
- * rendered, even under reduced/off motion — "preservar apenas o fundo
- * Stella" (section 10) — the other layers (Decoration/Foreground) hide
- * themselves in that case, this one doesn't.
+ * The Stella scene's base layer: sky gradient + distant stars, sharing a
+ * single StellaParallaxLayer wrapper (Web Fase 6.5 merged what used to be
+ * two separately-transformed layers — same near-identical depth, so the
+ * merge is visually silent). Always rendered, even under reduced/off
+ * motion — "preservar apenas o fundo Stella" — the other layers
+ * (DecorationLayer) hide themselves in that case, this one doesn't. Star
+ * count comes from the scene's quality tier, not a fixed number.
  */
 export type BackgroundLayerProps = Record<string, never>;
 
 export function BackgroundLayer(_props: BackgroundLayerProps) {
-  const { layersById } = useParallaxScene();
-  const stars = useMemo(() => generateStarField(40, 1), []);
+  const { layersById, quality } = useParallaxScene();
+  const stars = useMemo(() => generateStarField(quality.starCount, 1), [quality.starCount]);
 
   return (
-    <>
-      <StellaParallaxLayer
-        config={layersById['background-gradient'] ?? { id: 'background-gradient', depthX: 1, depthY: 1, maxOffsetX: 0, maxOffsetY: 0 }}
-        className="stella-scene-background"
-      />
-      <StellaParallaxLayer
-        config={layersById['distant-stars'] ?? { id: 'distant-stars', depthX: 1, depthY: 1, maxOffsetX: 0, maxOffsetY: 0 }}
-        className="stella-scene-stars"
-      >
-        {stars.map((star, index) => (
-          <StellaStarParticle key={index} left={star.left} top={star.top} size={star.size} opacity={star.opacity} />
-        ))}
-      </StellaParallaxLayer>
-    </>
+    <StellaParallaxLayer
+      config={layersById['distant-stars'] ?? { id: 'distant-stars', depthX: 1, depthY: 1, maxOffsetX: 0, maxOffsetY: 0 }}
+      className="stella-scene-background stella-scene-stars"
+    >
+      {stars.map((star, index) => (
+        <StellaStarParticle key={index} left={star.left} top={star.top} size={star.size} opacity={star.opacity} />
+      ))}
+    </StellaParallaxLayer>
   );
 }

@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, Route, Routes } from 'react-router-dom';
 import {
   ResponsiveContainer,
@@ -18,7 +18,9 @@ import {
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { SummaryPanel } from '../features/dashboard/SummaryPanel';
-import { DashboardPage, BillsPage, PlaceholderPage } from '../router';
+import { DashboardSummaryProvider } from '../features/dashboard/DashboardSummaryContext';
+import { DashboardPage } from '../features/dashboard/DashboardPage';
+import { BillsPage, PlaceholderPage } from '../router';
 import { bottomNavItems } from '../features/navigation/navItems';
 import { useWebStellaCoreActions } from '../features/stellaCore/useWebStellaCoreActions';
 import { FinanceDialogProvider, useFinanceDialog } from '../features/finance/FinanceDialogContext';
@@ -58,6 +60,10 @@ function AppRoutes() {
   return (
     <Suspense fallback={<p>Carregando…</p>}>
       <Routes>
+        {/* Dashboard is a static import (see the top of this file), not
+            React.lazy — it's the very first thing anyone sees, so it
+            ships in the main chunk instead of costing an extra
+            network round-trip before first paint. */}
         <Route path="/" element={<DashboardPage />} />
         <Route path="/contas" element={<BillsPage />} />
         <Route path="/calendario" element={<PlaceholderPage title="Calendário" transitionKey={location.pathname} />} />
@@ -74,7 +80,15 @@ const actionToEntryType: Partial<Record<string, FinanceEntryType>> = {
   'new-income': 'income',
 };
 
-function AppShellContent() {
+/**
+ * The only piece of the shell that actually needs the current route —
+ * isolated into its own component so navigating doesn't re-render
+ * AppShellContent (and, with it, Sidebar/Header/SummaryPanel/the global
+ * parallax — none of which depend on the pathname at all). Web Fase 6.5:
+ * this used to live inline in AppShellContent, which meant every
+ * navigation re-rendered the entire shell subtree for no reason.
+ */
+function AppStellaCore() {
   const location = useLocation();
   const { openCreate } = useFinanceDialog();
   const { openCalculator } = useGlobalCalculator();
@@ -91,11 +105,15 @@ function AppShellContent() {
     onPlaceholder: (label) => showStellaToast(`${label} — em breve`, 'info'),
   });
 
-  const stellaCore = useMemo(
-    () => <StellaCore actions={stellaCoreActions} activeContext={location.pathname} />,
-    [stellaCoreActions, location.pathname],
+  return (
+    <>
+      <StellaCore actions={stellaCoreActions} activeContext={location.pathname} />
+      {markPaidOpen && <MarkPaidPicker onClose={() => setMarkPaidOpen(false)} />}
+    </>
   );
+}
 
+function AppShellContent() {
   return (
     <>
       <StellaOfflineBanner />
@@ -115,7 +133,7 @@ function AppShellContent() {
                 main={<AppRoutes />}
                 rightPanel={<SummaryPanel />}
               />
-              {stellaCore}
+              <AppStellaCore />
             </>
           }
           tablet={
@@ -126,21 +144,20 @@ function AppShellContent() {
                 main={<AppRoutes />}
                 rightPanel={<SummaryPanel />}
               />
-              {stellaCore}
+              <AppStellaCore />
             </>
           }
           mobile={
             <MobileLayout
               header={null}
               main={<AppRoutes />}
-              stellaCore={stellaCore}
+              stellaCore={<AppStellaCore />}
               bottomNav={<StellaBottomNavigation items={bottomNavItems} />}
             />
           }
         />
 
         <FinanceEntryDialog />
-        {markPaidOpen && <MarkPaidPicker onClose={() => setMarkPaidOpen(false)} />}
         <GlobalCalculatorHost />
         <StellaToastViewport />
       </div>
@@ -152,7 +169,9 @@ export function AppShell() {
   return (
     <FinanceDialogProvider>
       <GlobalCalculatorProvider>
-        <AppShellContent />
+        <DashboardSummaryProvider>
+          <AppShellContent />
+        </DashboardSummaryProvider>
       </GlobalCalculatorProvider>
     </FinanceDialogProvider>
   );

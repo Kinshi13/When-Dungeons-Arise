@@ -1,6 +1,6 @@
 import { StellaCard, StellaEmptyState, StellaSkeleton } from '@stella-founds/stella-ui';
 import { formatCurrency, toDateOnly } from '@stella-founds/core';
-import { useDashboardSummary } from './useDashboardSummary';
+import { useDashboardSummary } from './DashboardSummaryContext';
 import './SummaryPanel.css';
 
 /** Desktop right panel / tablet drawer content — no charts yet, just the four headline numbers. */

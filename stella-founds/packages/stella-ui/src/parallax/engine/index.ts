@@ -2,6 +2,7 @@ export * from './parallax.types';
 export * from './parallax.tokens';
 export * from './useParallaxInput';
 export * from './useParallaxMotion';
+export * from './useParallaxQuality';
 export * from './ParallaxSceneContext';
 export * from './StellaParallax';
 export * from './StellaParallaxLayer';

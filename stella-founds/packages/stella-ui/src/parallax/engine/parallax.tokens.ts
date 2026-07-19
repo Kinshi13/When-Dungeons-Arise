@@ -6,13 +6,17 @@ import type { ParallaxLayerConfig } from './parallax.types';
  * nearer ones read a little more mobile — kept subtle per the "elegant,
  * not exaggerated" brief.
  */
+/**
+ * Three-layer Stella scene, back to front (Web Fase 6.5 consolidated this
+ * from six wrapper divs down to three — same visual composition approved
+ * in Fase 5, just fewer independently-transformed elements: the gradient
+ * backdrop now shares distant-stars' layer, and orbital rings + soft glow
+ * share one "near decoration" layer instead of two).
+ */
 export const stellaParallaxScene: ParallaxLayerConfig[] = [
-  { id: 'background-gradient', depthX: 1, depthY: 0.6, maxOffsetX: 1, maxOffsetY: 1, scale: 1.005, zIndex: 0, enabled: true },
   { id: 'distant-stars', depthX: 1, depthY: 0.6, maxOffsetX: 3, maxOffsetY: 3, scale: 1.01, zIndex: 1, enabled: true },
   { id: 'constellation-lines', depthX: 1, depthY: 0.6, maxOffsetX: 5, maxOffsetY: 5, scale: 1.015, zIndex: 2, enabled: true },
-  { id: 'orbital-rings', depthX: 1, depthY: 0.6, maxOffsetX: 7, maxOffsetY: 7, scale: 1.02, zIndex: 3, enabled: true },
-  { id: 'soft-glow', depthX: 1, depthY: 0.6, maxOffsetX: 9, maxOffsetY: 9, scale: 1.025, zIndex: 4, enabled: true },
-  { id: 'foreground-particles', depthX: 1, depthY: 0.6, maxOffsetX: 12, maxOffsetY: 12, scale: 1.03, zIndex: 5, enabled: true },
+  { id: 'near-decoration', depthX: 1, depthY: 0.6, maxOffsetX: 8, maxOffsetY: 8, scale: 1.02, zIndex: 3, enabled: true },
 ];
 
 /** Amplitude multiplier by Stella shell breakpoint — same layer config everywhere, just less travel on smaller screens. */

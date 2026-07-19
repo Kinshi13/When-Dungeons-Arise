@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useAppContainer, onFinanceChanged, type HomeSummary } from '@stella-founds/core';
 import { logError } from '../../lib/logError';
 
@@ -12,8 +12,16 @@ export interface DashboardSummaryState {
   reload: () => void;
 }
 
-/** Same HomeSummaryService Android uses — only the storage underneath differs (IndexedDB either way, see createContainer). */
-export function useDashboardSummary(): DashboardSummaryState {
+const DashboardSummaryContext = createContext<DashboardSummaryState | null>(null);
+
+/**
+ * One HomeSummaryService.getSummary() call feeds both the Dashboard page
+ * and the always-mounted SummaryPanel — before Web Fase 6.5 each called
+ * useDashboardSummary() independently, so every finance-changed event (and
+ * every mount) fetched the same summary twice. Mount once near the app
+ * root, above both consumers.
+ */
+export function DashboardSummaryProvider({ children }: { children: ReactNode }) {
   const { homeSummaryService } = useAppContainer();
   const [summary, setSummary] = useState<HomeSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +43,7 @@ export function useDashboardSummary(): DashboardSummaryState {
       })
       .catch((err: unknown) => {
         if (cancelledRef.current) return;
-        logError('useDashboardSummary', err);
+        logError('DashboardSummaryProvider', err);
         setError(err instanceof Error ? err : new Error('Failed to load dashboard summary'));
       })
       .finally(() => {
@@ -56,5 +64,15 @@ export function useDashboardSummary(): DashboardSummaryState {
     };
   }, [load]);
 
-  return { summary, isLoading, isRefreshing, error, reload: load };
+  const value: DashboardSummaryState = { summary, isLoading, isRefreshing, error, reload: load };
+
+  return <DashboardSummaryContext.Provider value={value}>{children}</DashboardSummaryContext.Provider>;
+}
+
+export function useDashboardSummary(): DashboardSummaryState {
+  const context = useContext(DashboardSummaryContext);
+  if (!context) {
+    throw new Error('useDashboardSummary must be used within DashboardSummaryProvider');
+  }
+  return context;
 }
