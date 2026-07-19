@@ -25,6 +25,25 @@
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   padding: 20px;
   padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  box-shadow: var(--shadow-elevated);
+  animation: modal-panel-rise 0.2s ease both;
+}
+
+@keyframes modal-panel-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-panel {
+    animation: none;
+  }
 }
 
 @media (min-width: 768px) {

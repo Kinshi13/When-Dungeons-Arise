@@ -13,6 +13,17 @@
   transform: scale(0.97);
 }
 
+.stella-button:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+.stella-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .stella-button--ghost {
   background: var(--surface-glass);
   color: var(--text-primary);

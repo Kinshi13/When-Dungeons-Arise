@@ -7,6 +7,7 @@ import {
 } from '@stella-founds/stella-ui';
 import { formatCurrency, toDateOnly, todayIso } from '@stella-founds/core';
 import { useDashboardSummary } from './useDashboardSummary';
+import { DashboardHero } from './DashboardHero';
 import './DashboardPage.css';
 
 export function DashboardPage() {
@@ -25,11 +26,23 @@ export function DashboardPage() {
     ? `${summary.proximaConta.title} · vence ${toDateOnly(summary.proximaConta.dueDate ?? today)}`
     : 'Nenhuma conta pendente';
 
+  const dueTodayCount = summary.proximosVencimentos.filter(
+    (entry) => toDateOnly(entry.dueDate ?? entry.createdAt) === today,
+  ).length;
+
   return (
     <div className="dashboard-page__content">
-      <ScreenShell title="Hoje">
+      <ScreenShell title="Hoje" hideHeader>
+        <DashboardHero dueTodayCount={dueTodayCount} />
+
         <PageTransition transitionKey="dashboard">
           <div className="dashboard-page__grid">
+            <StellaAmountCard
+              size="hero"
+              label="Saldo previsto"
+              value={formatCurrency(summary.previstoAposContas)}
+              tone={summary.previstoAposContas >= 0 ? 'success' : 'danger'}
+            />
             <StellaAmountCard
               label="Gasto hoje"
               value={formatCurrency(summary.gastoHoje)}
@@ -41,11 +54,6 @@ export function DashboardPage() {
               detail={proximaContaDetail}
             />
             <StellaAmountCard label="Assinaturas do mês" value={formatCurrency(summary.assinaturasMes)} />
-            <StellaAmountCard
-              label="Saldo previsto"
-              value={formatCurrency(summary.previstoAposContas)}
-              tone={summary.previstoAposContas >= 0 ? 'success' : 'danger'}
-            />
           </div>
 
           <StellaConstellationDivider />

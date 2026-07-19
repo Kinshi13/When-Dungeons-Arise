@@ -1,8 +1,14 @@
 .stella-amount-card {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 4px;
   padding: 16px;
+}
+
+.stella-amount-card--hero {
+  padding: 20px 22px;
+  gap: 6px;
 }
 
 .stella-amount-card__label {
@@ -13,6 +19,19 @@
 .stella-amount-card__value {
   font-size: 22px;
   font-weight: 700;
+  transition: opacity 0.18s ease;
+}
+
+.stella-amount-card--hero .stella-amount-card__label {
+  font-size: 14px;
+}
+
+.stella-amount-card--hero .stella-amount-card__value {
+  font-size: 34px;
+}
+
+.stella-amount-card__value.is-updating {
+  opacity: 0.35;
 }
 
 .stella-amount-card--success .stella-amount-card__value {

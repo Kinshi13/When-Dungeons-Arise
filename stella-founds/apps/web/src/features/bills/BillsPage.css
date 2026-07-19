@@ -16,6 +16,15 @@
   align-items: start;
 }
 
+/* Without this, the grid item's intrinsic min-content width (driven by
+   FinanceEntryCard's nowrap title/date text) can exceed the 1fr track's
+   available space and blow the whole grid past its container, shoving the
+   300px details panel out to the right — visually overlapping the
+   app-level SummaryPanel column in the layout's own right panel. */
+.bills-page__main {
+  min-width: 0;
+}
+
 .bills-page__details-panel {
   position: sticky;
   top: 0;
@@ -23,6 +32,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 20px;
+  box-shadow: var(--shadow-card);
 }
 
 .bills-page__details-placeholder {

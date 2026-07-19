@@ -18,16 +18,32 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   padding: 12px 20px calc(20px + env(safe-area-inset-bottom));
+  box-shadow: var(--shadow-elevated);
   transition: transform 0.2s ease;
+  /* Fades in on mount only — deliberately doesn't animate `transform` here
+     (that's owned live by the touch-drag handlers below), and uses the
+     default 'none' fill-mode so once it finishes the animation stops
+     influencing the element and drag can take transform over cleanly. */
+  animation: stella-sheet-fade-in 0.2s ease;
 }
 
 .stella-bottom-sheet.is-dragging {
   transition: none;
 }
 
+@keyframes stella-sheet-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .stella-bottom-sheet {
     transition: none;
+    animation: none;
   }
 }
 

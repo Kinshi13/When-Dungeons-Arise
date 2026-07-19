@@ -1,14 +1,7 @@
 import { StellaIconButton } from '@stella-founds/stella-ui';
 import { useGlobalCalculator } from '../features/calculator/GlobalCalculatorProvider';
+import { greetingForHour, longDateFormatter } from '../lib/greeting';
 import './Header.css';
-
-function greetingForHour(hour: number): string {
-  if (hour < 12) return 'Bom dia';
-  if (hour < 18) return 'Boa tarde';
-  return 'Boa noite';
-}
-
-const dateFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 
 /** Reused across Desktop and Tablet layouts (Mobile keeps its own compact ScreenShell header, same as Android). */
 export function Header() {
@@ -20,7 +13,7 @@ export function Header() {
       <div className="stella-header__identity">
         <span className="stella-header__logo" aria-hidden="true">✦ Stella Founds</span>
         <span className="stella-header__greeting">
-          {greetingForHour(now.getHours())} · {dateFormatter.format(now)}
+          {greetingForHour(now.getHours())} · {longDateFormatter.format(now)}
         </span>
       </div>
       <div className="stella-header__actions">

@@ -3,6 +3,7 @@
   border-radius: var(--radius-lg);
   background: var(--surface-card);
   border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 
@@ -23,11 +24,16 @@
 @media (hover: hover) and (pointer: fine) {
   .stella-card--interactive:hover {
     border-color: rgba(232, 201, 136, 0.45);
-    box-shadow: 0 0 0 1px rgba(232, 201, 136, 0.12);
+    box-shadow: var(--shadow-card), var(--glow-gold-soft);
   }
 }
 
 .stella-card--interactive:active {
   border-color: rgba(232, 201, 136, 0.45);
   transform: scale(0.99);
+}
+
+.stella-card--interactive:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
 }

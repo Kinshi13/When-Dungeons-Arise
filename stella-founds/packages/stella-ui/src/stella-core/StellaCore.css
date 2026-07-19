@@ -87,8 +87,15 @@
   justify-content: center;
   box-shadow: var(--shadow-core-button);
   cursor: pointer;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
   overflow: visible;
+}
+
+/* Very subtle extra lift while the constellation is open — reinforces that
+   the button is "the heart" of the open menu without turning it neon. */
+.stella-core[data-phase='opening'] .stella-core__button,
+.stella-core[data-phase='open'] .stella-core__button {
+  box-shadow: var(--shadow-core-button), 0 0 16px rgba(232, 201, 136, 0.16);
 }
 
 .stella-core__button:active {

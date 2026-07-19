@@ -1,12 +1,13 @@
 .entry-list-card {
-  padding: 16px;
-  margin-bottom: 16px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
 }
 
 .entry-list-card__title {
   font-size: 15px;
   font-weight: 600;
-  margin: 0 0 12px;
+  letter-spacing: 0.01em;
+  margin: 0 0 14px;
 }
 
 .entry-list-card__list {
@@ -25,6 +26,40 @@
   gap: 8px;
   padding: 8px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  animation: entry-list-item-rise 0.2s ease both;
+}
+
+.entry-list-card__item:nth-child(1) {
+  animation-delay: 0ms;
+}
+.entry-list-card__item:nth-child(2) {
+  animation-delay: 30ms;
+}
+.entry-list-card__item:nth-child(3) {
+  animation-delay: 60ms;
+}
+.entry-list-card__item:nth-child(4) {
+  animation-delay: 90ms;
+}
+.entry-list-card__item:nth-child(n + 5) {
+  animation-delay: 120ms;
+}
+
+@keyframes entry-list-item-rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entry-list-card__item {
+    animation: none;
+  }
 }
 
 .entry-list-card__item:last-child {
