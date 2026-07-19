@@ -1,0 +1,11 @@
+/* The parallax background is now a single fixed, viewport-pinned instance
+   (see StellaParallax's `fixed` prop) rendered as a sibling of this
+   wrapper, not inside it — this wrapper only needs to keep real content
+   stacked above it and prevent the fixed layer from introducing
+   horizontal scroll. */
+.app-shell__foreground {
+  position: relative;
+  z-index: var(--z-content);
+  min-height: 100vh;
+  overflow-x: hidden;
+}

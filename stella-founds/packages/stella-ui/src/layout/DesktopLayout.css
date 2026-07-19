@@ -1,6 +1,6 @@
 .stella-desktop-layout {
   display: grid;
-  grid-template-columns: 240px 1fr 320px;
+  grid-template-columns: minmax(220px, 240px) 1fr minmax(280px, 300px);
   min-height: 100vh;
 }
 
@@ -23,12 +23,12 @@
 
 .stella-desktop-layout__main {
   flex: 1;
+  min-width: 0;
   padding: 24px 32px 48px;
-  max-width: 960px;
 }
 
 .stella-desktop-layout__right-panel {
   border-left: 1px solid var(--border-subtle);
   background: var(--surface-glass);
-  padding: 24px 20px;
+  padding: 20px 20px 24px;
 }

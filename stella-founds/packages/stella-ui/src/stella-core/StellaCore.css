@@ -120,8 +120,12 @@
   transition: transform 0.25s ease;
 }
 
+/* Stays rotated through 'closing' too — the button should only relax back
+   to neutral once the items have actually finished their own closing
+   animation (phase reaches 'closed'), not the instant closing begins. */
 .stella-core[data-phase='opening'] .stella-core__icon,
-.stella-core[data-phase='open'] .stella-core__icon {
+.stella-core[data-phase='open'] .stella-core__icon,
+.stella-core[data-phase='closing'] .stella-core__icon {
   transform: rotate(135deg);
 }
 

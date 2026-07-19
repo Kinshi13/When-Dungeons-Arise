@@ -13,9 +13,7 @@ import {
   StellaDrawer,
   useBreakpoint,
   showStellaToast,
-  StellaParallax,
-  BackgroundLayer,
-  stellaParallaxScene,
+  PageTransition,
 } from '@stella-founds/stella-ui';
 import { useBillsData } from './useBillsData';
 import { BillsFiltersBar } from './BillsFiltersBar';
@@ -135,9 +133,7 @@ export function BillsPage() {
   );
 
   return (
-    <StellaParallax layers={stellaParallaxScene} className="bills-page__parallax">
-      <BackgroundLayer />
-
+    <>
       <div className="bills-page__content">
         <div className={`bills-page__layout bills-page__layout--${breakpoint}`}>
           <div className="bills-page__main">
@@ -146,7 +142,7 @@ export function BillsPage() {
                 {entries ? `${filtered.length} lançamento(s) nesta visão.` : 'Carregando resumo…'}
               </p>
               <BillsFiltersBar value={filter} onChange={setFilter} />
-              {list}
+              <PageTransition transitionKey={filter}>{list}</PageTransition>
             </ScreenShell>
           </div>
 
@@ -184,6 +180,6 @@ export function BillsPage() {
           />
         )}
       </div>
-    </StellaParallax>
+    </>
   );
 }

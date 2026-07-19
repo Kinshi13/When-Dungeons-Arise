@@ -4,11 +4,6 @@ import {
   EntryListCard,
   StellaConstellationDivider,
   PageTransition,
-  StellaParallax,
-  BackgroundLayer,
-  DecorationLayer,
-  ForegroundLayer,
-  stellaParallaxScene,
 } from '@stella-founds/stella-ui';
 import { formatCurrency, toDateOnly, todayIso } from '@stella-founds/core';
 import { useDashboardSummary } from './useDashboardSummary';
@@ -31,54 +26,47 @@ export function DashboardPage() {
     : 'Nenhuma conta pendente';
 
   return (
-    <StellaParallax layers={stellaParallaxScene} className="dashboard-page__parallax">
-      <BackgroundLayer />
-      <DecorationLayer />
-
-      <div className="dashboard-page__content">
-        <ScreenShell title="Hoje">
-          <PageTransition transitionKey="dashboard">
-            <div className="dashboard-page__grid">
-              <StellaAmountCard
-                label="Gasto hoje"
-                value={formatCurrency(summary.gastoHoje)}
-                tone={summary.gastoHoje > 0 ? 'warning' : 'neutral'}
-              />
-              <StellaAmountCard
-                label="Próxima conta"
-                value={summary.proximaConta ? formatCurrency(summary.proximaConta.amount) : '—'}
-                detail={proximaContaDetail}
-              />
-              <StellaAmountCard label="Assinaturas do mês" value={formatCurrency(summary.assinaturasMes)} />
-              <StellaAmountCard
-                label="Saldo previsto"
-                value={formatCurrency(summary.previstoAposContas)}
-                tone={summary.previstoAposContas >= 0 ? 'success' : 'danger'}
-              />
-            </div>
-
-            <StellaConstellationDivider />
-
-            <EntryListCard
-              title="Próximos vencimentos"
-              entries={summary.proximosVencimentos}
-              emptyTitle="Nenhum vencimento por enquanto"
-              emptyMessage="Seu céu financeiro está limpo."
-              referenceIso={today}
+    <div className="dashboard-page__content">
+      <ScreenShell title="Hoje">
+        <PageTransition transitionKey="dashboard">
+          <div className="dashboard-page__grid">
+            <StellaAmountCard
+              label="Gasto hoje"
+              value={formatCurrency(summary.gastoHoje)}
+              tone={summary.gastoHoje > 0 ? 'warning' : 'neutral'}
             />
-
-            <EntryListCard
-              title="Últimos lançamentos"
-              entries={summary.ultimosLancamentos}
-              emptyTitle="Nenhum lançamento ainda"
-              emptyMessage="Adicione um gasto, conta ou recebimento pelo Stella Core."
-              referenceIso={today}
+            <StellaAmountCard
+              label="Próxima conta"
+              value={summary.proximaConta ? formatCurrency(summary.proximaConta.amount) : '—'}
+              detail={proximaContaDetail}
             />
-          </PageTransition>
-        </ScreenShell>
-      </div>
+            <StellaAmountCard label="Assinaturas do mês" value={formatCurrency(summary.assinaturasMes)} />
+            <StellaAmountCard
+              label="Saldo previsto"
+              value={formatCurrency(summary.previstoAposContas)}
+              tone={summary.previstoAposContas >= 0 ? 'success' : 'danger'}
+            />
+          </div>
 
-      <ForegroundLayer />
-    </StellaParallax>
+          <StellaConstellationDivider />
+
+          <EntryListCard
+            title="Próximos vencimentos"
+            entries={summary.proximosVencimentos}
+            emptyTitle="Nenhum vencimento por enquanto"
+            emptyMessage="Seu céu financeiro está limpo."
+            referenceIso={today}
+          />
+
+          <EntryListCard
+            title="Últimos lançamentos"
+            entries={summary.ultimosLancamentos}
+            emptyTitle="Nenhum lançamento ainda"
+            emptyMessage="Adicione um gasto, conta ou recebimento pelo Stella Core."
+            referenceIso={today}
+          />
+        </PageTransition>
+      </ScreenShell>
+    </div>
   );
 }

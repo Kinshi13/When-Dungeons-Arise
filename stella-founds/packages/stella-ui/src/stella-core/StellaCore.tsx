@@ -28,7 +28,7 @@ export function StellaCore({ actions, activeContext, reducedMotion: reducedMotio
   const layouts = useMemo(() => getStellaConstellationLayouts(actions.length), [actions.length]);
   const maxOrder = layouts.length;
 
-  const { phase, isVisuallyOpen, rootRef, firstItemRef, toggle, closeMenu } = useStellaCore({
+  const { phase, isVisuallyOpen, rootRef, firstItemRef, triggerRef, toggle, closeMenu } = useStellaCore({
     activeContext,
     transitionDurationMs: () => ((maxOrder - 1) * stagger + duration) * 1000,
   });
@@ -79,6 +79,7 @@ export function StellaCore({ actions, activeContext, reducedMotion: reducedMotio
 
         <button
           type="button"
+          ref={triggerRef}
           className="stella-core__button"
           aria-label={phase === 'closed' ? 'Abrir Stella Core' : 'Fechar Stella Core'}
           aria-expanded={phase !== 'closed'}

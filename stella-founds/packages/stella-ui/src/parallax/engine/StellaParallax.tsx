@@ -20,6 +20,7 @@ export function StellaParallax({
   enabled = true,
   reducedMotion,
   motionMode = 'full',
+  fixed = false,
   className = '',
   children,
 }: StellaParallaxProps) {
@@ -38,8 +39,12 @@ export function StellaParallax({
     [layers],
   );
 
+  const classes = ['stella-parallax-scene', fixed && 'stella-parallax-scene--fixed', className]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className={`stella-parallax-scene ${className}`.trim()} ref={containerRef}>
+    <div className={classes} ref={containerRef}>
       <ParallaxSceneProvider value={{ layersById, amplitude, motionActive: isMotionActive }}>
         {children}
       </ParallaxSceneProvider>

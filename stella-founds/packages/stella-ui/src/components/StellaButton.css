@@ -6,7 +6,11 @@
   border-radius: var(--radius-pill);
   border: 1px solid var(--border-subtle);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.stella-button:active {
+  transform: scale(0.97);
 }
 
 .stella-button--ghost {

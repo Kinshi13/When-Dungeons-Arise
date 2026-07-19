@@ -40,6 +40,8 @@ export interface StellaParallaxProps {
   reducedMotion?: boolean;
   /** Explicit override: 'full' (default, follows OS preference), 'reduced' (static layers, no listeners/RAF), 'off' (engine fully inert). */
   motionMode?: ParallaxMotionMode;
+  /** Pin the scene to the viewport (position: fixed, inset: 0) instead of sizing to its parent — for a single app-shell-level background that sits behind everything, including sidebars/panels, rather than being scoped to one page's content column. */
+  fixed?: boolean;
   className?: string;
   children?: ReactNode;
 }

@@ -1,4 +1,4 @@
-import { StellaCard, StellaSectionHeader, StellaEmptyState } from '@stella-founds/stella-ui';
+import { StellaCard, StellaEmptyState } from '@stella-founds/stella-ui';
 import { formatCurrency, toDateOnly } from '@stella-founds/core';
 import { useDashboardSummary } from './useDashboardSummary';
 import './SummaryPanel.css';
@@ -9,7 +9,7 @@ export function SummaryPanel() {
 
   return (
     <div className="summary-panel">
-      <StellaSectionHeader title="Resumo financeiro" />
+      <h2 className="summary-panel__title">Resumo financeiro</h2>
       {!summary ? (
         <p>Carregando…</p>
       ) : (

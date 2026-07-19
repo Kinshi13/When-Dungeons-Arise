@@ -4,3 +4,14 @@
   --parallax-x: 0;
   --parallax-y: 0;
 }
+
+/* App-shell-level background: pinned to the viewport, behind sidebar,
+   header, panels and content alike, instead of scoped to one page's
+   content column. Low z-index (see tokens/zIndex.ts) keeps it under
+   every real UI element without needing pointer-events: none — it still
+   receives pointer input over empty space for the parallax motion. */
+.stella-parallax-scene--fixed {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-parallax-background);
+}

@@ -19,8 +19,10 @@ export function useStellaCore({
   const [phase, setPhase] = useState<StellaCorePhase>('closed');
   const rootRef = useRef<HTMLDivElement>(null);
   const firstItemRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const timeoutRef = useRef<number | null>(null);
   const pushedHistoryRef = useRef(false);
+  const wasOpenedRef = useRef(false);
 
   const isVisuallyOpen = phase === 'opening' || phase === 'open';
 
@@ -34,6 +36,7 @@ export function useStellaCore({
   function openMenu() {
     if (phase !== 'closed') return;
     clearPendingTransition();
+    wasOpenedRef.current = true;
     setPhase('opening');
     timeoutRef.current = window.setTimeout(() => setPhase('open'), transitionDurationMs());
     window.history.pushState({ stellaCoreMenu: true }, '');
@@ -67,11 +70,21 @@ export function useStellaCore({
   useEffect(() => {
     clearPendingTransition();
     pushedHistoryRef.current = false;
+    wasOpenedRef.current = false;
     setPhase('closed');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeContext]);
 
   useEffect(() => () => clearPendingTransition(), []);
+
+  // Restore focus to the trigger button once the closing animation has
+  // actually finished (phase reaches 'closed' again after a real open —
+  // not on the initial mount or on the activeContext reset above).
+  useEffect(() => {
+    if (phase !== 'closed' || !wasOpenedRef.current) return;
+    wasOpenedRef.current = false;
+    triggerRef.current?.focus();
+  }, [phase]);
 
   useEffect(() => {
     if (phase !== 'open') return;
@@ -108,5 +121,5 @@ export function useStellaCore({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
-  return { phase, isVisuallyOpen, rootRef, firstItemRef, toggle, closeMenu };
+  return { phase, isVisuallyOpen, rootRef, firstItemRef, triggerRef, toggle, closeMenu };
 }

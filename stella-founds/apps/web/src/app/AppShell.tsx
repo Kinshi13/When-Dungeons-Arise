@@ -9,6 +9,10 @@ import {
   StellaCore,
   StellaToastViewport,
   showStellaToast,
+  StellaParallax,
+  BackgroundLayer,
+  DecorationLayer,
+  stellaParallaxScene,
 } from '@stella-founds/stella-ui';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
@@ -22,16 +26,18 @@ import { MarkPaidPicker } from '../features/bills/MarkPaidPicker';
 import { GlobalCalculatorProvider, useGlobalCalculator } from '../features/calculator/GlobalCalculatorProvider';
 import { GlobalCalculatorHost } from '../features/calculator/GlobalCalculatorHost';
 import type { FinanceEntryType } from '@stella-founds/core';
+import './AppShell.css';
 
 function AppRoutes() {
+  const location = useLocation();
   return (
     <Suspense fallback={<p>Carregando…</p>}>
       <Routes>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/contas" element={<BillsPage />} />
-        <Route path="/calendario" element={<PlaceholderPage title="Calendário" />} />
-        <Route path="/relatorios" element={<PlaceholderPage title="Relatórios" />} />
-        <Route path="/configuracoes" element={<PlaceholderPage title="Configurações" />} />
+        <Route path="/calendario" element={<PlaceholderPage title="Calendário" transitionKey={location.pathname} />} />
+        <Route path="/relatorios" element={<PlaceholderPage title="Relatórios" transitionKey={location.pathname} />} />
+        <Route path="/configuracoes" element={<PlaceholderPage title="Configurações" transitionKey={location.pathname} />} />
       </Routes>
     </Suspense>
   );
@@ -67,43 +73,50 @@ function AppShellContent() {
 
   return (
     <>
-      <ResponsiveContainer
-        desktop={
-          <>
-            <DesktopLayout
-              sidebar={<Sidebar />}
-              header={<Header />}
-              main={<AppRoutes />}
-              rightPanel={<SummaryPanel />}
-            />
-            {stellaCore}
-          </>
-        }
-        tablet={
-          <>
-            <TabletLayout
-              sidebar={<Sidebar collapsed />}
-              header={<Header />}
-              main={<AppRoutes />}
-              rightPanel={<SummaryPanel />}
-            />
-            {stellaCore}
-          </>
-        }
-        mobile={
-          <MobileLayout
-            header={null}
-            main={<AppRoutes />}
-            stellaCore={stellaCore}
-            bottomNav={<StellaBottomNavigation items={bottomNavItems} />}
-          />
-        }
-      />
+      <StellaParallax fixed layers={stellaParallaxScene} className="app-shell__background">
+        <BackgroundLayer />
+        <DecorationLayer />
+      </StellaParallax>
 
-      <FinanceEntryDialog />
-      {markPaidOpen && <MarkPaidPicker onClose={() => setMarkPaidOpen(false)} />}
-      <GlobalCalculatorHost />
-      <StellaToastViewport />
+      <div className="app-shell__foreground">
+        <ResponsiveContainer
+          desktop={
+            <>
+              <DesktopLayout
+                sidebar={<Sidebar />}
+                header={<Header />}
+                main={<AppRoutes />}
+                rightPanel={<SummaryPanel />}
+              />
+              {stellaCore}
+            </>
+          }
+          tablet={
+            <>
+              <TabletLayout
+                sidebar={<Sidebar collapsed />}
+                header={<Header />}
+                main={<AppRoutes />}
+                rightPanel={<SummaryPanel />}
+              />
+              {stellaCore}
+            </>
+          }
+          mobile={
+            <MobileLayout
+              header={null}
+              main={<AppRoutes />}
+              stellaCore={stellaCore}
+              bottomNav={<StellaBottomNavigation items={bottomNavItems} />}
+            />
+          }
+        />
+
+        <FinanceEntryDialog />
+        {markPaidOpen && <MarkPaidPicker onClose={() => setMarkPaidOpen(false)} />}
+        <GlobalCalculatorHost />
+        <StellaToastViewport />
+      </div>
     </>
   );
 }
