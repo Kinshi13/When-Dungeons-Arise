@@ -1,4 +1,5 @@
-import { IndexedDbAdapter } from './storage/IndexedDbAdapter';
+import { IndexedDbAdapter, COLLECTIONS } from './storage/IndexedDbAdapter';
+import { SyncingStorageAdapter } from './storage/SyncingStorageAdapter';
 import type { StorageAdapter } from './storage/StorageAdapter';
 import {
   FinanceEntryRepository,
@@ -9,9 +10,22 @@ import {
 } from './repositories';
 import { FinanceService, HomeSummaryService, RecurrenceService, ReportService } from './services';
 import { WebExportAdapter, WebNotificationAdapter, WebPlatformAdapter } from './platform';
+import { SyncEngine, NoopCloudAdapter, AuthController, LocalAuthRepository, EngineSyncRepository } from './sync';
+import type { CloudAdapter } from './sync';
 
-/** @param storage defaults to IndexedDbAdapter; pass a different StorageAdapter (e.g. an in-memory fake) to reuse the same repositories/services on another platform. */
-export function createContainer(storage: StorageAdapter = new IndexedDbAdapter()) {
+/**
+ * @param baseStorage defaults to IndexedDbAdapter; pass a different StorageAdapter (e.g. an in-memory fake) to reuse the same repositories/services on another platform.
+ * @param cloudAdapter defaults to NoopCloudAdapter (no backend wired yet); pass a real one (Supabase, etc.) once available — nothing else in this function changes.
+ */
+export function createContainer(baseStorage: StorageAdapter = new IndexedDbAdapter(), cloudAdapter: CloudAdapter = new NoopCloudAdapter()) {
+  const syncEngine = new SyncEngine(baseStorage, cloudAdapter, COLLECTIONS);
+  // Repositories get the syncing decorator; the engine itself reads/writes
+  // through baseStorage directly (pulled remote changes must never
+  // re-enqueue themselves as if they were a new local edit).
+  const storage: StorageAdapter = new SyncingStorageAdapter(baseStorage, syncEngine);
+
+  const authController = new AuthController(new LocalAuthRepository());
+  const syncRepository = new EngineSyncRepository(syncEngine);
 
   const financeEntryRepository = new FinanceEntryRepository(storage);
   const financeCategoryRepository = new FinanceCategoryRepository(storage);
@@ -46,6 +60,9 @@ export function createContainer(storage: StorageAdapter = new IndexedDbAdapter()
     platformAdapter,
     notificationAdapter,
     exportAdapter,
+    syncEngine,
+    syncRepository,
+    authController,
   };
 }
 

@@ -19,6 +19,9 @@ export function AppContainerProvider({
     seedDefaultsIfEmpty(container.financeCategoryRepository, container.financeNucleusRepository).then(() => {
       container.recurrenceService.generateAll();
     });
+    void container.authController.restoreSession();
+    void container.syncEngine.start();
+    return () => container.syncEngine.stop();
   }, [container]);
 
   return (

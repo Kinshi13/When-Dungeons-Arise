@@ -3,14 +3,17 @@ import {
   StellaAmountCard,
   EntryListCard,
   StellaConstellationDivider,
+  SyncIndicator,
 } from '@stella-founds/stella-ui';
-import { formatCurrency, toDateOnly, todayIso } from '@stella-founds/core';
+import { formatCurrency, toDateOnly, todayIso, useAppContainer, useSyncStatus } from '@stella-founds/core';
 import { useHomeSummary } from './useHomeSummary';
 import './HomeScreen.css';
 
 export function HomeScreen() {
   const summary = useHomeSummary();
   const today = todayIso();
+  const { syncEngine } = useAppContainer();
+  const syncStatus = useSyncStatus(syncEngine);
 
   if (!summary) {
     return (
@@ -25,7 +28,7 @@ export function HomeScreen() {
     : 'Nenhuma conta pendente';
 
   return (
-    <ScreenShell title="Hoje">
+    <ScreenShell title="Hoje" action={<SyncIndicator status={syncStatus} />}>
       <div className="home-screen__grid">
         <StellaAmountCard
           label="Gasto hoje"

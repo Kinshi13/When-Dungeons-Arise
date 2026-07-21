@@ -21,6 +21,7 @@ export * from './StellaSelect';
 export * from './StellaSkeleton';
 export * from './StellaStatusPill';
 export * from './StellaToast';
+export * from './SyncIndicator';
 
 // Aliases matching the Stella Design System naming (Web Fase 1.5): these are
 // the same components as ScreenShell / StellaSectionHeader, kept as a single

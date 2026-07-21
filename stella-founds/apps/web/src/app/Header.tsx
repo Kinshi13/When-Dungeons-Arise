@@ -1,4 +1,5 @@
-import { StellaIconButton } from '@stella-founds/stella-ui';
+import { StellaIconButton, SyncIndicator } from '@stella-founds/stella-ui';
+import { useAppContainer, useSyncStatus } from '@stella-founds/core';
 import { useGlobalCalculator } from '../features/calculator/GlobalCalculatorProvider';
 import { greetingForHour, longDateFormatter } from '../lib/greeting';
 import './Header.css';
@@ -7,6 +8,8 @@ import './Header.css';
 export function Header() {
   const now = new Date();
   const { toggleCalculator } = useGlobalCalculator();
+  const { syncEngine } = useAppContainer();
+  const syncStatus = useSyncStatus(syncEngine);
 
   return (
     <div className="stella-header">
@@ -18,6 +21,7 @@ export function Header() {
       </div>
       <div className="stella-header__actions">
         <input className="stella-header__search" type="search" placeholder="Pesquisar (em breve)" disabled />
+        <SyncIndicator status={syncStatus} />
         <StellaIconButton icon="🖩" label="Calculadora (Alt+C)" onClick={toggleCalculator} />
         <span className="stella-header__avatar" aria-hidden="true">🌙</span>
       </div>
