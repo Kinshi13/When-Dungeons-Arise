@@ -68,23 +68,35 @@ export const StellaSkyBackground = memo(function StellaSkyBackground() {
       aria-hidden="true"
     >
       <defs>
-        <radialGradient id="stella-sky-base" cx="30%" cy="8%" r="85%">
+        <radialGradient id="stella-sky-base" cx="30%" cy="8%" r="90%">
           <stop offset="0%" stopColor="#1c2440" />
+          <stop offset="55%" stopColor="#141a35" />
           <stop offset="100%" stopColor="#0e1228" />
         </radialGradient>
         <radialGradient id="stella-sky-nebula-blue" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="rgba(109, 139, 255, 0.14)" />
+          <stop offset="60%" stopColor="rgba(109, 139, 255, 0.05)" />
           <stop offset="100%" stopColor="rgba(109, 139, 255, 0)" />
         </radialGradient>
         <radialGradient id="stella-sky-nebula-gold" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="rgba(232, 201, 136, 0.08)" />
+          <stop offset="60%" stopColor="rgba(232, 201, 136, 0.03)" />
           <stop offset="100%" stopColor="rgba(232, 201, 136, 0)" />
+        </radialGradient>
+        {/* Third nebula — a quiet violet wash off in a corner neither of the
+            other two reach, so the sky reads as one continuous painted
+            scene instead of two isolated glows on a flat field. */}
+        <radialGradient id="stella-sky-nebula-violet" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="rgba(185, 168, 255, 0.07)" />
+          <stop offset="60%" stopColor="rgba(185, 168, 255, 0.025)" />
+          <stop offset="100%" stopColor="rgba(185, 168, 255, 0)" />
         </radialGradient>
       </defs>
 
       <rect width="1600" height="900" fill="url(#stella-sky-base)" />
       <ellipse cx="260" cy="140" rx="520" ry="340" fill="url(#stella-sky-nebula-blue)" />
       <ellipse cx="1340" cy="640" rx="440" ry="320" fill="url(#stella-sky-nebula-gold)" />
+      <ellipse cx="820" cy="820" rx="480" ry="260" fill="url(#stella-sky-nebula-violet)" />
 
       {/* Faint orbital arcs — large circles, only the stroke visible. */}
       <circle cx="180" cy="620" r="420" fill="none" stroke="var(--accent-lavender)" strokeWidth="1" opacity="0.06" />

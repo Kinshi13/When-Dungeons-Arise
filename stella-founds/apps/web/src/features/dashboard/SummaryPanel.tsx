@@ -1,4 +1,10 @@
-import { StellaCard, StellaEmptyState, StellaSkeleton } from '@stella-founds/stella-ui';
+import {
+  StellaCard,
+  StellaEmptyState,
+  StellaSkeleton,
+  CardConstellation,
+  constellationSignature,
+} from '@stella-founds/stella-ui';
 import { formatCurrency, toDateOnly } from '@stella-founds/core';
 import { useDashboardSummary } from './DashboardSummaryContext';
 import './SummaryPanel.css';
@@ -9,6 +15,7 @@ export function SummaryPanel() {
 
   return (
     <div className="summary-panel">
+      <CardConstellation variant={constellationSignature.resumo} />
       <h2 className="summary-panel__title">Resumo financeiro</h2>
       {isLoading ? (
         <div className="summary-panel__list" aria-hidden="true">

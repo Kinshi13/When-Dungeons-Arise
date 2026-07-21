@@ -35,9 +35,9 @@ function generatePattern(seed: number): [number, number][] {
   return points;
 }
 
-// 8 distinct static patterns — computed once at module load, shared by
+// 12 distinct static patterns — computed once at module load, shared by
 // every CardConstellation instance (never regenerated per card/render).
-const PATTERN_COUNT = 8;
+const PATTERN_COUNT = 12;
 const patterns = Array.from({ length: PATTERN_COUNT }, (_, i) => generatePattern(101 + i));
 
 const TOUCH_LIT_MS = 2000;
@@ -50,6 +50,21 @@ export function constellationSeedFromString(text: string): number {
   }
   return Math.abs(hash);
 }
+
+/**
+ * Named pattern indices — one signature per area of the app, chosen once
+ * and fixed (not re-hashed from a label), so "Financeiro" always reads as
+ * the same shape everywhere it appears, the same way a category gets one
+ * color, not a different one per screen. Web Fase 6.9 section 3.
+ */
+export const constellationSignature = {
+  financeiro: 0,
+  calendario: 1,
+  assinaturas: 2,
+  relatorios: 3,
+  resumo: 4,
+  configuracoes: 5,
+} as const;
 
 /**
  * A tiny, near-invisible constellation overlay for a card — 4–5 stars

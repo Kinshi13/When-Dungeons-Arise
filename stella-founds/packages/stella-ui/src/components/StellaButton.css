@@ -40,10 +40,18 @@
   border-color: transparent;
 }
 
+.stella-button--primary:hover {
+  box-shadow: var(--glow-gold-soft);
+}
+
 .stella-button--danger {
   background: var(--surface-glass);
   color: var(--status-danger);
   font-weight: 500;
+}
+
+.stella-button--danger:hover {
+  background: rgba(224, 122, 122, 0.12);
 }
 
 .stella-button--chip {
@@ -54,8 +62,17 @@
   flex-shrink: 0;
 }
 
+.stella-button--chip:hover {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+}
+
 .stella-button--chip.is-active {
   background: var(--accent-stella);
   color: #f4f6ff;
   border-color: transparent;
+}
+
+.stella-button--chip.is-active:hover {
+  background: var(--accent-stella);
 }

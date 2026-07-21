@@ -1,0 +1,5 @@
+.placeholder-page__surface {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+}

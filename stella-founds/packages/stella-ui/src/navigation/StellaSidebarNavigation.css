@@ -5,10 +5,11 @@
 }
 
 .stella-sidebar-nav__item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 10px 12px 10px 16px;
   border-radius: var(--radius-md);
   color: var(--text-secondary);
   text-decoration: none;
@@ -22,13 +23,41 @@
   padding: 12px;
 }
 
-.stella-sidebar-nav__item:hover {
-  background: var(--surface-glass);
+/* A thin left accent instead of (or alongside) a background tint — the
+   same "current location" language a card's active/selected state uses
+   elsewhere, so the sidebar reads as one more Stella surface, not a
+   separate menu system. */
+.stella-sidebar-nav__item::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 20%;
+  bottom: 20%;
+  width: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-gold);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.stella-sidebar-nav.is-collapsed .stella-sidebar-nav__item::before {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .stella-sidebar-nav__item:hover {
+    color: var(--text-primary);
+    background: var(--surface-elevated);
+  }
 }
 
 .stella-sidebar-nav__item.is-active {
   color: var(--accent-gold);
   background: rgba(232, 201, 136, 0.1);
+}
+
+.stella-sidebar-nav__item.is-active::before {
+  opacity: 0.8;
 }
 
 .stella-sidebar-nav__item:focus-visible {
@@ -39,6 +68,8 @@
 .stella-sidebar-nav__icon {
   display: flex;
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
 }
 
 .stella-sidebar-nav__label {

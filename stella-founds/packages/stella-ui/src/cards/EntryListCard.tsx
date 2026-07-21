@@ -3,6 +3,7 @@ import { formatCurrency, toDateOnly, effectiveStatus } from '@stella-founds/core
 import { StellaCard } from '../components/StellaCard';
 import { StellaEmptyState } from '../components/StellaEmptyState';
 import { StellaStatusPill } from '../components/StellaStatusPill';
+import { CardConstellation, constellationSignature } from '../components/CardConstellation';
 import './EntryListCard.css';
 
 export function EntryListCard({
@@ -20,6 +21,7 @@ export function EntryListCard({
 }) {
   return (
     <StellaCard className="entry-list-card">
+      <CardConstellation variant={constellationSignature.financeiro} />
       <h2 className="entry-list-card__title">{title}</h2>
       {entries.length === 0 ? (
         <StellaEmptyState title={emptyTitle} message={emptyMessage} />

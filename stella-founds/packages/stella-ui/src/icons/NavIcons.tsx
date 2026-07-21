@@ -35,7 +35,7 @@ export function CalendarIcon({ size = 22 }: IconProps) {
 export function ReportsIcon({ size = 22 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 19V10M12 19V5M19 19v-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M5 19V10M12 19V5M19 19v-7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
       <path d="M3 19h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
