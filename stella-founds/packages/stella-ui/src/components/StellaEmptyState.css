@@ -1,7 +1,22 @@
 .stella-empty-state {
+  position: relative;
   text-align: center;
   padding: 32px 16px;
   color: var(--text-secondary);
+}
+
+/* A void isn't really empty in the Stella sky — a whisper of stardust
+   behind the glyph, never competing with the title/message above it. */
+.stella-empty-state::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  height: 140px;
+  background: radial-gradient(closest-side, rgba(185, 168, 255, 0.08), transparent 75%);
+  pointer-events: none;
 }
 
 .stella-empty-state__glyph {

@@ -1,0 +1,38 @@
+.hero-stars {
+  position: absolute;
+  inset: 0;
+}
+
+/* Static glow: a radial-gradient halo baked into the element's own
+   background (not an animated box-shadow — see the Fase 6.8 performance
+   budget, section 13). Only opacity breathes, which is compositor-only
+   and among the cheapest properties to animate continuously. */
+.hero-star {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-gold) 0%, rgba(232, 201, 136, 0.4) 45%, transparent 75%);
+  opacity: 0.75;
+}
+
+.hero-star.is-breathing {
+  animation-name: hero-star-breathe;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes hero-star-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-star.is-breathing {
+    animation: none;
+    opacity: 0.75;
+  }
+}

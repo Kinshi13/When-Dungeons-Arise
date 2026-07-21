@@ -16,22 +16,24 @@
 .summary-panel__list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .summary-panel__row {
-  padding: 12px 14px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .summary-panel__label {
   font-size: 11px;
+  letter-spacing: 0.02em;
   color: var(--text-secondary);
 }
 
 .summary-panel__value {
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 600;
+  letter-spacing: -0.005em;
 }

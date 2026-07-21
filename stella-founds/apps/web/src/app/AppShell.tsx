@@ -10,8 +10,8 @@ import {
   StellaToastViewport,
   showStellaToast,
   StellaParallax,
-  BackgroundLayer,
-  DecorationLayer,
+  StellaSkyBackground,
+  HeroStars,
   stellaParallaxScene,
   StellaOfflineBanner,
 } from '@stella-founds/stella-ui';
@@ -118,9 +118,12 @@ function AppShellContent() {
     <>
       <StellaOfflineBanner />
 
+      {/* Web Fase 6.8: identity no longer depends on the parallax engine —
+          StellaSkyBackground is one static scene, mounted once, that never
+          changes. HeroStars is the only thing that still animates. */}
+      <StellaSkyBackground />
       <StellaParallax fixed layers={stellaParallaxScene} className="app-shell__background">
-        <BackgroundLayer />
-        <DecorationLayer />
+        <HeroStars />
       </StellaParallax>
 
       <div className="app-shell__foreground">

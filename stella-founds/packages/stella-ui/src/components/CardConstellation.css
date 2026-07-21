@@ -1,0 +1,62 @@
+.card-constellation {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  overflow: visible;
+}
+
+.card-constellation__lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.card-constellation__line {
+  stroke: var(--accent-gold);
+  stroke-width: 0.6;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* True circles, positioned by percentage — not SVG <circle>s sharing the
+   line's non-uniformly-stretched viewBox (see this file's doc comment). */
+.card-constellation__node {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  opacity: 0.12;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.2s ease;
+}
+
+/* Desktop hover — lines become visible, nodes glow up. Gated to fine
+   pointers so touch devices never get a "stuck" hover state. */
+@media (hover: hover) and (pointer: fine) {
+  .card-constellation:hover .card-constellation__line {
+    opacity: 0.4;
+  }
+  .card-constellation:hover .card-constellation__node {
+    opacity: 0.85;
+  }
+}
+
+.card-constellation.is-selected .card-constellation__line,
+.card-constellation.is-touched .card-constellation__line {
+  opacity: 0.4;
+}
+
+.card-constellation.is-selected .card-constellation__node,
+.card-constellation.is-touched .card-constellation__node {
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-constellation__line,
+  .card-constellation__node {
+    transition: none;
+  }
+}

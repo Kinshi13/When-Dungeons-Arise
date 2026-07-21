@@ -9,7 +9,14 @@ import {
   type FinanceEntry,
   type FinanceNucleus,
 } from '@stella-founds/core';
-import { StellaCard, StellaButton, StellaStatusPill, financeEntryTypeIcons } from '@stella-founds/stella-ui';
+import {
+  StellaCard,
+  StellaButton,
+  StellaStatusPill,
+  CardConstellation,
+  constellationSeedFromString,
+  financeEntryTypeIcons,
+} from '@stella-founds/stella-ui';
 import './FinanceEntryCard.css';
 
 export interface FinanceEntryCardProps {
@@ -78,6 +85,7 @@ export function FinanceEntryCard({
       onClick={() => onSelect(entry)}
       onKeyDown={handleKeyDown}
     >
+      <CardConstellation variant={constellationSeedFromString(entry.id)} selected={selected} />
       <div className="finance-entry-card__info">
         <span className="finance-entry-card__title">
           <span className="finance-entry-card__type-icon" aria-hidden="true">

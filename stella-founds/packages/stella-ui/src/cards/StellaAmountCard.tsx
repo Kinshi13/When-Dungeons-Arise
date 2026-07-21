@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { StellaCard } from '../components/StellaCard';
+import { CardConstellation, constellationSeedFromString } from '../components/CardConstellation';
 import { useFlashOnChange } from '../hooks/useFlashOnChange';
 import './StellaAmountCard.css';
 
@@ -26,6 +27,7 @@ export function StellaAmountCard({
     <StellaCard
       className={`stella-amount-card stella-amount-card--${tone} stella-amount-card--${size}`}
     >
+      <CardConstellation variant={constellationSeedFromString(label)} />
       <span className="stella-amount-card__label">{label}</span>
       <span className={`stella-amount-card__value${isUpdating ? ' is-updating' : ''}`}>{value}</span>
       {detail && <span className="stella-amount-card__detail">{detail}</span>}

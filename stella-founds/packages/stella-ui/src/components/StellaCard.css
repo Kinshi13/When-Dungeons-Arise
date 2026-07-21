@@ -1,7 +1,9 @@
 .stella-card {
   position: relative;
   border-radius: var(--radius-lg);
-  background: var(--surface-card);
+  /* Extremely discreet internal gradient — a physical surface catching
+     light from above, not a flat filled rectangle. */
+  background: linear-gradient(165deg, var(--surface-elevated) 0%, var(--surface-card) 45%);
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-card);
   overflow: hidden;

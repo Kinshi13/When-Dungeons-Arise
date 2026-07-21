@@ -52,7 +52,7 @@ export function DashboardPage() {
   return (
     <div className="dashboard-page__content">
       <ScreenShell title="Hoje" hideHeader>
-        <DashboardHero dueTodayCount={dueTodayCount} />
+        <DashboardHero dueTodayCount={dueTodayCount} previstoAposContas={summary.previstoAposContas} />
 
         <PageTransition transitionKey="dashboard">
           <div className="dashboard-page__grid">

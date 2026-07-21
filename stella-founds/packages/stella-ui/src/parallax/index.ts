@@ -5,6 +5,8 @@ export * from './useParallaxInput';
 export * from './BackgroundLayer';
 export * from './ForegroundLayer';
 export * from './DecorationLayer';
+export * from './StellaSkyBackground';
+export * from './HeroStars';
 
 // Stella Parallax Engine (Web Fase 2.5) — generic, reusable motor. Lives in
 // ./engine to avoid colliding with the legacy StellaParallaxBackground
